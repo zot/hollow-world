@@ -13,6 +13,7 @@ export interface ISplashScreen extends IUIComponent {
     onPeerIdClick?: () => void;
     onJoinGame?: () => void;
     onStartGame?: () => void;
+    onCharacters?: () => void;
     toggleMusic?(): Promise<void>;
 }
 
@@ -25,6 +26,7 @@ export interface ISplashScreenConfig {
     buttonsContainerClass: string;
     joinButtonClass: string;
     startButtonClass: string;
+    charactersButtonClass: string;
     musicButtonClass: string;
 }
 
@@ -37,6 +39,7 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
     buttonsContainerClass: 'splash-buttons-container',
     joinButtonClass: 'splash-join-button',
     startButtonClass: 'splash-start-button',
+    charactersButtonClass: 'splash-characters-button',
     musicButtonClass: 'splash-music-button'
 };
 
@@ -51,8 +54,10 @@ export class SplashScreen implements ISplashScreen {
     public onPeerIdClick?: () => void;
     public onJoinGame?: () => void;
     public onStartGame?: () => void;
+    public onCharacters?: () => void;
     private joinButtonElement: HTMLElement | null = null;
     private startButtonElement: HTMLElement | null = null;
+    private charactersButtonElement: HTMLElement | null = null;
     private musicButtonElement: HTMLElement | null = null;
 
     constructor(
@@ -88,6 +93,7 @@ export class SplashScreen implements ISplashScreen {
         this.peerIdElement = container.querySelector(`.${this.config.peerIdClass}`);
         this.joinButtonElement = container.querySelector(`.${this.config.joinButtonClass}`);
         this.startButtonElement = container.querySelector(`.${this.config.startButtonClass}`);
+        this.charactersButtonElement = container.querySelector(`.${this.config.charactersButtonClass}`);
         this.musicButtonElement = container.querySelector(`.${this.config.musicButtonClass}`);
 
         if (this.peerIdElement) {
@@ -114,6 +120,7 @@ export class SplashScreen implements ISplashScreen {
         this.peerIdElement = null;
         this.joinButtonElement = null;
         this.startButtonElement = null;
+        this.charactersButtonElement = null;
         this.musicButtonElement = null;
     }
 
@@ -130,6 +137,7 @@ export class SplashScreen implements ISplashScreen {
                 <div class="${this.config.buttonsContainerClass}">
                     <button class="${this.config.joinButtonClass}">Join Game</button>
                     <button class="${this.config.startButtonClass}">Start Game</button>
+                    <button class="${this.config.charactersButtonClass}">Characters</button>
                 </div>
                 ${this.audioManager ? `<button class="${this.config.musicButtonClass}" title="Toggle Music">🎵</button>` : ''}
             </div>
@@ -171,6 +179,17 @@ export class SplashScreen implements ISplashScreen {
                 }
                 if (this.onStartGame) {
                     this.onStartGame();
+                }
+            });
+        }
+
+        if (this.charactersButtonElement) {
+            this.charactersButtonElement.addEventListener('click', async () => {
+                if (this.audioManager) {
+                    await this.audioManager.playRandomGunshot();
+                }
+                if (this.onCharacters) {
+                    this.onCharacters();
                 }
             });
         }
@@ -428,7 +447,8 @@ export class SplashScreen implements ISplashScreen {
                 }
 
                 .splash-join-button,
-                .splash-start-button {
+                .splash-start-button,
+                .splash-characters-button {
                     font-family: 'Rye', 'Impact', 'Arial Black', sans-serif;
                     font-size: 1.4rem;
                     font-weight: 900;
@@ -457,7 +477,8 @@ export class SplashScreen implements ISplashScreen {
                 }
 
                 .splash-join-button::before,
-                .splash-start-button::before {
+                .splash-start-button::before,
+                .splash-characters-button::before {
                     content: '';
                     position: absolute;
                     top: 5px;
@@ -469,7 +490,8 @@ export class SplashScreen implements ISplashScreen {
                 }
 
                 .splash-join-button::after,
-                .splash-start-button::after {
+                .splash-start-button::after,
+                .splash-characters-button::after {
                     content: '★';
                     position: absolute;
                     top: 2px;
@@ -480,7 +502,8 @@ export class SplashScreen implements ISplashScreen {
                 }
 
                 .splash-join-button:hover,
-                .splash-start-button:hover {
+                .splash-start-button:hover,
+                .splash-characters-button:hover {
                     background:
                         linear-gradient(45deg, #f4a460, #ffd700, #ffb347, #f4a460),
                         radial-gradient(circle at center, rgba(255,248,220,0.5), transparent);
@@ -498,7 +521,8 @@ export class SplashScreen implements ISplashScreen {
                 }
 
                 .splash-join-button:active,
-                .splash-start-button:active {
+                .splash-start-button:active,
+                .splash-characters-button:active {
                     transform: perspective(150px) rotateX(-5deg) translateY(1px);
                     box-shadow:
                         inset 0 0 20px rgba(139,69,19,0.3),

@@ -102,6 +102,7 @@ export class AudioManager implements IAudioManager {
     private gunshotSrc: string;
     private defaultVolume: number = 0.5;
     private sfxVolume: number = 0.7;
+    private activeGunshots: HTMLAudioElement[] = [];
 
     constructor(
         musicSrc: string,
@@ -173,8 +174,12 @@ export class AudioManager implements IAudioManager {
         }
 
         try {
-            // Create a new audio element for each playback to allow overlapping sounds
+            // Stop and clean up any currently playing gunshots
+            this.stopAllGunshots();
+
+            // Create a new audio element for this gunshot
             const audio = new Audio(this.gunshotSrc);
+            this.activeGunshots.push(audio);
 
             // More dramatic volume variation for western atmosphere
             const volumeVariation = 0.5 + Math.random() * 0.4; // 0.5 to 0.9
@@ -252,13 +257,46 @@ export class AudioManager implements IAudioManager {
                 }
             });
 
+            // Set up cleanup when audio ends
+            audio.addEventListener('ended', () => {
+                this.removeGunshot(audio);
+            });
+
+            audio.addEventListener('error', () => {
+                this.removeGunshot(audio);
+            });
+
             // Play with optional delay for dramatic effect
             setTimeout(async () => {
-                await audio.play();
+                try {
+                    await audio.play();
+                } catch (playError) {
+                    console.warn('Failed to play gunshot sound:', playError);
+                    this.removeGunshot(audio);
+                }
             }, playbackDelay);
 
         } catch (error) {
             console.warn('Failed to play gunshot sound:', error);
+        }
+    }
+
+    private stopAllGunshots(): void {
+        this.activeGunshots.forEach(audio => {
+            try {
+                audio.pause();
+                audio.currentTime = 0;
+            } catch (error) {
+                console.warn('Error stopping gunshot:', error);
+            }
+        });
+        this.activeGunshots = [];
+    }
+
+    private removeGunshot(audio: HTMLAudioElement): void {
+        const index = this.activeGunshots.indexOf(audio);
+        if (index > -1) {
+            this.activeGunshots.splice(index, 1);
         }
     }
 }
