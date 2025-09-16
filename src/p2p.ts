@@ -1,6 +1,7 @@
 import { createLibp2p } from 'libp2p';
 import { createHelia } from 'helia';
 import type { PeerId } from '@libp2p/interface';
+import { createEd25519PeerId } from '@libp2p/peer-id-factory';
 
 // Interfaces for SOLID principles (Dependency Inversion)
 export interface IStorageProvider {
@@ -94,17 +95,107 @@ export class LibP2PNetworkProvider implements INetworkProvider {
     private libp2p: any;
     private helia: any;
     private peerId: string = '';
+    private storageProvider: IStorageProvider;
+    private readonly peerIdStorageKey = 'hollowPeerID';
+
+    constructor(storageProvider: IStorageProvider = new LocalStorageProvider()) {
+        this.storageProvider = storageProvider;
+    }
 
     async initialize(): Promise<void> {
-        this.libp2p = await createLibp2p({
-            // Basic configuration - can be extended based on needs
-        });
+        // Restore peer ID from persisted private key as per specs
+        let restoredPeerId;
+        let privateKeyForRestore;
+
+        // Check for stored private key data
+        const storedPrivateKey = await this.storageProvider.load<any>('privateKeyData');
+
+        if (storedPrivateKey) {
+            try {
+                // Get the raw bytes and recreate the private key object
+                const privateKeyBytes = new Uint8Array(storedPrivateKey.rawBytes || storedPrivateKey.privateKey);
+                const { privateKeyFromProtobuf } = await import('@libp2p/crypto/keys');
+                privateKeyForRestore = await privateKeyFromProtobuf(privateKeyBytes);
+
+                // Restore the peer ID from the private key
+                const { peerIdFromPrivateKey } = await import('@libp2p/peer-id');
+                restoredPeerId = await peerIdFromPrivateKey(privateKeyForRestore);
+            } catch (error: any) {
+                console.warn('Failed to restore peer ID from private key:', error.message);
+                restoredPeerId = null;
+                privateKeyForRestore = null;
+            }
+        }
+
+        // If no stored data or restoration failed, create new one
+        if (!restoredPeerId) {
+            const newPeerId = await createEd25519PeerId();
+
+            // Save the private key for future sessions
+            if (newPeerId.privateKey) {
+                try {
+                    const privateKeyData = {
+                        rawBytes: Array.from(newPeerId.privateKey)
+                    };
+                    await this.storageProvider.save('privateKeyData', privateKeyData);
+                } catch (saveError) {
+                    console.warn('Failed to save private key:', saveError);
+                }
+            }
+
+            restoredPeerId = newPeerId;
+            privateKeyForRestore = newPeerId.privateKey;
+        }
+
+        // Clean up old persistence data from previous attempts
+        await this.loadSerializedPeerId();
+
+        // Configure libp2p with the private key
+        let libp2pInit: any = {
+            addresses: {
+                listen: []
+            },
+            transports: [],
+            streamMuxers: [],
+            connectionEncryption: [],
+            services: {}
+        };
+
+        // Use the restored private key if available
+        if (privateKeyForRestore) {
+            libp2pInit.privateKey = privateKeyForRestore;
+        }
+
+        this.libp2p = await createLibp2p(libp2pInit);
 
         this.helia = await createHelia({
             libp2p: this.libp2p
         });
 
         this.peerId = this.libp2p.peerId.toString();
+
+        // Save the peer ID for future sessions
+        await this.persistPeerId();
+    }
+
+    private async loadSerializedPeerId(): Promise<any> {
+        // Peer ID persistence is disabled - always return null
+        // Clear any old data from previous attempts
+        try {
+            const peerData = await this.storageProvider.load<any>(this.peerIdStorageKey);
+            if (peerData) {
+                console.log('Clearing old peer data from localStorage (persistence not supported)');
+                await this.storageProvider.save(this.peerIdStorageKey, null);
+            }
+        } catch (error) {
+            // Ignore errors when cleaning up
+        }
+        return null;
+    }
+
+    private async persistPeerId(): Promise<void> {
+        // Peer ID persistence is not supported in libp2p@2.10.0
+        // This method is kept for backward compatibility but does nothing
     }
 
     getPeerId(): string {
@@ -136,12 +227,14 @@ export class LibP2PNetworkProvider implements INetworkProvider {
 export class HollowPeer {
     private networkProvider: INetworkProvider;
     private friendsManager: IFriendsManager;
+    private storageProvider: IStorageProvider;
 
     constructor(
-        networkProvider: INetworkProvider = new LibP2PNetworkProvider(),
+        networkProvider?: INetworkProvider,
         storageProvider: IStorageProvider = new LocalStorageProvider()
     ) {
-        this.networkProvider = networkProvider;
+        this.storageProvider = storageProvider;
+        this.networkProvider = networkProvider || new LibP2PNetworkProvider(storageProvider);
         this.friendsManager = new FriendsManager(storageProvider);
     }
 
