@@ -1,23 +1,36 @@
-# this is the p2p API for the Hollow World game
+# 🌐 P2P Networking Specification
 
-# based on ../claude.md
+**Peer-to-peer API for the Hollow World game**
 
-# use SOLID principals
+*Based on [`../claude.md`](../claude.md)*
 
-# make unit tests
+## 🎯 Core Requirements
+- Use **SOLID principles** in all implementations
+- Create comprehensive **unit tests** for all components
 
-# uses libp2p and helia
+## 🔧 Technology Stack
+- **LibP2P** - Decentralized networking protocol
+- **Helia** - IPFS implementation for data storage
 
-# uses a persistent HollowPeer object to track the session
-## loaded on session start, saved when edited
-## fields
-- privateKey: stores the libp2p peer ID's private key
-- friends: a map of friend's names -> their peer IDs
+### 💾 Persistent Session Tracking
+- **Loaded on session start**, saved when edited
 
-## the HollowPeer object should reload on startup and restory the peer ID from the persisted private key
-- use a libp2pInit object with createLibp2p
-- supply the persisted private key as the privateKey property of the libp2pInit object
+### 🔑 Data Fields
+- **`privateKey`**: Stores the LibP2P peer ID's private key
+- **`friends`**: Map of friend names → their peer IDs
 
-## methods
-- getPeerId(): returns persistent peer ID
-- addFriend(name, friendPeerId): adds a friend's name and peerid to persistent a name
+### 🔄 Session Restoration
+- **Startup process**: Reload HollowPeer object and restore peer ID from persisted private key
+- **LibP2P initialization**: Use `createLibp2p` with `libp2pInit` object
+- **Private key supply**: Include persisted private key as `privateKey` property
+
+## 🔧 API Methods
+
+### Core Network Functions
+- **`getPeerId()`**: Returns persistent peer ID
+- **`addFriend(name, friendPeerId)`**: Adds friend's name and peer ID to persistent storage
+
+### Implementation Details
+- **Network provider interface**: [`src/p2p.ts`](../src/p2p.ts)
+- **Storage integration**: Uses LocalStorageProvider for persistence
+- **Error handling**: Graceful degradation when network fails

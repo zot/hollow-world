@@ -1,31 +1,57 @@
-# character editing for the Hollow World single page webapp
-# based on ../claude.md
-# use SOLID principals
-# make unit tests
+# 👤 Character Management Specification
 
-# Character manager view
-## the browser back button navigates back to the previous screen
-## track a persistent list of characters
-## show a list of characters with an "Add character" button underneath
-### each character is keyed by the UUID used to store it
-### each character shows the name with abbreviated stats underneath and a delete button on the right (skull and crossbones)
-### the user can click a character item in the list
-- this flips to the character editor view, passing the UUID to it in the URL path
+**Character editing system for the Hollow World single-page webapp**
 
-# Character editor view
-## creating the history item for this view when called from the character manager view
-- load the character from storage based on the UUID in the URL path
-- edit it live as the "current" character but don't persist anything until the user clicks the "Yep" button
-## revisiting a history item when called from the browser back or forward button
-- edit the history item live as the "current" cuaracter but don't persist anything until the user clicks the "Yep" button
-## Display the current character's stats in stylish, old-timey, labled fields that let you edit the values
-## Show a "Nope" button at the bottom-left and a "Yep" button at the bottom-right
-### "Nope" button
-- reloads the character from storage and displays the stats in the fields
-- overwrites the character item in the history array with the retrieved object
-### "Yep" button
-- loads the character from storage and keep it in a temporary variable
-- saves the current character to storage
-- replace the history object with the original that is in the temporary variable
-- remove any "future" items in the history and add the newly saved character to the history
-- advance the internal history so that pressing the browser's back button will return to the history object that was in the temporary variable
+*Based on [`../claude.md`](../claude.md)*
+
+## 🎯 Core Requirements
+- Use **SOLID principles** in all implementations
+- Create comprehensive **unit tests** for all components
+
+### 🧭 Navigation
+- **Browser back button** navigates to previous screen
+- **Persistent character list** tracked across sessions
+
+### 📜 Character List Display
+- **"Add Character" button** at the bottom
+- **UUID-based storage** for each character
+- **Character cards** showing:
+  - Character name
+  - Abbreviated stats underneath
+  - **Delete button** on the right (💀 skull and crossbones)
+
+### 🖱️ Interaction
+- **Click character item** to edit
+  - Navigates to character editor view
+  - Passes UUID in URL path
+
+### 🏗️ Editor Initialization
+- **From character manager**: Load character from storage using UUID in URL path
+- **From browser navigation**: Edit history item live as "current" character
+- **Live editing**: Make changes without persistence until "Yep" button clicked
+
+### 🎨 Editor Interface
+- **Stylish old-timey labeled fields** for editing character values
+- **Character sheet integration** with full Hollow RPG system
+- **Western styling** consistent with splash screen theme
+
+### 🔘 Action Buttons
+
+#### 🚫 "Nope" Button (Bottom-left)
+- **Revert changes**: Reload character from storage
+- **Update fields**: Display original stats in all fields
+- **History update**: Overwrite history item with retrieved object
+
+#### ✅ "Yep" Button (Bottom-right)
+- **Save workflow**:
+  1. Load original character from storage → temporary variable
+  2. Save current (edited) character to storage
+  3. Replace history object with original from temporary variable
+  4. Remove any "future" history items
+  5. Add newly saved character to history
+  6. Advance internal history for proper back button behavior
+
+### 🧭 Navigation Behavior
+- **Browser back button** returns to previous history object
+- **History management** ensures proper state restoration
+- **Future truncation** when new changes are made

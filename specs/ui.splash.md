@@ -1,30 +1,52 @@
-# The splash screen for the Hollow World game
-# based on ../claude.md
-# use SOLID principals
-# make unit tests
+# 🏜️ Splash Screen Specification
 
-# Initial screen for the game
-## old timey western look with sancreek font, like a dime novel
-## unless specified, nothing is user-selectable
-## display "Don't Go Hollow" in a large old-west-style font; the word "Hollow" should have a green glow but still with sancreek font
-- text is medium-light brown
-## display the peer ID, selectable by the user
-## buttons
-- Join Game
-- Start Game
-- Characters: flips to the character manager view when you click it
-### each button should make a random gunshot sound when you click it
-- randomly change the pitch and duration of single-gunshot-54-40780.mp3 on each click
-- clicking a button should interrupt any currently playing gunshot and start another one
-## mysterious western ghosttown music
+**The initial screen for the Hollow World game**
 
-## history management
-### "location" in this single-page app should be represented by the browser's URL
-- each view gets its own URL path
-### keep a history array of objects so the user can visit them with the browser's back and forward buttons
-- the browser's forward and back buttons are enabled only if there are objects available to visit
-- each object knows what view to display when visiting the object with the browser's back and forward buttons
-- when the user goes back in the history array with the browser's back button history
-  - they can use the forward button to advance in the history array to edit that object
-  - or they can use the UI to edit a different object
-    - this deletes the objects in the "future" of the history array and pushes the new object in the array
+*Based on [`../claude.md`](../claude.md)*
+
+## 🎯 Core Requirements
+- Use **SOLID principles** in all implementations
+- Create comprehensive **unit tests** for all components
+
+### 🎨 Theme & Typography
+- **Old-timey western look** with Sancreek font, like a dime novel
+- **Non-selectable elements** unless specifically noted
+- **"Don't Go Hollow" title** in large old-west style font
+  - The word **"Hollow"** should have a **green glow** while still using Sancreek font
+- **Text color**: Medium-light brown throughout
+
+### 📡 Peer ID Display
+- **Display the peer ID** prominently
+- **User-selectable** text (click to select all)
+
+### 🔘 Interactive Buttons
+- **Join Game** - Connect to existing game session
+- **Start Game** - Begin new game session
+- **Characters** - Navigate to character manager view
+
+#### 🔫 Button Audio Effects
+- **Random gunshot sound** on each button click
+- Use [`single-gunshot-54-40780.mp3`](../src/assets/audio/single-gunshot-54-40780.mp3)
+- **Randomly vary** pitch and duration on each click
+- **Interrupt functionality**: New gunshot stops any currently playing
+
+### 🎵 Background Audio
+- **Mysterious western ghosttown music** plays continuously
+
+## 🧭 History Management
+
+### URL-Based Navigation
+- **Single-page app location** represented by browser URL
+- **Each view** gets its own URL path
+
+### Browser History Integration
+- **History array of objects** for browser back/forward navigation
+- **Forward/back buttons** enabled only when history objects are available
+- **Self-rendering objects**: Each history object knows what view to display
+
+### Navigation Behavior
+- **Going back**: User can navigate backward through history
+  - **Forward navigation**: Can advance through existing history
+  - **New navigation**: Can navigate to different object
+    - **Future deletion**: Removes "future" history objects
+    - **New object**: Pushes new object to history array
