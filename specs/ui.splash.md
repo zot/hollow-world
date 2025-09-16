@@ -19,6 +19,8 @@
 ## mysterious western ghosttown music
 
 ## history management
+### "location" in this single-page app should be represented by the browser's URL
+- each view gets its own URL path
 ### keep a history array of objects so the user can visit them with the browser's back and forward buttons
 - the browser's forward and back buttons are enabled only if there are objects available to visit
 - each object knows what view to display when visiting the object with the browser's back and forward buttons

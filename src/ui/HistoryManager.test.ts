@@ -108,7 +108,9 @@ describe('HistoryManager', () => {
         mockContainer = mockDocument.createElement('div') as HTMLElement;
 
         // Mock global objects
-        (global as any).window = mockWindow;\n        (global as any).history = mockWindow.history;\n        (global as any).document = mockDocument;
+        (global as any).window = mockWindow;
+        (global as any).history = mockWindow.history;
+        (global as any).document = mockDocument;
 
         historyManager = new BrowserHistoryManager();
     });
@@ -251,7 +253,7 @@ describe('HistoryManager', () => {
             const state = ViewStateFactory.createSplashState(renderFn, data);
 
             expect(state.id).toBe('splash');
-            expect(state.title).toBe(\"Don't Go Hollow - Main Menu\");
+            expect(state.title).toBe("Don't Go Hollow - Main Menu");
             expect(state.data).toBe(data);
         });
 
@@ -261,7 +263,7 @@ describe('HistoryManager', () => {
             const state = ViewStateFactory.createCharactersState(renderFn, data);
 
             expect(state.id).toBe('characters');
-            expect(state.title).toBe(\"Don't Go Hollow - Characters\");
+            expect(state.title).toBe("Don't Go Hollow - Characters");
             expect(state.data).toBe(data);
         });
 
@@ -271,7 +273,7 @@ describe('HistoryManager', () => {
             const state = ViewStateFactory.createGameState(renderFn, data);
 
             expect(state.id).toBe('game');
-            expect(state.title).toBe(\"Don't Go Hollow - Game\");
+            expect(state.title).toBe("Don't Go Hollow - Game");
             expect(state.data).toBe(data);
         });
 

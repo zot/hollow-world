@@ -1,9 +1,12 @@
+console.log('Main.ts starting to load...');
+
 import { SplashScreen } from './ui/SplashScreen.js';
-import { CharacterManagerView } from './ui/CharacterManagerView.js';
+import { CharacterManagerView } from './ui/CharacterManagerView.simple.js';
 import { LibP2PNetworkProvider } from './p2p.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { BrowserHistoryManager, ViewStateFactory } from './ui/HistoryManager.js';
-import { ICharacter } from './character/types.js';
+
+console.log('All imports loaded successfully');
 
 // Global app state
 let historyManager: BrowserHistoryManager;
@@ -16,11 +19,15 @@ let characterManager: CharacterManagerView;
 let currentView: 'splash' | 'characters' | 'game' = 'splash';
 
 async function createApp(): Promise<void> {
+    console.log('createApp called');
+
     const app = document.getElementById('app');
     if (!app) {
         console.error('App container not found');
         return;
     }
+
+    console.log('App container found');
 
     try {
         // Initialize history manager
@@ -30,7 +37,6 @@ async function createApp(): Promise<void> {
         networkProvider = new LibP2PNetworkProvider();
 
         // Initialize audio manager (gracefully handle missing audio files)
-        let audioManager: AudioManager | undefined;
         try {
             audioManager = new AudioManager(
                 './src/assets/audio/western-adventure-cinematic-spaghetti-loop-385618.mp3',
@@ -66,6 +72,7 @@ async function createApp(): Promise<void> {
         await showSplashScreen();
 
         console.log('HollowWorld application initialized successfully');
+        console.log('App should now be visible');
     } catch (error) {
         console.error('Failed to initialize HollowWorld:', error);
         app.innerHTML = `
@@ -98,8 +105,8 @@ function setupCharacterManagerCallbacks(): void {
         showSplashScreen();
     };
 
-    characterManager.onCharacterSelected = (character: ICharacter) => {
-        console.log('Character selected:', character.name);
+    characterManager.onCharacterSelected = (character: any) => {
+        console.log('Character selected:', character);
         // TODO: Start game with selected character
         showSplashScreen(); // For now, return to splash
     };

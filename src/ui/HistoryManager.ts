@@ -148,7 +148,7 @@ export class BrowserHistoryManager implements IHistoryManager {
         return null;
     }
 
-    private async handlePopState(event: PopStateEvent): void {
+    private async handlePopState(event: PopStateEvent): Promise<void> {
         if (this.isNavigating) {
             return;
         }
