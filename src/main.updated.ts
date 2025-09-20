@@ -11,7 +11,8 @@ import {
     IBenefit,
     IDrawback,
     IItem,
-    ICompanion
+    ICompanion,
+    CHARACTER_CREATION_RULES
 } from './character/types.js';
 import { CharacterCalculations } from './character/CharacterUtils.js';
 
@@ -97,7 +98,7 @@ class CharacterStorageService {
         };
 
         const hollow: IHollowData = {
-            dust: 0,
+            dust: CHARACTER_CREATION_RULES.startingDust,
             burned: 0,
             hollowInfluence: 0,
             glimmerDebt: 0,
@@ -110,8 +111,8 @@ class CharacterStorageService {
             name,
             description: 'A mysterious newcomer to the frontier',
             rank: 1,
-            totalXP: 0,
-            currentXP: 0,
+            totalXP: CHARACTER_CREATION_RULES.startingXP,
+            currentXP: CHARACTER_CREATION_RULES.startingXP,
             attributes,
             skills: [],
             fields: [],
@@ -191,6 +192,22 @@ class SimpleAudioManager {
         }
     }
 
+    toggleMusic(): void {
+        if (!this.backgroundMusic) return;
+
+        if (this.backgroundMusic.paused) {
+            this.backgroundMusic.play().catch(error => {
+                console.warn('Failed to resume music:', error);
+            });
+        } else {
+            this.backgroundMusic.pause();
+        }
+    }
+
+    isMusicPlaying(): boolean {
+        return this.backgroundMusic ? !this.backgroundMusic.paused : false;
+    }
+
     private removeGunshot(audio: HTMLAudioElement): void {
         const index = this.activeGunshots.indexOf(audio);
         if (index > -1) {
@@ -198,6 +215,9 @@ class SimpleAudioManager {
         }
     }
 }
+
+// Global audio manager instance
+let globalAudioManager: SimpleAudioManager;
 
 // Simple router
 class SimpleRouter {
@@ -215,6 +235,10 @@ class SimpleRouter {
 
         this.networkProvider = new LibP2PNetworkProvider();
         this.characterStorage = new CharacterStorageService();
+
+        // Initialize global audio manager
+        globalAudioManager = new SimpleAudioManager();
+
         this.initializeNetwork();
 
         window.addEventListener('popstate', (event) => {
@@ -325,6 +349,9 @@ class SimpleRouter {
         `;
 
         this.setupSplashEventListeners();
+
+        // Add global music button
+        this.addGlobalMusicButton(app);
     }
 
     private async renderCharacterManager(app: HTMLElement): Promise<void> {
@@ -344,19 +371,32 @@ class SimpleRouter {
                                 ${characters.map(char => `
                                     <div class="character-item" data-id="${char.id}">
                                         <div class="character-info">
-                                            <h3>${char.name}</h3>
                                             <div class="character-stats">
+                                                <span class="character-name">${char.name}</span>
                                                 <span class="rank">Rank ${char.rank}</span>
                                                 <span class="xp">${char.currentXP}/${char.totalXP} XP</span>
                                                 <span class="damage-cap">DC: ${char.damageCapacity}</span>
                                                 <span class="dust">Dust: ${char.hollow.dust}</span>
                                                 ${char.hollow.hollowInfluence > 0 ? `<span class="hollow-influence warning">Hollow: -${char.hollow.hollowInfluence}</span>` : ''}
                                             </div>
-                                            <div class="character-attributes">
-                                                <span>DEX: ${char.attributes[AttributeType.DEX]}</span>
-                                                <span>STR: ${char.attributes[AttributeType.STR]}</span>
-                                                <span>CON: ${char.attributes[AttributeType.CON]}</span>
-                                                <span>CHA: ${char.attributes[AttributeType.CHA]}</span>
+                                            <div class="character-attributes-by-category">
+                                                <div class="attr-category-group">
+                                                    <span class="category-label">Physical:</span>
+                                                    <span>DEX: ${char.attributes[AttributeType.DEX]}</span>
+                                                    <span>STR: ${char.attributes[AttributeType.STR]}</span>
+                                                    <span>CON: ${char.attributes[AttributeType.CON]}</span>
+                                                </div>
+                                                <div class="attr-category-group">
+                                                    <span class="category-label">Social:</span>
+                                                    <span>CHA: ${char.attributes[AttributeType.CHA]}</span>
+                                                    <span>WIS: ${char.attributes[AttributeType.WIS]}</span>
+                                                    <span>GRI: ${char.attributes[AttributeType.GRI]}</span>
+                                                </div>
+                                                <div class="attr-category-group">
+                                                    <span class="category-label">Mental:</span>
+                                                    <span>INT: ${char.attributes[AttributeType.INT]}</span>
+                                                    <span>PER: ${char.attributes[AttributeType.PER]}</span>
+                                                </div>
                                             </div>
                                             <p class="character-desc">${char.description}</p>
                                         </div>
@@ -385,6 +425,9 @@ class SimpleRouter {
             `;
 
             this.setupCharacterManagerEventListeners();
+
+            // Add global music button
+            this.addGlobalMusicButton(app);
         } catch (error) {
             console.error('Failed to render character manager:', error);
             app.innerHTML = `
@@ -408,11 +451,9 @@ class SimpleRouter {
         const charactersBtn = document.getElementById('characters-btn');
         const peerIdDisplay = document.getElementById('peer-id-display');
 
-        const audioManager = new SimpleAudioManager();
-
         if (joinBtn) {
             joinBtn.addEventListener('click', async () => {
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 console.log('Join Game clicked');
                 // TODO: Implement join game functionality
             });
@@ -420,7 +461,7 @@ class SimpleRouter {
 
         if (startBtn) {
             startBtn.addEventListener('click', async () => {
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 console.log('Start Game clicked');
                 // TODO: Implement start game functionality
             });
@@ -428,7 +469,7 @@ class SimpleRouter {
 
         if (charactersBtn) {
             charactersBtn.addEventListener('click', async () => {
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 this.navigate('/characters', "Don't Go Hollow - Characters");
             });
         }
@@ -438,6 +479,41 @@ class SimpleRouter {
                 this.selectAllText(peerIdDisplay);
             });
         }
+
+    }
+
+    private updateMusicButtonState(button: HTMLElement, audioManager: SimpleAudioManager): void {
+        const isPlaying = audioManager.isMusicPlaying();
+        button.textContent = isPlaying ? '🎵' : '🔇';
+        button.title = isPlaying ? 'Pause Music' : 'Play Music';
+    }
+
+    private addGlobalMusicButton(container: HTMLElement): void {
+        // Remove any existing music button first
+        const existingButton = document.querySelector('.music-toggle-button');
+        if (existingButton) {
+            existingButton.remove();
+        }
+
+        // Create new music button
+        const musicButton = document.createElement('button');
+        musicButton.className = 'music-toggle-button';
+        musicButton.id = 'global-music-toggle';
+        musicButton.title = 'Toggle Music';
+
+        // Set initial state
+        const isPlaying = globalAudioManager.isMusicPlaying();
+        musicButton.textContent = isPlaying ? '🎵' : '🔇';
+        musicButton.title = isPlaying ? 'Pause Music' : 'Play Music';
+
+        // Add event listener
+        musicButton.addEventListener('click', () => {
+            globalAudioManager.toggleMusic();
+            this.updateMusicButtonState(musicButton, globalAudioManager);
+        });
+
+        // Add to document body (not container) for fixed positioning
+        document.body.appendChild(musicButton);
     }
 
     private setupCharacterManagerEventListeners(): void {
@@ -446,18 +522,16 @@ class SimpleRouter {
         const deleteButtons = document.querySelectorAll('.delete-btn');
         const characterItems = document.querySelectorAll('.character-item');
 
-        const audioManager = new SimpleAudioManager();
-
         if (backBtn) {
             backBtn.addEventListener('click', async () => {
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 this.navigate('/', "Don't Go Hollow");
             });
         }
 
         if (addBtn) {
             addBtn.addEventListener('click', async () => {
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 // Create new character and navigate to editor
                 const newCharacter = this.characterStorage.createNewCharacter();
                 await this.characterStorage.saveCharacter(newCharacter);
@@ -473,7 +547,7 @@ class SimpleRouter {
                     return;
                 }
 
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 const id = (item as HTMLElement).dataset.id;
                 if (id) {
                     this.navigate(`/character/${id}`, `Don't Go Hollow - Edit Character`);
@@ -486,7 +560,7 @@ class SimpleRouter {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation(); // Prevent triggering the item click
 
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
 
                 const id = (btn as HTMLElement).dataset.id;
                 if (id && confirm('Are you sure you want to delete this character? This cannot be undone.')) {
@@ -518,8 +592,7 @@ class SimpleRouter {
                 const backBtn = app.querySelector('#back-to-characters-btn');
                 if (backBtn) {
                     backBtn.addEventListener('click', async () => {
-                        const audioManager = new SimpleAudioManager();
-                        await audioManager.playRandomGunshot();
+                        await globalAudioManager.playRandomGunshot();
                         this.navigate('/characters', "Don't Go Hollow - Characters");
                     });
                 }
@@ -538,39 +611,70 @@ class SimpleRouter {
 
                     <div class="character-editor-content">
                         <div class="character-sheet-wrapper" id="character-sheet-container">
-                            <!-- CharacterSheet component will be rendered here -->
-                            <div class="character-preview">
-                                <h2>${character.name}</h2>
-                                <p><strong>Rank:</strong> ${character.rank}</p>
-                                <p><strong>XP:</strong> ${character.currentXP}/${character.totalXP}</p>
-                                <p><strong>Damage Capacity:</strong> ${character.damageCapacity}</p>
+                            <div class="character-editor-form">
+                                <div class="character-name-section">
+                                    <label for="character-name">Character Name:</label>
+                                    <input type="text" id="character-name" value="${character.name}" />
+                                </div>
 
-                                <div class="attributes-preview">
-                                    <h3>Attributes</h3>
-                                    <div class="attributes-grid-preview">
-                                        <span>DEX: ${character.attributes[AttributeType.DEX]}</span>
-                                        <span>STR: ${character.attributes[AttributeType.STR]}</span>
-                                        <span>CON: ${character.attributes[AttributeType.CON]}</span>
-                                        <span>CHA: ${character.attributes[AttributeType.CHA]}</span>
-                                        <span>WIS: ${character.attributes[AttributeType.WIS]}</span>
-                                        <span>GRI: ${character.attributes[AttributeType.GRI]}</span>
-                                        <span>INT: ${character.attributes[AttributeType.INT]}</span>
-                                        <span>PER: ${character.attributes[AttributeType.PER]}</span>
+                                <div class="character-core-stats">
+                                    <div class="core-stat-item">
+                                        <label for="character-rank-input" class="core-stat-label">Rank:</label>
+                                        <input type="number" id="character-rank-input" value="${character.rank}" min="1" max="15" />
+                                    </div>
+                                    <div class="core-stat-item">
+                                        <span class="core-stat-label">Damage Capacity:</span>
+                                        <span id="damage-capacity">${character.damageCapacity}</span>
+                                    </div>
+                                    <div class="core-stat-item">
+                                        <span class="core-stat-label">Dust:</span>
+                                        <span id="character-dust">${character.hollow.dust}</span>
+                                    </div>
+                                    <div class="core-stat-item">
+                                        <span class="core-stat-label">Available XP (${this.getTotalXPForRank(character.rank)}):</span>
+                                        <span id="available-xp">${character.currentXP}</span>
+                                    </div>
+                                    <div class="core-stat-item">
+                                        <span class="core-stat-label">Attribute Chips (${this.getTotalChipsForRank(character.rank)}):</span>
+                                        <span id="available-chips">${this.getAvailableAttributeChips()}</span>
                                     </div>
                                 </div>
 
-                                <div class="hollow-preview">
-                                    <h3>Hollow Status</h3>
-                                    <p>Dust: ${character.hollow.dust}</p>
-                                    <p>Burned: ${character.hollow.burned}</p>
-                                    ${character.hollow.hollowInfluence > 0 ? `<p class="warning">Hollow Influence: -${character.hollow.hollowInfluence}</p>` : ''}
+                                <div class="attributes-editor">
+                                    <h3>Attributes</h3>
+
+                                    <div class="attribute-category">
+                                        <h4>Physical</h4>
+                                        <div class="attribute-category-row">
+                                            ${this.renderAttributeEditor('DEX', character.attributes[AttributeType.DEX], 4)}
+                                            ${this.renderAttributeEditor('STR', character.attributes[AttributeType.STR], 3)}
+                                            ${this.renderAttributeEditor('CON', character.attributes[AttributeType.CON], 1)}
+                                        </div>
+                                    </div>
+
+                                    <div class="attribute-category">
+                                        <h4>Social</h4>
+                                        <div class="attribute-category-row">
+                                            ${this.renderAttributeEditor('CHA', character.attributes[AttributeType.CHA], 4)}
+                                            ${this.renderAttributeEditor('WIS', character.attributes[AttributeType.WIS], 3)}
+                                            ${this.renderAttributeEditor('GRI', character.attributes[AttributeType.GRI], 1)}
+                                        </div>
+                                    </div>
+
+                                    <div class="attribute-category">
+                                        <h4>Mental</h4>
+                                        <div class="attribute-category-row">
+                                            ${this.renderAttributeEditor('INT', character.attributes[AttributeType.INT], 4)}
+                                            ${this.renderAttributeEditor('PER', character.attributes[AttributeType.PER], 4)}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <p class="character-desc-preview">${character.description}</p>
 
-                                <p class="integration-note" style="color: #666; font-style: italic; margin-top: 20px;">
-                                    Full character sheet integration coming next...
-                                </p>
+                                <div class="character-desc-section">
+                                    <label for="character-desc">Description:</label>
+                                    <textarea id="character-desc" rows="3">${character.description}</textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -584,6 +688,9 @@ class SimpleRouter {
             `;
 
             this.setupCharacterEditorEventListeners();
+
+            // Add global music button
+            this.addGlobalMusicButton(app);
         } catch (error) {
             console.error('Failed to render character editor:', error);
             app.innerHTML = `
@@ -601,12 +708,249 @@ class SimpleRouter {
             const backBtn = app.querySelector('#back-to-characters-btn');
             if (backBtn) {
                 backBtn.addEventListener('click', async () => {
-                    const audioManager = new SimpleAudioManager();
-                    await audioManager.playRandomGunshot();
+                    await globalAudioManager.playRandomGunshot();
                     this.navigate('/characters', "Don't Go Hollow - Characters");
                 });
             }
         }
+    }
+
+    private renderAttributeEditor(attrName: string, currentValue: number, cost: number): string {
+        const wouldBeBelowMin = (currentValue - 1) < CHARACTER_CREATION_RULES.attributeMinimum;
+        const isAtMaximum = currentValue >= CHARACTER_CREATION_RULES.attributeMaximum;
+
+        // Check if increment is possible (not at max AND have resources)
+        const availableChips = this.getAvailableAttributeChips();
+        const availableXP = this.currentCharacter?.currentXP || 0;
+        const canAffordIncrement = (availableChips >= cost) || (availableXP >= cost);
+        const canIncrement = !isAtMaximum && canAffordIncrement;
+
+        return `
+            <div class="attribute-editor-row" data-attribute="${attrName}">
+                <div class="attribute-info">
+                    <span class="attribute-name">${attrName}</span>
+                    <span class="attribute-cost">(${cost})</span>
+                </div>
+                <div class="attribute-controls">
+                    <button class="attr-btn dec-btn ${wouldBeBelowMin ? 'disabled' : ''}"
+                            data-action="dec" data-attribute="${attrName}" data-cost="${cost}"
+                            ${wouldBeBelowMin ? 'disabled' : ''}>−</button>
+                    <span class="attribute-value" id="attr-${attrName}">${currentValue}</span>
+                    <button class="attr-btn inc-btn ${!canIncrement ? 'disabled' : ''}"
+                            data-action="inc" data-attribute="${attrName}" data-cost="${cost}"
+                            ${!canIncrement ? 'disabled' : ''}>+</button>
+                </div>
+            </div>
+        `;
+    }
+
+    private incrementAttribute(attrName: string, cost: number): void {
+        if (!this.currentCharacter) return;
+
+        const attrKey = AttributeType[attrName as keyof typeof AttributeType];
+        const currentValue = this.currentCharacter.attributes[attrKey];
+
+        // Check attribute range maximum
+        if (currentValue >= CHARACTER_CREATION_RULES.attributeMaximum) {
+            console.warn('Cannot increase attribute above maximum of', CHARACTER_CREATION_RULES.attributeMaximum);
+            return;
+        }
+
+        // Check if we can afford it
+        const availableChips = this.getAvailableAttributeChips();
+        const availableXP = this.currentCharacter.currentXP;
+
+        if (availableChips >= cost) {
+            // Use attribute chips (automatically tracked by total cost calculation)
+            this.currentCharacter.attributes[attrKey] = currentValue + 1;
+        } else if (availableXP >= cost) {
+            // Use XP when no attribute chips left
+            this.currentCharacter.attributes[attrKey] = currentValue + 1;
+            this.currentCharacter.currentXP -= cost;
+        } else {
+            // Can't afford it
+            console.warn('Not enough points to increase attribute');
+            return;
+        }
+
+        this.updateCharacterDisplay();
+    }
+
+    private decrementAttribute(attrName: string, cost: number): void {
+        if (!this.currentCharacter) return;
+
+        const attrKey = AttributeType[attrName as keyof typeof AttributeType];
+        const currentValue = this.currentCharacter.attributes[attrKey];
+
+        // Check attribute range minimum - prevent going below minimum
+        if (currentValue - 1 < CHARACTER_CREATION_RULES.attributeMinimum) {
+            console.warn('Cannot decrease attribute below minimum of', CHARACTER_CREATION_RULES.attributeMinimum);
+            return;
+        }
+
+        // Current total is the sum of all attribute costs before this decrement
+        const currentTotalCosts = this.calculateTotalAttributeCosts(this.currentCharacter.attributes);
+
+        // Decrease the attribute
+        this.currentCharacter.attributes[attrKey] = currentValue - 1;
+
+        // Next total is the sum of all attribute costs after this decrement
+        const nextTotalCosts = this.calculateTotalAttributeCosts(this.currentCharacter.attributes);
+
+        // Points to restore is the cost of the attribute (1, 3, or 4 points)
+        const decPointsToRestore = cost;
+
+        // Max attribute chips for the rank
+        const maxAttributeChipsForRank = this.getTotalChipsForRank(this.currentCharacter.rank);
+
+        if (currentTotalCosts > maxAttributeChipsForRank) {
+            // Some points need to go to XP, some are automatically available as attribute chips
+            const slopOverAmount = Math.min(decPointsToRestore, currentTotalCosts - maxAttributeChipsForRank);
+
+            // Restore the slop over portion to XP
+            if (slopOverAmount > 0) {
+                this.currentCharacter.currentXP += slopOverAmount;
+            }
+
+            // The non-slop portion is automatically available as attribute chips
+            // since we calculate available chips as total chips - total costs
+        } else {
+            // All points automatically become available as attribute chips
+            // since we calculate available chips as total chips - total costs
+        }
+
+        this.updateCharacterDisplay();
+    }
+
+    private getAvailableAttributeChips(): number {
+        if (!this.currentCharacter) return 0;
+        const totalChips = this.getTotalChipsForRank(this.currentCharacter.rank);
+        const totalAttributeCosts = this.calculateTotalAttributeCosts(this.currentCharacter.attributes);
+        // Show negatives as 0 because the excess points are automatically removed from XP anyway
+        return Math.max(0, totalChips - totalAttributeCosts);
+    }
+
+    private getTotalXPForRank(rank: number): number {
+        // Rank 1 has 10 XP, +10 for each additional rank
+        return 10 + (rank - 1) * 10;
+    }
+
+    private getTotalChipsForRank(rank: number): number {
+        // Rank 1 has 16 Attribute Chips, +1 for each additional rank
+        return 16 + (rank - 1);
+    }
+
+    private getAttributeCost(attrType: AttributeType): number {
+        const attributeCosts = {
+            [AttributeType.DEX]: 4,
+            [AttributeType.STR]: 3,
+            [AttributeType.CON]: 1,
+            [AttributeType.CHA]: 4,
+            [AttributeType.WIS]: 3,
+            [AttributeType.GRI]: 1,
+            [AttributeType.INT]: 4,
+            [AttributeType.PER]: 4
+        };
+        return attributeCosts[attrType];
+    }
+
+    private calculateTotalAttributeCosts(attributes: IAttributes): number {
+        let totalCost = 0;
+        Object.entries(attributes).forEach(([attrType, value]) => {
+            const cost = this.getAttributeCost(attrType as AttributeType);
+            totalCost += value * cost;
+        });
+
+        return totalCost;
+    }
+
+    private updateCharacterRank(newRank: number): void {
+        if (!this.currentCharacter) return;
+
+        const oldRank = this.currentCharacter.rank;
+        this.currentCharacter.rank = newRank;
+
+        // Update total XP based on rank
+        const newTotalXP = this.getTotalXPForRank(newRank);
+        const oldTotalXP = this.getTotalXPForRank(oldRank);
+
+        // Adjust current XP by the difference in total XP
+        this.currentCharacter.currentXP += (newTotalXP - oldTotalXP);
+        this.currentCharacter.totalXP = newTotalXP;
+
+        this.updateCharacterDisplay();
+    }
+
+    private updateCharacterDisplay(): void {
+        if (!this.currentCharacter) return;
+
+        // Update attribute values
+        Object.entries(this.currentCharacter.attributes).forEach(([key, value]) => {
+            const attrName = key.toUpperCase();
+            const element = document.getElementById(`attr-${attrName}`);
+            if (element) {
+                element.textContent = value.toString();
+            }
+        });
+
+        // Update resource displays
+        const xpElement = document.getElementById('available-xp');
+        if (xpElement) {
+            xpElement.textContent = this.currentCharacter.currentXP.toString();
+        }
+
+        const chipsElement = document.getElementById('available-chips');
+        if (chipsElement) {
+            chipsElement.textContent = this.getAvailableAttributeChips().toString();
+        }
+
+        // Update labels with totals - find the labels by looking for the specific text patterns
+        const allLabels = document.querySelectorAll('.core-stat-label');
+        allLabels.forEach(label => {
+            if (label.textContent?.includes('Available XP')) {
+                label.textContent = `Available XP (${this.getTotalXPForRank(this.currentCharacter.rank)}):`;
+            } else if (label.textContent?.includes('Attribute Chips')) {
+                label.textContent = `Attribute Chips (${this.getTotalChipsForRank(this.currentCharacter.rank)}):`;
+            }
+        });
+
+        // Update derived stats
+        const dcElement = document.getElementById('damage-capacity');
+        if (dcElement) {
+            // Recalculate damage capacity based on CON (10 + CON per game rules)
+            const newDC = 10 + this.currentCharacter.attributes[AttributeType.CON];
+            this.currentCharacter.damageCapacity = newDC;
+            dcElement.textContent = newDC.toString();
+        }
+
+        // Update button states based on attribute ranges and resource availability
+        Object.entries(this.currentCharacter.attributes).forEach(([attrType, value]) => {
+            const attrName = attrType.toUpperCase();
+            const attrCost = this.getAttributeCost(attrType as AttributeType);
+
+            const wouldBeBelowMin = (value - 1) < CHARACTER_CREATION_RULES.attributeMinimum;
+            const isAtMaximum = value >= CHARACTER_CREATION_RULES.attributeMaximum;
+
+            // Check if increment is possible (not at max AND have resources)
+            const availableChips = this.getAvailableAttributeChips();
+            const availableXP = this.currentCharacter.currentXP;
+            const canAffordIncrement = (availableChips >= attrCost) || (availableXP >= attrCost);
+            const canIncrement = !isAtMaximum && canAffordIncrement;
+
+            // Find the buttons for this attribute
+            const decBtn = document.querySelector(`[data-attribute="${attrName}"][data-action="dec"]`) as HTMLButtonElement;
+            const incBtn = document.querySelector(`[data-attribute="${attrName}"][data-action="inc"]`) as HTMLButtonElement;
+
+            if (decBtn) {
+                decBtn.disabled = wouldBeBelowMin;
+                decBtn.classList.toggle('disabled', wouldBeBelowMin);
+            }
+
+            if (incBtn) {
+                incBtn.disabled = !canIncrement;
+                incBtn.classList.toggle('disabled', !canIncrement);
+            }
+        });
     }
 
     private setupCharacterEditorEventListeners(): void {
@@ -614,29 +958,93 @@ class SimpleRouter {
         const yepBtn = document.querySelector('#yep-btn');
         const backBtn = document.querySelector('#back-to-characters-btn');
 
-        const audioManager = new SimpleAudioManager();
+        // Attribute increment/decrement buttons
+        const attrButtons = document.querySelectorAll('.attr-btn');
+        attrButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                await globalAudioManager.playRandomGunshot();
+                const target = e.target as HTMLElement;
+                const action = target.dataset.action;
+                const attribute = target.dataset.attribute;
+                const cost = parseInt(target.dataset.cost || '1');
+
+                if (action === 'inc') {
+                    this.incrementAttribute(attribute!, cost);
+                } else if (action === 'dec') {
+                    this.decrementAttribute(attribute!, cost);
+                }
+            });
+        });
+
+        // Character name input
+        const nameInput = document.querySelector('#character-name') as HTMLInputElement;
+        if (nameInput) {
+            nameInput.addEventListener('input', (e) => {
+                if (this.currentCharacter) {
+                    this.currentCharacter.name = (e.target as HTMLInputElement).value;
+                }
+            });
+        }
+
+        // Character description textarea
+        const descInput = document.querySelector('#character-desc') as HTMLTextAreaElement;
+        if (descInput) {
+            descInput.addEventListener('input', (e) => {
+                if (this.currentCharacter) {
+                    this.currentCharacter.description = (e.target as HTMLTextAreaElement).value;
+                }
+            });
+        }
+
+        // Rank input
+        const rankInput = document.querySelector('#character-rank-input') as HTMLInputElement;
+        if (rankInput) {
+            rankInput.addEventListener('blur', (e) => {
+                if (this.currentCharacter) {
+                    const newRank = parseInt((e.target as HTMLInputElement).value);
+                    if (newRank >= 1 && newRank <= 15) {
+                        this.updateCharacterRank(newRank);
+                    } else {
+                        // Reset to current rank if invalid
+                        (e.target as HTMLInputElement).value = this.currentCharacter.rank.toString();
+                    }
+                }
+            });
+        }
 
         if (nopeBtn) {
             nopeBtn.addEventListener('click', async () => {
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 console.log('Nope clicked - revert changes');
-                // TODO: Implement revert functionality
-                this.navigate('/characters', "Don't Go Hollow - Characters");
+                // Revert changes: Reload character from storage
+                if (this.currentCharacter) {
+                    const originalCharacter = await this.characterStorage.getCharacter(this.currentCharacter.id);
+                    if (originalCharacter) {
+                        this.currentCharacter = { ...originalCharacter };
+                        // Re-render the editor with reverted data
+                        this.render();
+                    }
+                }
             });
         }
 
         if (yepBtn) {
             yepBtn.addEventListener('click', async () => {
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 console.log('Yep clicked - save changes');
-                // TODO: Implement save functionality
+                // Save workflow per specifications
+                if (this.currentCharacter) {
+                    // Save current (edited) character to storage
+                    await this.characterStorage.saveCharacter(this.currentCharacter);
+                    console.log('Character saved successfully');
+                }
                 this.navigate('/characters', "Don't Go Hollow - Characters");
             });
         }
 
         if (backBtn) {
             backBtn.addEventListener('click', async () => {
-                await audioManager.playRandomGunshot();
+                await globalAudioManager.playRandomGunshot();
                 this.navigate('/characters', "Don't Go Hollow - Characters");
             });
         }
@@ -999,6 +1407,131 @@ const styles = `
         z-index: 10;
     }
 
+    /* Character List Styling */
+    .character-list {
+        margin-bottom: 40px;
+    }
+
+    .character-item {
+        display: flex;
+        align-items: stretch;
+        background: rgba(255,248,220,0.9);
+        border: 3px solid #cd853f;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+
+    .character-item:hover {
+        background: rgba(255,248,220,1);
+        border-color: #8b4513;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    .character-info {
+        flex: 1;
+        padding: 20px;
+    }
+
+    .character-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+        align-items: flex-end;
+    }
+
+    .character-stats span {
+        background: rgba(139,69,19,0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #cd853f;
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: #654321;
+    }
+
+    .character-name {
+        font-family: 'Sancreek', serif !important;
+        color: #8b4513 !important;
+        font-size: 1.1rem !important;
+        background: rgba(222,184,135,0.7) !important;
+        border: 2px solid #8b4513 !important;
+        text-shadow: 1px 1px 0px rgba(0,0,0,0.3) !important;
+        padding: 6px 12px !important;
+        align-self: flex-start;
+    }
+
+    .character-stats span:not(.character-name) {
+        align-self: flex-end;
+    }
+
+    .character-desc {
+        color: #654321;
+        font-style: italic;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .character-actions {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border-left: 2px solid #cd853f;
+    }
+
+    .delete-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        color: #8b4513;
+    }
+
+    .delete-btn:hover {
+        background: rgba(255,0,0,0.1);
+        transform: scale(1.1);
+    }
+
+    .character-attributes-by-category {
+        margin: 15px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .attr-category-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .category-label {
+        font-family: 'Rye', serif;
+        font-weight: bold;
+        color: #8b4513;
+        font-size: 0.85rem;
+        min-width: 60px;
+        text-transform: uppercase;
+    }
+
+    .attr-category-group span:not(.category-label) {
+        background: rgba(139,69,19,0.1);
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(139,69,19,0.3);
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: #654321;
+    }
+
     .character-attributes {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -1135,6 +1668,409 @@ const styles = `
         padding: 15px;
     }
 
+    /* Character Editor Styles */
+    .character-editor-form {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .character-name-section,
+    .character-desc-section {
+        margin: 20px 0;
+    }
+
+    .character-core-stats {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin: 25px 0;
+        padding: 15px;
+        background: rgba(139,69,19,0.08);
+        border: 2px solid #cd853f;
+        border-radius: 8px;
+    }
+
+    .core-stat-item {
+        text-align: center;
+    }
+
+    .core-stat-label {
+        display: block;
+        font-family: 'Rye', serif;
+        font-weight: bold;
+        color: #8b4513;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .core-stat-item span:last-child,
+    .core-stat-item input[type="number"] {
+        display: block;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #654321;
+        background: rgba(255,248,220,0.9);
+        padding: 6px 14px;
+        border: 2px solid #cd853f;
+        border-radius: 4px;
+        min-width: 50px;
+        text-align: center;
+        font-family: 'Rye', serif;
+    }
+
+    .core-stat-item input[type="number"] {
+        transition: all 0.2s ease;
+        width: 70px;
+    }
+
+    .core-stat-item input[type="number"]:focus {
+        outline: none;
+        border-color: #8b4513;
+        background: rgba(255,248,220,1);
+        box-shadow: 0 0 8px rgba(139,69,19,0.3);
+    }
+
+    .core-stat-item input[type="number"]::-webkit-outer-spin-button,
+    .core-stat-item input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .core-stat-item input[type="number"] {
+        -moz-appearance: textfield;
+    }
+
+    .character-name-section label,
+    .character-desc-section label {
+        display: block;
+        font-family: 'Rye', serif;
+        font-weight: bold;
+        color: #8b4513;
+        margin-bottom: 8px;
+        font-size: 1.1rem;
+    }
+
+    .character-name-section input,
+    .character-desc-section textarea {
+        width: 100%;
+        padding: 12px;
+        border: 3px solid #cd853f;
+        background: rgba(255,248,220,0.9);
+        font-family: 'Rye', serif;
+        font-size: 1rem;
+        color: #654321;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .character-name-section input:focus,
+    .character-desc-section textarea:focus {
+        outline: none;
+        border-color: #8b4513;
+        background: rgba(255,248,220,1);
+        box-shadow: 0 0 10px rgba(139,69,19,0.3);
+    }
+
+    .character-resources {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin: 30px 0;
+        padding: 20px;
+        background: rgba(139,69,19,0.1);
+        border: 2px solid #cd853f;
+        border-radius: 8px;
+    }
+
+    .resource-display {
+        text-align: center;
+    }
+
+    .resource-label {
+        display: block;
+        font-family: 'Rye', serif;
+        font-weight: bold;
+        color: #8b4513;
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }
+
+    .resource-display span:last-child {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #654321;
+        background: rgba(255,248,220,0.8);
+        padding: 8px 16px;
+        border: 2px solid #cd853f;
+        border-radius: 4px;
+        min-width: 60px;
+    }
+
+    .attributes-editor {
+        margin: 30px 0;
+    }
+
+    .attributes-editor h3 {
+        font-family: 'Sancreek', serif;
+        color: #8b4513;
+        font-size: 1.5rem;
+        text-align: center;
+        margin-bottom: 20px;
+        text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+    }
+
+    .attribute-category {
+        margin: 25px 0;
+    }
+
+    .attribute-category h4 {
+        font-family: 'Sancreek', serif;
+        color: #8b4513;
+        font-size: 1.2rem;
+        text-align: center;
+        margin-bottom: 15px;
+        text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .attribute-category-row {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .attributes-grid-editor {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .attribute-editor-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255,248,220,0.9);
+        border: 2px solid #cd853f;
+        border-radius: 6px;
+        padding: 12px 16px;
+        transition: all 0.2s ease;
+    }
+
+    .attribute-editor-row:hover {
+        background: rgba(255,248,220,1);
+        border-color: #8b4513;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+
+    .attribute-info {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+    }
+
+    .attribute-name {
+        font-family: 'Rye', serif;
+        font-weight: bold;
+        font-size: 1rem;
+        color: #8b4513;
+    }
+
+    .attribute-cost {
+        font-size: 0.85rem;
+        color: #654321;
+        font-style: italic;
+    }
+
+    .attribute-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .attr-btn {
+        width: 32px;
+        height: 32px;
+        border: 2px solid #8b4513;
+        background: linear-gradient(45deg, #deb887, #f4a460);
+        color: #654321;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .attr-btn:hover {
+        background: linear-gradient(45deg, #f4a460, #ffd700);
+        transform: scale(1.1);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .attr-btn:active {
+        transform: scale(0.95);
+    }
+
+    .attr-btn.disabled,
+    .attr-btn:disabled {
+        background: linear-gradient(45deg, #999, #bbb);
+        color: #666;
+        cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
+    }
+
+    .attr-btn.disabled:hover,
+    .attr-btn:disabled:hover {
+        background: linear-gradient(45deg, #999, #bbb);
+        transform: none;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .attribute-value {
+        font-family: 'Rye', serif;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: #654321;
+        min-width: 30px;
+        text-align: center;
+        background: rgba(139,69,19,0.1);
+        padding: 6px 10px;
+        border: 1px solid #cd853f;
+        border-radius: 3px;
+    }
+
+    .character-stats-display {
+        margin: 30px 0;
+        padding: 20px;
+        background: rgba(139,69,19,0.05);
+        border: 2px dashed #cd853f;
+        border-radius: 8px;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 10px 0;
+        padding: 8px 16px;
+        background: rgba(255,248,220,0.7);
+        border: 1px solid #cd853f;
+        border-radius: 4px;
+    }
+
+    .stat-label {
+        font-family: 'Rye', serif;
+        font-weight: bold;
+        color: #8b4513;
+    }
+
+    .stat-row span:last-child {
+        font-weight: bold;
+        color: #654321;
+        background: rgba(255,248,220,0.9);
+        padding: 4px 12px;
+        border: 1px solid #cd853f;
+        border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+        .attributes-grid-editor {
+            grid-template-columns: 1fr;
+        }
+
+        .attribute-category-row {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .character-core-stats {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .character-resources {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .attribute-editor-row {
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+            max-width: 280px;
+        }
+
+        .attribute-controls {
+            justify-content: center;
+        }
+
+        .character-item {
+            flex-direction: column;
+        }
+
+        .character-actions {
+            border-left: none;
+            border-top: 2px solid #cd853f;
+            justify-content: center;
+        }
+    }
+
+    /* Music Toggle Button - Lower Right Position */
+    .music-toggle-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 3px solid #654321;
+        background:
+            radial-gradient(circle, #deb887, #b8860b),
+            radial-gradient(circle at 30% 30%, rgba(255,248,220,0.8), transparent);
+        font-size: 1.8rem;
+        color: #2d1810;
+        cursor: pointer;
+        box-shadow:
+            inset 0 0 10px rgba(255,248,220,0.5),
+            3px 3px 0px #654321,
+            6px 6px 10px rgba(0,0,0,0.4);
+        transition: all 0.2s ease;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+    }
+
+    .music-toggle-button:hover {
+        background:
+            radial-gradient(circle, #ffd700, #daa520),
+            radial-gradient(circle at 30% 30%, rgba(255,248,220,0.9), transparent);
+        box-shadow:
+            inset 0 0 15px rgba(255,248,220,0.7),
+            3px 3px 0px #654321,
+            8px 8px 15px rgba(0,0,0,0.5),
+            0 0 20px rgba(255,215,0,0.4);
+        transform: scale(1.05);
+    }
+
+    .music-toggle-button:active {
+        transform: scale(0.95);
+        box-shadow:
+            inset 0 0 15px rgba(139,69,19,0.3),
+            2px 2px 0px #654321,
+            4px 4px 8px rgba(0,0,0,0.6);
+    }
+
     @media (max-width: 768px) {
         .splash-buttons {
             flex-direction: column;
@@ -1146,7 +2082,7 @@ const styles = `
         }
 
         .character-attributes {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, 1fr);
         }
 
         .attributes-grid-preview {
