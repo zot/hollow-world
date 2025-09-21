@@ -44,12 +44,12 @@ export class CharacterCalculations {
         return definition.costMultiplier;
     }
 
-    // Calculate total attribute costs (positive values only)
+    // Calculate total attribute costs (including negative values)
     static calculateTotalAttributeCosts(attributes: IAttributes): number {
         let totalCost = 0;
         Object.entries(attributes).forEach(([attrType, value]) => {
             const cost = this.getAttributeCost(attrType as AttributeType);
-            totalCost += Math.max(0, value) * cost;
+            totalCost += value * cost;
         });
         return totalCost;
     }
@@ -77,10 +77,11 @@ export class CharacterCalculations {
     }
 
     // Calculate available (unspent) XP - this replaces the stored currentXP
+    // Note: Can be negative if character has overspent XP beyond their rank
     static calculateAvailableXP(character: ICharacter): number {
         const totalXP = this.calculateTotalXPForRank(character.rank);
         const spentXP = this.calculateSpentXP(character);
-        return Math.max(0, totalXP - spentXP);
+        return totalXP - spentXP;
     }
 
     // Calculate available attribute chips

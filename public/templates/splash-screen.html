@@ -1,0 +1,15 @@
+<div class="{{containerClass}}">
+    <h1 class="{{titleClass}}">{{titleWithHollow}}</h1>
+    <div class="{{peerIdClass}}">Peer ID: {{currentPeerId}}</div>
+    <div class="{{buttonsContainerClass}}">
+        <button class="{{joinButtonClass}}">Join Game</button>
+        <button class="{{startButtonClass}}">Start Game</button>
+        <button class="{{charactersButtonClass}}">Characters</button>
+    </div>
+    <div class="splash-credits-container">
+        <button class="splash-credits-button">Credits</button>
+    </div>
+    {{#if hasAudioManager}}
+    <button class="{{musicButtonClass}}" title="Toggle Music">🎵</button>
+    {{/if}}
+</div>

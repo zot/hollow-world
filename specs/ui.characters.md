@@ -1,102 +1,134 @@
-# 👤 Character Management Specification
+# 🤠 Character Management Specification
+## *"Don't Go Hollow, Partner"*
 
-**Character editing system for the Hollow World single-page webapp**
+**🏜️ Frontier Character Wrangling System for the Hollow World Webapp 🏜️**
 
-*Based on [`../claude.md`](../claude.md)*
+*Saddle up your characters for the wild frontier adventure*
 
-## 🎯 Core Requirements
-- Use **SOLID principles** in all implementations
-- Create comprehensive **unit tests** for all components
-- use html templates instead of javascript template literals
+---
 
-### 🧭 Navigation
-- **Browser back button** navigates to previous screen
-- **Persistent character list** tracked across sessions
+🌵 *Based on [`../claude.md`](../claude.md)* 🌵
 
-### 📜 Character List Display
-- **"Add Character" button** at the bottom
-- **UUID-based storage** for each character
-- **Character card list entries** showing:
-  - Character name, rank, xp, dc, dust
-    - the 4 stats should be bottom aligned in the row
-  - physical attrs
-  - social attrs
-  - mental attrs
-  - **Delete button** on the right (💀 skull and crossbones) -- make sure it is on the right side of the list entry
+---
 
-### 🖱️ Interaction
-- **Click character item** to edit
-  - Navigates to character editor view
-  - Passes UUID in URL path
+## 🎯 Core Requirements *(Code Harder Than a Two-Dollar Steak)*
+- Use **SOLID principles** in all implementations *(Keep it cleaner than a Sunday church service)*
+- Create comprehensive **unit tests** for all components *(Test everything twice, trust nothing once)*
+- Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
 
-### 🏗️ Editor Initialization
-- **From character manager**: Load character from storage using UUID in URL path
-- **From browser navigation**: Edit history item live as "current" character
-- **Live editing**: Make changes without persistence until "Yep" button clicked
+### Character structure
+- total XP and total Attribute Chips are based on rank
+- available Attribute Chips is computed dynamically
+  - rank's attribute chip total - current attribute cost total
+    - this amount is allowed to go higher than the rank's attribute ship total
+    - make sure there's a test for Dex -2 and all other attrs at 0
+      - the attribute chip total should be 8 higher than the rank's attribute chip total
+  - doesn't drop below 0 because extra attribute points come from XP
+- available XP is computed dynamically from skills and total attribute costs that exceed total attribute chips
 
-### 🎨 Editor Interface
-- **🎭 Stylish old-timey labeled fields** for editing character values
-- **📋 Character sheet integration** with full Hollow RPG system
-- **🤠 Western styling** consistent with splash screen theme
-- **📊 Resource displays** - Show unspent XP and attribute chips for current rank
-- **🏷️ Attribute organization** - Arrange attributes in rows by cost order (4, 3, 1):
-  - 💪 **Physical** - DEX(4), STR(3), CON(1)
-  - 🗣️ **Social** - CHA(4), WIS(3), GRI(1)
-  - 🧠 **Mental** - INT(4), PER(4)
-- **📈 Top stats bar** - Rank, damage capacity, dust, available XP, and Attribute Chips at top under character name
-- **🎯 Available XP display**:
-  - Show total XP in parentheses in label based on rank (rank 1 = 10 XP, +10 per additional rank)
-  - Value shown is unspent XP remaining (persisted in character)
-- **🎲 Available Attribute Chips display**:
-  - Show total chips in parentheses in label based on rank (rank 1 = 16 chips, +1 per additional rank)
-  - available attribute chips should be total chips - the total attribute costs
-    - show negatives as 0 because the excess points are automatically removed from XP anyway
-- **⚡ Editable rank input**:
-  - Number input field with min/max validation (1-15)
-  - On blur: automatically updates total XP and Attribute Chips available, also the totals in parens
+### 🧭 Navigation *(Trail Blazing Through the UI)*
+- **Browser back button** navigates to previous screen *(Like ridin' back to where you came from)*
+- **Persistent character list** tracked across sessions *(Your posse remembers you)*
 
-### New Characters
-- new characters start with points given in game rules (XP and Attribute Chips)
+### 📜 Character List Display *(The Saloon Roll Call)*
+- **"Add Character" button** at the bottom *(Recruit new gunhands for your outfit)*
+- **UUID-based storage** for each character *(Every outlaw needs a proper wanted poster)*
+- **Character card list entries** showing *(Like a deck of playing cards, but deadlier)*:
+  - Character name, rank, xp, dc, dust *(The vital statistics)*
+    - *The 4 stats should be bottom aligned in the row like bullets in a chamber*
+  - Physical attrs *(How tough they are)*
+  - Social attrs *(How smooth they talk)*
+  - Mental attrs *(How sharp they think)*
+  - **Delete button** on the right (💀 skull and crossbones) *(Send 'em to Boot Hill)*
 
-### 🔘 Action Buttons
+### 🖱️ Interaction *(How to Wrangle Your Characters)*
+- **Click character item** to edit *(Pick your fighter)*
+  - Navigates to character editor view *(Head to the character creation station)*
+  - Passes UUID in URL path *(Proper paperwork for the sheriff)*
 
-#### ➕ **Attribute Increment Buttons**
-- **🎨 Stylish western-themed** inc/dec buttons on each attribute
-- **⬆️ When incrementing** an attribute:
-  - **🎲 Priority spending**: Take points from Attribute Chips first, then XP when chips depleted
-  - **⚡ Live validation**: Prevent increment if insufficient resources
-  - don't allow increment if the attribute cannot be incremented
+### 🏗️ Editor Initialization *(Setting Up Camp)*
+- **From character manager**: Load character from storage using UUID in URL path *(Find your outlaw in the filing cabinet)*
+- **From browser navigation**: Edit history item live as "current" character *(Pick up where you left off)*
+- **Live editing**: Make changes without persistence until "Yep" button clicked *(Sketch in the dirt before carving in stone)*
 
-#### ➖ **Attribute Decrement Logic**
-- **📊 Point restoration** = attribute cost (1, 3, or 4 points)
-- **📈 Current total** = sum of all attribute costs before decrement
-- **📉 Next total** = sum of all attribute costs after decrement
-- **🎯 Smart restoration logic**:
-  - **If current total > max Attribute Chips for rank**:
-    - **💰 Slop-over portion** → restored to XP
-    - **🎲 Remaining portion** → restored to Attribute Chips
-  - **Otherwise**: All points → restored to Attribute Chip total
+### 🎨 Editor Interface *(The Character Creation Saloon)*
+- **🎭 Stylish old-timey labeled fields** for editing character values *(Fancy as a gambling hall)*
+- **📋 Character sheet integration** with full Hollow RPG system *(All the rules, none of the confusion)*
+- **🤠 Western styling** consistent with splash screen theme *(Prettier than a painted lady)*
+- **📊 Resource displays** - Show unspent XP and attribute chips for current rank *(Keep track of your gold and gunpowder)*
+- **🏷️ Attribute organization** - Arrange attributes in rows by cost order (4, 3, 1) *(Most expensive to cheapest, like whiskey pricing)*:
+  - 💪 **Physical** - DEX(4), STR(3), CON(1) *(How fast, strong, and tough you are)*
+  - 🗣️ **Social** - CHA(4), WIS(3), GRI(1) *(How charming, wise, and gritty you are)*
+  - 🧠 **Mental** - INT(4), PER(4) *(How smart and sharp-eyed you are)*
+  - *A little space between the attr and the open paren* *(Give 'em breathing room)*
+  - *A little space between the close paren and the attribute value* *(Don't crowd the numbers)*
+- **🎨 Attribute value spacing** - Add visual spacing before each attribute input value for better readability *(Make it easy on the eyes)*
+- **🖱️ Mouse wheel interaction** - Attribute input spinners respond to mouse wheel for increment/decrement with range validation (-2 to 15) *(Scroll like you're spinning the cylinder of a six-shooter)*
+- **📈 Top stats bar** - Rank, damage capacity, dust, available XP, and Attribute Chips at top under character name *(The important stuff front and center)*
+- **🎯 Available XP display** *(Your advancement currency)*:
+  - Show total XP in parentheses in label based on rank (rank 1 = 10 XP, +10 per additional rank) *(Show the pot size)*
+  - Value shown is unspent XP remaining *(What you got left to spend)*
+- **🎲 Available Attribute Chips display** *(Your character creation tokens)*:
+  - Show total chips in parentheses in label based on rank (rank 1 = 16 chips, +1 per additional rank) *(Show your stake)*
+  - Available attribute chips should be total chips - the total attribute costs *(What's left after you ante up)*
+    - Show negatives as 0 because the excess points are automatically removed from XP anyway *(Don't go into debt, partner)*
+    - This should update whenever attributes change *(Live as a poker game)*
+  - if available XP is negative, show it in red
+- **⚡ Editable rank input** *(Promote your gunslinger)*:
+  - Number input field with min/max validation (1-15) *(From greenhorn to legend)*
+  - On blur: automatically updates total XP and Attribute Chips available, also the totals in parens *(Recalculate the pot)*
 
-#### 🚫 "Nope" Button (Bottom-left)
-- **Revert changes**: Reload character from storage
-- **Update fields**: Display original stats in all fields
-- **History update**: Overwrite history item with retrieved object
+### 🌟 New Characters *(Fresh Meat for the Frontier)*
+- New characters start with points given in game rules (XP and Attribute Chips) *(Everyone gets a fair shake)*
 
-#### ✅ "Yep" Button (Bottom-right)
-- **Save workflow**:
-  1. Load original character from storage → temporary variable
-  2. Save current (edited) character to storage
-  3. Replace history object with original from temporary variable
-  4. Remove any "future" history items
-  5. Add newly saved character to history
-  6. Advance internal history for proper back button behavior
+### 🔘 Action Buttons *(The Business End of Character Creation)*
 
-### 🧭 Navigation Behavior
-- **Browser back button** returns to previous history object
-- **History management** ensures proper state restoration
-- **Future truncation** when new changes are made
+#### ➕ **Attribute Spinner Button** *(Fine-Tuning Your Gunslinger)*
+- **🎨 Stylish western-themed** spinner buttons on each attribute *(Classier than a silver-plated Colt)*
+  - Stacked arrows, like normal spinner buttons but still western themed *(Up and down like a bucking bronco)*
+  - No space between the value and the spinner buttons *(Tight as a new saddle)*
+- **⬆️ When incrementing** an attribute *(Making your outlaw meaner)*:
+  - **🎲 Priority spending**: Take points from Attribute Chips first, then XP when chips depleted *(Spend your coins before your gold)*
+  - **⚡ Live validation**: Prevent increment if insufficient resources *(Can't buy what you can't afford)*
+  - Don't allow increment unless both of these apply *(Even legends have limits)*:
+    - **📏 The new value is in range** *(Stay between the fences)*
+    - **💰 There's enough XP and Attribute Chips to pay for the new value** *(Don't write checks your wallet can't cash)*
+  - **📊 Update displayed available XP and available Attribute Chips** *(Keep the books current)*
 
-## ✅ Implementation Checklist
+#### ➖ **Attribute Decrement Logic** *(Getting Your Money Back)*
+- **📊 Point restoration** = attribute cost (1, 3, or 4 points) *(Get back what you paid)*
+- **📈 Current total** = sum of all attribute costs before decrement *(Count your chips before cashing out)*
+- **📉 Next total** = sum of all attribute costs after decrement *(What you'll have left)*
+- **🚫 Range protection**: Don't allow decrement if attribute would be out of range *(Don't ride off a cliff)*
+- **📊 Update displays**: Update available XP and Attribute Chips after a decrement *(Balance the books)*
+
+#### 🚫 **"Nope" Button** *(The Chicken-Out Option)*
+- **Revert changes**: Reload character from storage *(Put everything back the way it was)*
+- **Update fields**: Display original stats in all fields *(Wipe the slate clean)*
+- **History update**: Overwrite history item with retrieved object *(Fix the paperwork)*
+- Enable only if there are changes to revert *(No point in backing down if you ain't moved forward)*
+- test cases for these things
+
+#### ✅ **"Yep" Button** *(Seal the Deal)*
+- Enable only if there are changes that have not been saved *(Only when you got something worth keeping)*
+- **Save workflow** *(The proper way to file your paperwork)*:
+  1. Load original character from storage → temporary variable *(Keep a backup copy)*
+  2. Save current (edited) character to storage *(Write it in permanent ink)*
+  3. Replace history object with original from temporary variable *(Clean up the records)*
+  4. Remove any "future" history items *(No fortune telling allowed)*
+  5. Add newly saved character to history *(Add it to the ledger)*
+  6. Advance internal history for proper back button behavior *(Keep the timeline straight)*
+- test cases for these things
+
+### 🧭 Navigation Behavior *(Finding Your Way Around the Frontier)*
+- **Browser back button** returns to previous history object *(Backtrack your steps)*
+- **History management** ensures proper state restoration *(Remember where you've been)*
+- **Future truncation** when new changes are made *(Can't change the past, but you can change the future)*
+
+## ✅ Implementation Checklist *(Trail Markers on the Road to Glory)*
+### *"Every feature implemented, every bug shot down, every test passed with flying colors"*
+
+---
 
 - [x] **🎮 Make character view editable** - Added stylish inc/dec buttons with western styling, implemented XP/chip spending logic
 - [x] **🏷️ Arrange attributes by category** - Organized by category (Physical, Social, Mental) in cost order (4,3,1) with clear headers

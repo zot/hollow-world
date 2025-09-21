@@ -2,19 +2,20 @@
 // Interface for managing multiple characters in the game
 
 import { ICharacter, AttributeType } from '../character/types.js';
-import { CharacterSheet } from '../character/CharacterSheet.js';
+// CharacterSheet import removed - handled by separate CharacterEditorView
 import { IUIComponent } from './SplashScreen.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { CharacterCalculations } from '../character/CharacterUtils.js';
+import { characterStorageService } from '../services/CharacterStorageService.js';
+import '../styles/CharacterManager.css';
 
 export interface ICharacterManager extends IUIComponent {
     getCharacters(): ICharacter[];
     createNewCharacter(): void;
-    editCharacter(characterId: string): void;
     deleteCharacter(characterId: string): void;
     onBackToMenu?: () => void;
-    onBackToCharacters?: () => void;
     onCharacterSelected?: (character: ICharacter) => void;
+    onNewCharacterCreated?: (character: ICharacter) => void;
 }
 
 export interface ICharacterManagerConfig {
@@ -207,9 +208,6 @@ export class CharacterManagerView implements ICharacterManager {
     private config: ICharacterManagerConfig;
     private container: HTMLElement | null = null;
     private characters: ICharacter[] = [];
-    private selectedCharacter: ICharacter | null = null;
-    private currentView: 'list' | 'edit' = 'list';
-    private characterSheet: CharacterSheet | null = null;
 
     // Performance optimization properties
     private renderCache = new Map<string, string>();
@@ -217,12 +215,24 @@ export class CharacterManagerView implements ICharacterManager {
     private pendingUpdate = false;
 
     public onBackToMenu?: () => void;
-    public onBackToCharacters?: () => void;
     public onCharacterSelected?: (character: ICharacter) => void;
+    public onNewCharacterCreated?: (character: ICharacter) => void;
 
     constructor(config: Partial<ICharacterManagerConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
-        this.characters = this.loadCharactersFromStorage() || [...SAMPLE_CHARACTERS];
+        this.loadCharacters();
+    }
+
+    private async loadCharacters(): Promise<void> {
+        try {
+            this.characters = await characterStorageService.getAllCharacters();
+            if (this.container) {
+                this.render(this.container);
+            }
+        } catch (error) {
+            console.error('Failed to load characters:', error);
+            this.characters = [...SAMPLE_CHARACTERS];
+        }
     }
 
     render(container: HTMLElement): void {
@@ -234,15 +244,7 @@ export class CharacterManagerView implements ICharacterManager {
         this.debouncedRender();
     }
 
-    // Async render method for external callers
-    async renderAsync(container: HTMLElement): Promise<void> {
-        if (!container) {
-            throw new Error('Container element is required');
-        }
-
-        this.container = container;
-        await this.debouncedRenderAsync();
-    }
+    // CharacterManagerView now only handles character list (no async render needed)
 
     private debouncedRender(): void {
         if (this.isRendering) {
@@ -255,12 +257,8 @@ export class CharacterManagerView implements ICharacterManager {
         // Use requestAnimationFrame for smooth rendering
         requestAnimationFrame(async () => {
             try {
-                if (this.currentView === 'list') {
-                    await this.renderCharacterListWithFallback();
-                } else if (this.currentView === 'edit' && this.selectedCharacter) {
-                    await this.renderCharacterEditorWithFallback();
-                }
-
+                // CharacterManagerView now only handles list view
+                await this.renderCharacterListWithFallback();
                 this.applyStyles();
             } catch (error) {
                 console.error('Render failed:', error);
@@ -287,14 +285,7 @@ export class CharacterManagerView implements ICharacterManager {
         }
     }
 
-    private async renderCharacterEditorWithFallback(): Promise<void> {
-        try {
-            await this.renderCharacterEditor();
-        } catch (error) {
-            console.warn('Template rendering failed, using fallback:', error);
-            await this.renderCharacterEditorFallback();
-        }
-    }
+    // renderCharacterEditor methods removed - now handled by separate CharacterEditorView
 
     private async renderFallbackUI(): Promise<void> {
         if (!this.container) return;
@@ -349,31 +340,7 @@ export class CharacterManagerView implements ICharacterManager {
         }
     }
 
-    private async renderCharacterEditorFallback(): Promise<void> {
-        if (!this.container || !this.selectedCharacter) return;
-
-        try {
-            const editorHtml = await templateEngine.renderTemplateFromFile('character-editor-fallback', {
-                characterName: this.selectedCharacter.name
-            });
-            this.container.innerHTML = editorHtml;
-
-            const sheetContainer = this.container.querySelector('#character-sheet-container') as HTMLElement;
-            if (sheetContainer) {
-                this.characterSheet = new CharacterSheet(this.selectedCharacter, {
-                    readOnly: false,
-                    showCreationMode: true
-                });
-                this.characterSheet.render(sheetContainer);
-            }
-
-            this.setupEditorEventListeners();
-        } catch (error) {
-            // Ultimate fallback
-            this.container.innerHTML = '<div><h1>Character Editor</h1><p>Failed to load editor templates</p></div>';
-            console.error('Editor fallback template failed:', error);
-        }
-    }
+    // Character editor fallback methods removed - handled by separate CharacterEditorView
 
     private setupFallbackEventListeners(): void {
         if (!this.container) return;
@@ -384,164 +351,55 @@ export class CharacterManagerView implements ICharacterManager {
         }
     }
 
-    private async debouncedRenderAsync(): Promise<void> {
-        if (this.isRendering) {
-            this.pendingUpdate = true;
-            return;
-        }
-
-        this.isRendering = true;
-
-        try {
-            if (this.currentView === 'list') {
-                await this.renderCharacterList();
-            } else if (this.currentView === 'edit' && this.selectedCharacter) {
-                await this.renderCharacterEditor();
-            }
-
-            this.applyStyles();
-        } catch (error) {
-            console.error('Render failed:', error);
-            this.showErrorMessage('Failed to render interface. Please refresh the page.');
-        } finally {
-            this.isRendering = false;
-
-            // If there's a pending update, render again
-            if (this.pendingUpdate) {
-                this.pendingUpdate = false;
-                await this.debouncedRenderAsync();
-            }
-        }
-    }
-
     destroy(): void {
-        if (this.characterSheet) {
-            this.characterSheet.destroy();
-            this.characterSheet = null;
-        }
-
         if (this.container) {
             this.container.innerHTML = '';
             this.container = null;
         }
 
-        this.selectedCharacter = null;
-        this.currentView = 'list';
+        this.characters = [];
+        this.renderCache.clear();
     }
 
     getCharacters(): ICharacter[] {
         return [...this.characters];
     }
 
-    createNewCharacter(): void {
+    async createNewCharacter(): Promise<void> {
         try {
-            const newCharacter: ICharacter = {
-                id: crypto.randomUUID(),
-                name: 'New Character',
-                description: 'A mysterious newcomer to the frontier',
-                rank: 1, // totalXP computed dynamically from rank
-                damageCapacity: 10,  // 10 + CON (0) = 10
-                attributes: {
-                    [AttributeType.DEX]: 0,
-                    [AttributeType.STR]: 0,
-                    [AttributeType.CON]: 0,
-                    [AttributeType.CHA]: 0,
-                    [AttributeType.WIS]: 0,
-                    [AttributeType.GRI]: 0,
-                    [AttributeType.INT]: 0,
-                    [AttributeType.PER]: 0
-                },
-                skills: [],
-                fields: [],
-                benefits: [],
-                drawbacks: [],
-                hollow: {
-                    dust: 10,  // Starting dust from game rules
-                    burned: 0,
-                    hollowInfluence: 0,
-                    glimmerDebt: 0,
-                    glimmerDebtTotal: 0,
-                    newMoonMarks: 0
-                },
-                items: [],
-                companions: [],
-                attributeChipsSpent: { positive: 0, negative: 0 },
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
+            const newCharacter = characterStorageService.createNewCharacter();
+            await characterStorageService.saveCharacter(newCharacter);
 
             this.characters.push(newCharacter);
-            this.saveCharactersToStorage();
-            this.editCharacter(newCharacter.id);
+            this.clearRenderCache();
+
+            // Trigger callback for route-based navigation to editor
+            if (this.onNewCharacterCreated) {
+                this.onNewCharacterCreated(newCharacter);
+            }
         } catch (error) {
             console.error('Failed to create new character:', error);
             this.showErrorMessage('Failed to create new character. Please try again.');
         }
     }
 
-    editCharacter(characterId: string): void {
-        const character = this.characters.find(c => c.id === characterId);
-        if (!character) {
-            console.error('Character not found:', characterId);
-            return;
-        }
+    // editCharacter removed - now handled by separate CharacterEditorView
 
-        this.selectedCharacter = character;
-        this.currentView = 'edit';
-        this.render(this.container!);
-    }
-
-    deleteCharacter(characterId: string): void {
+    async deleteCharacter(characterId: string): Promise<void> {
         if (confirm('Are you sure you want to delete this character? This action cannot be undone.')) {
             try {
-                this.characters = this.characters.filter(c => c.id !== characterId);
-                this.saveCharactersToStorage();
-
-                if (this.selectedCharacter?.id === characterId) {
-                    this.selectedCharacter = null;
-                    this.currentView = 'list';
-                }
-
-                if (this.currentView === 'list') {
+                const success = await characterStorageService.deleteCharacter(characterId);
+                if (success) {
+                    this.characters = this.characters.filter(c => c.id !== characterId);
+                    this.clearRenderCache();
                     this.render(this.container!);
+                } else {
+                    this.showErrorMessage('Character not found.');
                 }
             } catch (error) {
                 console.error('Failed to delete character:', error);
                 this.showErrorMessage('Failed to delete character. Please try again.');
             }
-        }
-    }
-
-    private loadCharactersFromStorage(): ICharacter[] | null {
-        try {
-            const stored = localStorage.getItem('hollow-world-characters');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed)) {
-                    return parsed.map(char => this.validateAndFixCharacter(char));
-                }
-            }
-            return null;
-        } catch (error) {
-            console.error('Failed to load characters from storage:', error);
-            this.showErrorMessage('Failed to load saved characters. Using default characters.');
-            return null;
-        }
-    }
-
-    private saveCharactersToStorage(): void {
-        try {
-            localStorage.setItem('hollow-world-characters', JSON.stringify(this.characters));
-            // Clear render cache when saving as character data may have changed
-            this.clearRenderCache();
-        } catch (error) {
-            console.error('Failed to save characters to storage:', error);
-            if (error instanceof Error && error.name === 'QuotaExceededError') {
-                this.showErrorMessage('Storage quota exceeded. Please delete some characters to free up space.');
-            } else {
-                this.showErrorMessage('Failed to save characters. Changes may not be preserved.');
-            }
-            throw error;
         }
     }
 
@@ -554,78 +412,6 @@ export class CharacterManagerView implements ICharacterManager {
         } else {
             // Clear entire cache
             this.renderCache.clear();
-        }
-    }
-
-    private validateAndFixCharacter(character: any): ICharacter {
-        try {
-            // Basic validation and fixing of character data
-            const validatedCharacter: ICharacter = {
-                id: character.id || crypto.randomUUID(),
-                name: character.name || 'Unknown Character',
-                description: character.description || '',
-                rank: Math.max(1, Math.min(15, parseInt(character.rank) || 1)),
-                // totalXP removed - now computed via CharacterCalculations.calculateTotalXPForRank()
-                damageCapacity: Math.max(1, parseInt(character.damageCapacity) || 10),
-                attributes: {
-                    [AttributeType.DEX]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.DEX]) || 0)),
-                    [AttributeType.STR]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.STR]) || 0)),
-                    [AttributeType.CON]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.CON]) || 0)),
-                    [AttributeType.CHA]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.CHA]) || 0)),
-                    [AttributeType.WIS]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.WIS]) || 0)),
-                    [AttributeType.GRI]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.GRI]) || 0)),
-                    [AttributeType.INT]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.INT]) || 0)),
-                    [AttributeType.PER]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.PER]) || 0)),
-                },
-                skills: Array.isArray(character.skills) ? character.skills : [],
-                fields: Array.isArray(character.fields) ? character.fields : [],
-                benefits: Array.isArray(character.benefits) ? character.benefits : [],
-                drawbacks: Array.isArray(character.drawbacks) ? character.drawbacks : [],
-                hollow: {
-                    dust: Math.max(0, parseInt(character.hollow?.dust) || 0),
-                    burned: Math.max(0, parseInt(character.hollow?.burned) || 0),
-                    hollowInfluence: Math.max(0, parseInt(character.hollow?.hollowInfluence) || 0),
-                    glimmerDebt: Math.max(0, parseInt(character.hollow?.glimmerDebt) || 0),
-                    glimmerDebtTotal: Math.max(0, parseInt(character.hollow?.glimmerDebtTotal) || 0),
-                    newMoonMarks: Math.max(0, parseInt(character.hollow?.newMoonMarks) || 0)
-                },
-                items: Array.isArray(character.items) ? character.items : [],
-                companions: Array.isArray(character.companions) ? character.companions : [],
-                attributeChipsSpent: character.attributeChipsSpent || { positive: 0, negative: 0 },
-                createdAt: character.createdAt ? new Date(character.createdAt) : new Date(),
-                updatedAt: new Date()
-            };
-            return validatedCharacter;
-        } catch (error) {
-            console.error('Failed to validate character:', error);
-            // Return a minimal valid character if validation fails completely
-            return {
-                id: crypto.randomUUID(),
-                name: 'Corrupted Character',
-                description: 'This character data was corrupted and has been reset',
-                rank: 1, // totalXP computed dynamically from rank
-                damageCapacity: 10,
-                attributes: {
-                    [AttributeType.DEX]: 0,
-                    [AttributeType.STR]: 0,
-                    [AttributeType.CON]: 0,
-                    [AttributeType.CHA]: 0,
-                    [AttributeType.WIS]: 0,
-                    [AttributeType.GRI]: 0,
-                    [AttributeType.INT]: 0,
-                    [AttributeType.PER]: 0
-                },
-                skills: [],
-                fields: [],
-                benefits: [],
-                drawbacks: [],
-                hollow: { dust: 0, burned: 0, hollowInfluence: 0, glimmerDebt: 0, glimmerDebtTotal: 0, newMoonMarks: 0 },
-                items: [],
-                companions: [],
-                attributeChipsSpent: { positive: 0, negative: 0 },
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
         }
     }
 
@@ -699,16 +485,12 @@ export class CharacterManagerView implements ICharacterManager {
             `Dust: ${character.hollow.dust}`
         ].join(' • ');
 
-        const attributes = [
-            `DEX: ${character.attributes[AttributeType.DEX]}`,
-            `STR: ${character.attributes[AttributeType.STR]}`,
-            `CON: ${character.attributes[AttributeType.CON]}`,
-            `CHA: ${character.attributes[AttributeType.CHA]}`,
-            `WIS: ${character.attributes[AttributeType.WIS]}`,
-            `GRI: ${character.attributes[AttributeType.GRI]}`,
-            `INT: ${character.attributes[AttributeType.INT]}`,
-            `PER: ${character.attributes[AttributeType.PER]}`
-        ].join(' • ');
+        // Organize attributes by category and cost order per spec
+        const physicalAttrs = `💪 Physical: DEX: ${character.attributes[AttributeType.DEX]}, STR: ${character.attributes[AttributeType.STR]}, CON: ${character.attributes[AttributeType.CON]}`;
+        const socialAttrs = `🗣️ Social: CHA: ${character.attributes[AttributeType.CHA]}, WIS: ${character.attributes[AttributeType.WIS]}, GRI: ${character.attributes[AttributeType.GRI]}`;
+        const mentalAttrs = `🧠 Mental: INT: ${character.attributes[AttributeType.INT]}, PER: ${character.attributes[AttributeType.PER]}`;
+
+        const attributes = [physicalAttrs, socialAttrs, mentalAttrs].join(' | ');
 
         try {
             const cardHtml = await templateEngine.renderTemplateFromFile('character-card', {
@@ -790,36 +572,26 @@ export class CharacterManagerView implements ICharacterManager {
     }
 
     // User Experience Testing Methods
-    public validateUserWorkflows(): string[] {
+    public async validateUserWorkflows(): Promise<string[]> {
         const issues: string[] = [];
 
         try {
             // Test 1: Character creation workflow
             const originalCount = this.characters.length;
-            this.createNewCharacter();
+            await this.createNewCharacter();
             if (this.characters.length !== originalCount + 1) {
                 issues.push('Character creation workflow failed: Character count did not increase');
             }
-            if (this.currentView !== 'edit') {
-                issues.push('Character creation workflow failed: Did not navigate to edit view');
-            }
 
-            // Test 2: Character validation
-            if (this.selectedCharacter) {
-                const testCharacter = { ...this.selectedCharacter };
-                testCharacter.rank = -1; // Invalid rank
-                const validatedChar = this.validateAndFixCharacter(testCharacter);
-                if (validatedChar.rank !== 1) {
-                    issues.push('Character validation failed: Invalid rank not corrected');
-                }
-            }
-
-            // Test 3: Storage functionality
+            // Test 2: Storage functionality
             try {
-                this.saveCharactersToStorage();
-                const loaded = this.loadCharactersFromStorage();
-                if (!loaded || loaded.length !== this.characters.length) {
-                    issues.push('Storage workflow failed: Save/load character count mismatch');
+                const testChar = this.characters[0];
+                if (testChar) {
+                    await characterStorageService.saveCharacter(testChar);
+                    const loaded = await characterStorageService.getCharacter(testChar.id);
+                    if (!loaded || loaded.id !== testChar.id) {
+                        issues.push('Storage workflow failed: Save/load character mismatch');
+                    }
                 }
             } catch (error) {
                 issues.push('Storage workflow failed: Exception during save/load');
@@ -854,8 +626,6 @@ export class CharacterManagerView implements ICharacterManager {
             // Clean up test character
             if (this.characters.length > originalCount) {
                 this.characters.pop();
-                this.selectedCharacter = null;
-                this.currentView = 'list';
             }
 
         } catch (error) {
@@ -907,8 +677,8 @@ export class CharacterManagerView implements ICharacterManager {
         return issues;
     }
 
-    public generateUXReport(): string {
-        const workflowIssues = this.validateUserWorkflows();
+    public async generateUXReport(): Promise<string> {
+        const workflowIssues = await this.validateUserWorkflows();
         const accessibilityIssues = this.runAccessibilityAudit();
 
         const report = `
@@ -925,7 +695,7 @@ ${accessibilityIssues.map(issue => `- ${issue}`).join('\n')}
 ## Performance Metrics
 - Render cache size: ${this.renderCache.size} entries
 - Character count: ${this.characters.length}
-- Current view: ${this.currentView}
+- View: Character List (route-based navigation)
 
 ## Recommendations
 ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
@@ -936,41 +706,26 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
         return report.trim();
     }
 
-    private async renderCharacterEditor(): Promise<void> {
-        if (!this.container || !this.selectedCharacter) return;
-
-        try {
-            const editorHtml = await templateEngine.renderTemplateFromFile('character-editor', {
-                characterName: this.selectedCharacter.name
-            });
-
-            this.container.innerHTML = editorHtml;
-
-            const sheetContainer = this.container.querySelector('#character-sheet-container') as HTMLElement;
-            if (sheetContainer) {
-                this.characterSheet = new CharacterSheet(this.selectedCharacter, {
-                    readOnly: false,
-                    showCreationMode: true
-                });
-
-                this.characterSheet.render(sheetContainer);
-            }
-
-            this.setupEditorEventListeners();
-        } catch (error) {
-            console.error('Failed to render character editor:', error);
-            this.showErrorMessage('Failed to render character editor. Please try again.');
-        }
-    }
+    // renderCharacterEditor method removed - handled by separate CharacterEditorView
 
     private setupListEventListeners(): void {
         if (!this.container) return;
 
         this.container.querySelectorAll('[data-action]').forEach(button => {
             button.addEventListener('click', (e) => {
-                const target = e.target as HTMLElement;
-                const action = target.dataset.action;
-                const characterId = target.dataset.characterId || target.getAttribute('data-character-id');
+                // Find the element with data-action (might be parent/child)
+                let target = e.target as HTMLElement;
+                let actionElement = target;
+
+                // Walk up the DOM tree to find the element with data-action
+                while (actionElement && !actionElement.dataset.action) {
+                    actionElement = actionElement.parentElement as HTMLElement;
+                }
+
+                if (!actionElement) return;
+
+                const action = actionElement.dataset.action;
+                const characterId = actionElement.dataset.characterId || actionElement.getAttribute('data-character-id');
 
                 if (!characterId) return;
 
@@ -979,9 +734,6 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
                         const character = this.characters.find(c => c.id === characterId);
                         if (character && this.onCharacterSelected) {
                             this.onCharacterSelected(character);
-                        } else {
-                            // Fallback to internal editing if no callback set
-                            this.editCharacter(characterId);
                         }
                         break;
                     case 'delete':
@@ -1045,597 +797,8 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
         }
     }
 
-    private setupEditorEventListeners(): void {
-        if (!this.container) return;
-
-        const nopeBtn = this.container.querySelector('#nope-character-btn');
-        if (nopeBtn) {
-            nopeBtn.addEventListener('click', () => {
-                // Use route-based navigation instead of internal view switching
-                if (this.onBackToCharacters) {
-                    this.onBackToCharacters(); // Triggers router.navigate('/characters')
-                } else {
-                    // Fallback to internal view switching
-                    this.currentView = 'list';
-                    this.render(this.container!);
-                }
-            });
-        }
-
-        const yepBtn = this.container.querySelector('#yep-character-btn');
-        if (yepBtn) {
-            yepBtn.addEventListener('click', () => {
-                if (this.characterSheet && this.selectedCharacter) {
-                    try {
-                        const updatedCharacter = this.characterSheet.getCharacter();
-                        const errors = this.characterSheet.validateCharacter();
-
-                        if (errors.length > 0) {
-                            this.showErrorMessage('Character validation failed:\n\n' + errors.join('\n'));
-                            return;
-                        }
-
-                        const index = this.characters.findIndex(c => c.id === this.selectedCharacter!.id);
-                        if (index >= 0) {
-                            this.characters[index] = updatedCharacter;
-                            this.saveCharactersToStorage();
-
-                            // Use route-based navigation instead of internal view switching
-                            if (this.onBackToCharacters) {
-                                this.onBackToCharacters(); // Triggers router.navigate('/characters')
-                            } else {
-                                // Fallback to internal view switching
-                                this.currentView = 'list';
-                                this.render(this.container!);
-                            }
-                        } else {
-                            throw new Error('Character not found in list');
-                        }
-                    } catch (error) {
-                        console.error('Failed to save character:', error);
-                        this.showErrorMessage('Failed to save character changes. Please try again.');
-                    }
-                }
-            });
-        }
-    }
 
     private applyStyles(): void {
-        if (!document.getElementById('character-manager-styles')) {
-            const styleSheet = document.createElement('style');
-            styleSheet.id = 'character-manager-styles';
-            styleSheet.textContent = `
-                @import url('https://fonts.googleapis.com/css2?family=Rye&family=Sancreek&family=Creepster&display=swap');
-
-                /* Screen reader only content */
-                .sr-only {
-                    position: absolute;
-                    width: 1px;
-                    height: 1px;
-                    padding: 0;
-                    margin: -1px;
-                    overflow: hidden;
-                    clip: rect(0, 0, 0, 0);
-                    white-space: nowrap;
-                    border: 0;
-                }
-
-                /* Focus styles for accessibility */
-                .character-item:focus,
-                .character-card-content:focus,
-                button:focus,
-                input:focus {
-                    outline: 3px solid #ff6347;
-                    outline-offset: 2px;
-                    box-shadow: 0 0 0 2px white, 0 0 0 5px #ff6347;
-                }
-
-                /* Error notification styles */
-                .error-notification {
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 1000;
-                    background: linear-gradient(45deg, #dc143c, #b22222);
-                    border: 3px solid #8b0000;
-                    border-radius: 8px;
-                    box-shadow:
-                        0 4px 20px rgba(0,0,0,0.5),
-                        inset 0 0 10px rgba(255,255,255,0.1);
-                    animation: errorSlideIn 0.3s ease-out;
-                    max-width: 400px;
-                    font-family: 'Rye', serif;
-                }
-
-                .error-content {
-                    display: flex;
-                    align-items: center;
-                    padding: 15px;
-                    color: white;
-                    gap: 10px;
-                }
-
-                .error-icon {
-                    font-size: 1.5rem;
-                    flex-shrink: 0;
-                }
-
-                .error-text {
-                    flex: 1;
-                    font-size: 0.9rem;
-                    line-height: 1.3;
-                }
-
-                .error-close {
-                    background: none;
-                    border: none;
-                    color: white;
-                    font-size: 1.2rem;
-                    cursor: pointer;
-                    padding: 5px;
-                    border-radius: 50%;
-                    width: 24px;
-                    height: 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: background-color 0.2s;
-                }
-
-                .error-close:hover {
-                    background: rgba(255,255,255,0.2);
-                }
-
-                @keyframes errorSlideIn {
-                    from {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-
-                .character-manager-container {
-                    font-family: 'Rye', 'Times New Roman', serif;
-                    background:
-                        radial-gradient(circle at center, rgba(255,248,220,0.1) 0%, transparent 50%),
-                        linear-gradient(45deg, #8b4513 0%, #deb887 25%, #f4a460 50%, #deb887 75%, #8b4513 100%);
-                    min-height: 100vh;
-                    padding: 20px;
-                    color: #3d2914;
-                    position: relative;
-                }
-
-                .character-manager-container::before {
-                    content: '';
-                    position: absolute;
-                    top: 10px;
-                    left: 10px;
-                    right: 10px;
-                    bottom: 10px;
-                    border: 4px solid #8b4513;
-                    pointer-events: none;
-                    border-image: repeating-linear-gradient(
-                        45deg,
-                        #8b4513,
-                        #8b4513 10px,
-                        #654321 10px,
-                        #654321 20px
-                    ) 4;
-                }
-
-                .character-manager-container::after {
-                    content: '🤠';
-                    position: absolute;
-                    top: 20px;
-                    right: 30px;
-                    font-size: 2rem;
-                    z-index: 1;
-                    opacity: 0.6;
-                    pointer-events: none;
-                }
-
-                .character-manager-header {
-                    text-align: center;
-                    margin-bottom: 40px;
-                    padding: 20px;
-                    background: rgba(222,184,135,0.9);
-                    border: 3px solid #8b4513;
-                    border-radius: 8px;
-                    position: relative;
-                    z-index: 10;
-                }
-
-                .character-manager-header h1 {
-                    font-family: 'Sancreek', serif;
-                    font-size: 3rem;
-                    color: #8b4513;
-                    margin: 0 0 10px 0;
-                    text-shadow:
-                        2px 2px 0px #000,
-                        3px 3px 0px #654321,
-                        4px 4px 0px #4a2c1a;
-                }
-
-                .header-description {
-                    color: #654321;
-                    font-style: italic;
-                    margin: 0;
-                    font-size: 1.1rem;
-                }
-
-                .editor-actions {
-                    margin-top: 20px;
-                    display: flex;
-                    justify-content: space-between;
-                    gap: 15px;
-                    max-width: 400px;
-                    margin-left: auto;
-                    margin-right: auto;
-                }
-
-                .character-cards {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 15px;
-                    margin-bottom: 40px;
-                    position: relative;
-                    z-index: 10;
-                }
-
-                .character-item {
-                    background:
-                        repeating-linear-gradient(
-                            90deg,
-                            rgba(222,184,135,0.1) 0px,
-                            transparent 1px,
-                            transparent 3px,
-                            rgba(222,184,135,0.1) 4px
-                        ),
-                        radial-gradient(ellipse at top left, rgba(255,248,220,0.9) 0%, transparent 50%),
-                        radial-gradient(ellipse at top right, rgba(222,184,135,0.7) 0%, transparent 50%),
-                        radial-gradient(ellipse at bottom left, rgba(210,180,140,0.6) 0%, transparent 50%),
-                        rgba(255,248,220,0.95);
-                    border: 3px solid #cd853f;
-                    border-radius: 8px;
-                    padding: 0;
-                    transition: all 0.3s ease;
-                    position: relative;
-                    box-shadow:
-                        inset 0 0 20px rgba(222,184,135,0.5),
-                        inset 2px 2px 10px rgba(139,69,19,0.1),
-                        0 0 15px rgba(0,0,0,0.3),
-                        0 3px 6px rgba(0,0,0,0.15);
-                    display: flex;
-                    align-items: stretch;
-                    cursor: pointer;
-                    overflow: hidden;
-                }
-
-                .character-item:hover {
-                    background: rgba(255,248,220,1);
-                    border-color: #8b4513;
-                    transform: translateY(-2px);
-                    box-shadow:
-                        inset 0 0 25px rgba(222,184,135,0.7),
-                        0 5px 20px rgba(0,0,0,0.4);
-                }
-
-                .character-card-content {
-                    flex: 1;
-                    padding: 20px;
-                    cursor: pointer;
-                }
-
-                .character-name h3 {
-                    font-family: 'Sancreek', serif;
-                    color: #8b4513;
-                    margin: 0 0 15px 0;
-                    font-size: 1.5rem;
-                    background: rgba(222,184,135,0.7);
-                    border: 2px solid #8b4513;
-                    text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    display: inline-block;
-                }
-
-                .character-stats {
-                    color: #654321;
-                    font-size: 0.9rem;
-                    line-height: 1.4;
-                }
-
-                .primary-stats {
-                    font-weight: bold;
-                    margin-bottom: 8px;
-                    color: #8b4513;
-                }
-
-                .attributes {
-                    font-size: 0.85rem;
-                }
-
-                .character-delete {
-                    display: flex;
-                    align-items: center;
-                    padding: 20px;
-                    border-left: 2px solid #cd853f;
-                }
-
-                .delete-btn {
-                    background: none;
-                    border: none;
-                    font-size: 1.5rem;
-                    cursor: pointer;
-                    padding: 10px;
-                    border-radius: 50%;
-                    transition: all 0.2s ease;
-                    color: #8b4513;
-                }
-
-                .delete-btn:hover {
-                    background: rgba(255,0,0,0.1);
-                    transform: scale(1.1);
-                }
-
-                .nope-btn,
-                .yep-btn,
-                .new-character-button,
-                .back-to-menu-button {
-                    font-family: 'Rye', serif;
-                    padding: 15px 30px;
-                    border-radius: 4px;
-                    border: 4px solid;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    font-weight: bold;
-                    font-size: 1.2rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.1em;
-                    position: relative;
-                    overflow: hidden;
-                    transform: perspective(150px) rotateX(-3deg);
-                    text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
-                }
-
-                .nope-btn {
-                    background: linear-gradient(45deg, #dc143c, #ff6347);
-                    border-color: #8b0000;
-                    color: white;
-                }
-
-                .nope-btn:hover {
-                    background: linear-gradient(45deg, #ff6347, #ff4500);
-                    transform: perspective(150px) rotateX(-3deg) translateY(-2px);
-                    box-shadow:
-                        inset 0 0 20px rgba(255,255,255,0.3),
-                        3px 3px 0px #8b0000,
-                        6px 6px 0px #4a0000,
-                        10px 10px 20px rgba(0,0,0,0.5);
-                }
-
-                .yep-btn {
-                    background: linear-gradient(45deg, #228b22, #32cd32);
-                    border-color: #006400;
-                    color: white;
-                }
-
-                .yep-btn:hover {
-                    background: linear-gradient(45deg, #32cd32, #00ff00);
-                    transform: perspective(150px) rotateX(-3deg) translateY(-2px);
-                    box-shadow:
-                        inset 0 0 20px rgba(255,255,255,0.3),
-                        3px 3px 0px #006400,
-                        6px 6px 0px #003300,
-                        10px 10px 20px rgba(0,0,0,0.5);
-                }
-
-                .new-character-button {
-                    background: linear-gradient(45deg, #deb887, #f4a460);
-                    border-color: #8b4513;
-                    color: #3d2914;
-                }
-
-                .new-character-button:hover {
-                    background: linear-gradient(45deg, #f4a460, #ffd700);
-                    transform: perspective(150px) rotateX(-3deg) translateY(-2px);
-                    box-shadow:
-                        inset 0 0 20px rgba(255,248,220,0.7),
-                        3px 3px 0px #654321,
-                        6px 6px 0px #4a2c1a,
-                        10px 10px 20px rgba(0,0,0,0.5),
-                        0 0 25px rgba(255,215,0,0.4);
-                }
-
-                .back-to-menu-button {
-                    background: linear-gradient(45deg, #696969, #808080);
-                    border-color: #2f4f4f;
-                    color: white;
-                }
-
-                .back-to-menu-button:hover {
-                    background: linear-gradient(45deg, #808080, #a9a9a9);
-                    transform: perspective(150px) rotateX(-3deg) translateY(-2px);
-                    box-shadow:
-                        inset 0 0 20px rgba(255,255,255,0.3),
-                        3px 3px 0px #2f4f4f,
-                        6px 6px 0px #1f2f2f,
-                        10px 10px 20px rgba(0,0,0,0.5);
-                }
-
-                .character-manager-actions {
-                    text-align: center;
-                    margin-bottom: 20px;
-                    position: relative;
-                    z-index: 10;
-                }
-
-                .bottom-actions {
-                    text-align: center;
-                    position: relative;
-                    z-index: 10;
-                }
-
-                .empty-state {
-                    text-align: center;
-                    padding: 60px 20px;
-                    background: rgba(255,248,220,0.7);
-                    border: 2px dashed #cd853f;
-                    border-radius: 8px;
-                    margin-bottom: 40px;
-                    position: relative;
-                    z-index: 10;
-                }
-
-                .empty-state p {
-                    color: #8b4513;
-                    font-size: 1.2rem;
-                    margin: 0 0 10px 0;
-                }
-
-                .empty-subtitle {
-                    color: #654321;
-                    font-style: italic;
-                    font-size: 1rem !important;
-                }
-
-                .lazy-load-more {
-                    text-align: center;
-                    padding: 20px;
-                    background: rgba(255,248,220,0.5);
-                    border: 2px dashed #cd853f;
-                    border-radius: 8px;
-                    margin: 20px 0;
-                }
-
-                .load-more-btn {
-                    font-family: 'Rye', serif;
-                    background: linear-gradient(45deg, #deb887, #cd853f);
-                    border: 2px solid #8b4513;
-                    color: #3d2914;
-                    padding: 12px 25px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    font-weight: bold;
-                    font-size: 1rem;
-                }
-
-                .load-more-btn:hover {
-                    background: linear-gradient(45deg, #f4a460, #daa520);
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                }
-
-                #character-sheet-container {
-                    position: relative;
-                    z-index: 10;
-                }
-
-                @media (max-width: 768px) {
-                    .character-manager-container {
-                        padding: 10px;
-                        margin: 0;
-                    }
-
-                    .character-manager-container::after {
-                        right: 15px;
-                        top: 15px;
-                        font-size: 1.5rem;
-                    }
-
-                    .character-manager-header h1 {
-                        font-size: 2rem;
-                    }
-
-                    .editor-actions {
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 10px;
-                    }
-
-                    .character-item {
-                        flex-direction: column;
-                        margin-bottom: 10px;
-                    }
-
-                    .character-card-content {
-                        padding: 15px;
-                    }
-
-                    .character-name h3 {
-                        font-size: 1.3rem;
-                    }
-
-                    .character-stats {
-                        font-size: 0.8rem;
-                    }
-
-                    .primary-stats {
-                        font-size: 0.85rem;
-                    }
-
-                    .attributes {
-                        font-size: 0.75rem;
-                        line-height: 1.3;
-                    }
-
-                    .character-delete {
-                        border-left: none;
-                        border-top: 2px solid #cd853f;
-                        justify-content: center;
-                        padding: 15px;
-                    }
-
-                    .delete-btn {
-                        font-size: 1.3rem;
-                        padding: 8px;
-                    }
-
-                    .nope-btn, .yep-btn, .new-character-button, .back-to-menu-button {
-                        padding: 12px 25px;
-                        font-size: 1rem;
-                        width: 100%;
-                        max-width: 300px;
-                    }
-
-                    .empty-state {
-                        padding: 40px 15px;
-                    }
-
-                    .character-manager-header {
-                        padding: 15px;
-                        margin-bottom: 20px;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    .character-manager-container {
-                        padding: 5px;
-                    }
-
-                    .character-manager-header h1 {
-                        font-size: 1.8rem;
-                    }
-
-                    .character-name h3 {
-                        font-size: 1.2rem;
-                    }
-
-                    .primary-stats, .attributes {
-                        word-break: break-word;
-                    }
-
-                    .nope-btn, .yep-btn, .new-character-button, .back-to-menu-button {
-                        font-size: 0.9rem;
-                        padding: 10px 20px;
-                    }
-                }
-            `;
-            document.head.appendChild(styleSheet);
-        }
+        // Styles now loaded via CSS import - no longer embedded in TypeScript
     }
 }

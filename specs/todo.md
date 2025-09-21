@@ -145,6 +145,8 @@
 - [x] ~~available XP should be dynamically computed~~ ✅ **RESOLVED** - XP is dynamically computed from rank with proper formulas
 - [x] ~~**available XP should be dynamically computed, i.e. a function, not a variable and not stored**~~ ✅ **RESOLVED** - Refactored architecture: removed stored `currentXP`, implemented `CharacterCalculations.calculateAvailableXP()` function that computes available XP as totalXP - spentXP, ensuring single source of truth and data integrity
 - [x] ~~**total XP should be dynamic and based on rank, not stored**~~ ✅ **RESOLVED** - Refactored architecture: removed stored `totalXP`, made rank the primary stat with `CharacterCalculations.calculateTotalXPForRank(rank)` computing total XP dynamically, ensuring data consistency and eliminating redundant storage
+- [x] ~~**the project should be MIT-licensed**~~ ✅ **RESOLVED** - Added MIT LICENSE file and updated package.json license field
+- [x] ~~**check the attribute organization against the spec in ui.characters.md**~~ ✅ **RESOLVED** - Updated attribute display to organize by category and cost order: Physical (DEX(4), STR(3), CON(1)), Social (CHA(4), WIS(3), GRI(1)), Mental (INT(4), PER(4))
 
 ### 💡 Future Enhancements
 *Ideas for post-MVP features and improvements*

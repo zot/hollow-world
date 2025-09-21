@@ -555,5 +555,34 @@ describe('CharacterSheet', () => {
             const availableChips = CharacterCalculations.calculateAvailableAttributeChips(testChar);
             expect(availableChips).toBe(12);
         });
+
+        it('should calculate attribute chips correctly with negative DEX', () => {
+            // Test case from spec: DEX -2 and all other attributes at 0
+            const testChar: ICharacter = {
+                ...character,
+                rank: 2,
+                attributes: {
+                    [AttributeType.DEX]: -2, // Costs -8 attribute chips (-2 * 4)
+                    [AttributeType.STR]: 0,  // Costs 0 attribute chips
+                    [AttributeType.CON]: 0,  // Costs 0 attribute chips
+                    [AttributeType.CHA]: 0,  // Costs 0 attribute chips
+                    [AttributeType.WIS]: 0,  // Costs 0 attribute chips
+                    [AttributeType.GRI]: 0,  // Costs 0 attribute chips
+                    [AttributeType.INT]: 0,  // Costs 0 attribute chips
+                    [AttributeType.PER]: 0   // Costs 0 attribute chips
+                }
+            };
+
+            // Total chips for rank 2: 16 + (2-1) = 17
+            // Total attribute cost: -8 (from DEX -2)
+            // Available chips: 17 - (-8) = 25
+            // This should be 8 higher than rank's chip total (17 + 8 = 25)
+
+            const availableChips = CharacterCalculations.calculateAvailableAttributeChips(testChar);
+            const rankChipTotal = CharacterCalculations.calculateTotalAttributeChipsForRank(testChar.rank);
+
+            expect(availableChips).toBe(25);
+            expect(availableChips).toBe(rankChipTotal + 8); // 8 higher than rank total
+        });
     });
 });

@@ -12,6 +12,7 @@ import {
     IHollowData
 } from './types.js';
 import { CharacterUpdater, CharacterValidation, CharacterCalculations } from './CharacterUtils.js';
+import '../styles/CharacterSheet.css';
 
 // Interface for UI components (Interface Segregation Principle)
 export interface ICharacterSheetComponent {
@@ -242,8 +243,12 @@ export class CharacterSheet implements ICharacterSheet {
                 <p class="character-description">${this.character.description}</p>
                 <div class="character-stats">
                     <span class="rank">Rank ${this.character.rank}</span>
-                    <span class="xp">XP: ${CharacterCalculations.calculateAvailableXP(this.character)}/${CharacterCalculations.calculateTotalXPForRank(this.character.rank)}</span>
                     <span class="damage-capacity">Damage Capacity: ${this.character.damageCapacity}</span>
+                    <span class="dust">Dust: ${this.character.hollow.dust}</span>
+                </div>
+                <div class="resource-displays">
+                    <span class="available-xp">Available XP (${CharacterCalculations.calculateTotalXPForRank(this.character.rank)}): ${CharacterCalculations.calculateAvailableXP(this.character)}</span>
+                    <span class="available-chips">Attribute Chips (${CharacterCalculations.calculateTotalAttributeChipsForRank(this.character.rank)}): ${CharacterCalculations.calculateAvailableAttributeChips(this.character)}</span>
                 </div>
             `;
         }
@@ -251,31 +256,161 @@ export class CharacterSheet implements ICharacterSheet {
         // Attributes placeholder
         const attributesEl = this.container.querySelector('#character-attributes');
         if (attributesEl) {
+            // Organize attributes by category and cost order per spec
+            const physicalAttrs = [
+                { type: AttributeType.DEX, cost: 4 },
+                { type: AttributeType.STR, cost: 3 },
+                { type: AttributeType.CON, cost: 1 }
+            ];
+            const socialAttrs = [
+                { type: AttributeType.CHA, cost: 4 },
+                { type: AttributeType.WIS, cost: 3 },
+                { type: AttributeType.GRI, cost: 1 }
+            ];
+            const mentalAttrs = [
+                { type: AttributeType.INT, cost: 4 },
+                { type: AttributeType.PER, cost: 4 }
+            ];
+
             attributesEl.innerHTML = `
                 <h2>Attributes</h2>
-                <div class="attributes-grid">
-                    ${Object.entries(this.character.attributes).map(([attr, value]) => `
-                        <div class="attribute-item">
-                            <label>${attr}</label>
-                            <input type="number" value="${value}"
-                                   min="-2" max="15"
-                                   data-attribute="${attr}"
-                                   ${this.config.readOnly ? 'disabled' : ''}>
-                        </div>
-                    `).join('')}
+
+                <div class="attribute-category">
+                    <h3>💪 Physical</h3>
+                    <div class="attribute-category-row">
+                        ${physicalAttrs.map(({ type, cost }) => `
+                            <div class="attribute-editor-row" data-attribute="${type}">
+                                <div class="attribute-info">
+                                    <span class="attribute-name">${type}</span>
+                                    <span class="attribute-cost">(${cost})</span>
+                                </div>
+                                <div class="attribute-controls">
+                                    <span class="attribute-value" id="attr-${type}">${this.character.attributes[type]}</span>
+                                    <div class="attribute-spinner">
+                                        <button class="attr-btn inc-btn" data-action="inc" data-attribute="${type}" data-cost="${cost}"
+                                                ${this.config.readOnly ? 'disabled' : ''}>▲</button>
+                                        <button class="attr-btn dec-btn" data-action="dec" data-attribute="${type}" data-cost="${cost}"
+                                                ${this.config.readOnly ? 'disabled' : ''}>▼</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="attribute-category">
+                    <h3>🗣️ Social</h3>
+                    <div class="attribute-category-row">
+                        ${socialAttrs.map(({ type, cost }) => `
+                            <div class="attribute-editor-row" data-attribute="${type}">
+                                <div class="attribute-info">
+                                    <span class="attribute-name">${type}</span>
+                                    <span class="attribute-cost">(${cost})</span>
+                                </div>
+                                <div class="attribute-controls">
+                                    <span class="attribute-value" id="attr-${type}">${this.character.attributes[type]}</span>
+                                    <div class="attribute-spinner">
+                                        <button class="attr-btn inc-btn" data-action="inc" data-attribute="${type}" data-cost="${cost}"
+                                                ${this.config.readOnly ? 'disabled' : ''}>▲</button>
+                                        <button class="attr-btn dec-btn" data-action="dec" data-attribute="${type}" data-cost="${cost}"
+                                                ${this.config.readOnly ? 'disabled' : ''}>▼</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="attribute-category">
+                    <h3>🧠 Mental</h3>
+                    <div class="attribute-category-row">
+                        ${mentalAttrs.map(({ type, cost }) => `
+                            <div class="attribute-editor-row" data-attribute="${type}">
+                                <div class="attribute-info">
+                                    <span class="attribute-name">${type}</span>
+                                    <span class="attribute-cost">(${cost})</span>
+                                </div>
+                                <div class="attribute-controls">
+                                    <span class="attribute-value" id="attr-${type}">${this.character.attributes[type]}</span>
+                                    <div class="attribute-spinner">
+                                        <button class="attr-btn inc-btn" data-action="inc" data-attribute="${type}" data-cost="${cost}"
+                                                ${this.config.readOnly ? 'disabled' : ''}>▲</button>
+                                        <button class="attr-btn dec-btn" data-action="dec" data-attribute="${type}" data-cost="${cost}"
+                                                ${this.config.readOnly ? 'disabled' : ''}>▼</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             `;
 
-            // Add attribute change listeners
+            // Add increment/decrement button listeners per specs
             if (!this.config.readOnly) {
-                attributesEl.querySelectorAll('input[data-attribute]').forEach(input => {
-                    input.addEventListener('change', (e) => {
-                        const target = e.target as HTMLInputElement;
+                attributesEl.querySelectorAll('.attr-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const target = e.target as HTMLButtonElement;
+                        const action = target.dataset.action;
                         const attribute = target.dataset.attribute as AttributeType;
-                        const value = parseInt(target.value);
-                        this.callbacks.onAttributeChange(attribute, value);
+                        const cost = parseInt(target.dataset.cost || '1');
+
+                        if (action === 'inc') {
+                            this.incrementAttribute(attribute, cost);
+                        } else if (action === 'dec') {
+                            this.decrementAttribute(attribute, cost);
+                        }
                     });
                 });
+
+                // Add mouse wheel support per specs - make the whole attribute row responsive
+                attributesEl.querySelectorAll('.attribute-editor-row').forEach(attributeRow => {
+                    attributeRow.addEventListener('wheel', (e: Event) => {
+                        const wheelEvent = e as WheelEvent;
+
+                        // Prevent page scroll - must be called before any other logic
+                        wheelEvent.preventDefault();
+                        wheelEvent.stopPropagation();
+
+                        console.log('Mouse wheel on attribute spinner:', wheelEvent.deltaY);
+
+                        const target = e.target as HTMLElement;
+                        const attributeRowElement = attributeRow as HTMLElement;
+
+                        const attribute = attributeRowElement.dataset.attribute as AttributeType;
+                        const costElement = attributeRowElement.querySelector('.attribute-cost');
+                        const costText = costElement?.textContent || '(1)';
+                        const cost = parseInt(costText.match(/\((\d+)\)/)?.[1] || '1');
+
+                        console.log('Wheel event - Attribute:', attribute, 'Cost:', cost, 'Delta:', wheelEvent.deltaY);
+
+                        // Determine direction (negative deltaY = wheel up = increment)
+                        if (wheelEvent.deltaY < 0) {
+                            console.log('Incrementing attribute');
+                            this.incrementAttribute(attribute, cost);
+                        } else {
+                            console.log('Decrementing attribute');
+                            this.decrementAttribute(attribute, cost);
+                        }
+                    }, { passive: false }); // Explicitly set passive to false for preventDefault to work
+
+                    // Add visual feedback for mouse wheel interaction on whole row
+                    attributeRow.addEventListener('mouseenter', (e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.cursor = 'ns-resize';
+                        target.title = 'Use mouse wheel to increment/decrement';
+                        target.style.backgroundColor = 'rgba(255,248,220,1)'; // Highlight on hover
+                    });
+
+                    attributeRow.addEventListener('mouseleave', (e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.cursor = '';
+                        target.title = '';
+                        target.style.backgroundColor = ''; // Remove highlight
+                    });
+                });
+
+                // Update button states based on current resources
+                this.updateAttributeButtonStates(attributesEl);
             }
         }
 
@@ -498,443 +633,160 @@ export class CharacterSheet implements ICharacterSheet {
         this.equipmentComponent = null;
     }
 
-    private applyStyles(): void {
-        if (!document.getElementById('character-sheet-styles')) {
-            const styleSheet = document.createElement('style');
-            styleSheet.id = 'character-sheet-styles';
-            styleSheet.textContent = `
-                @import url('https://fonts.googleapis.com/css2?family=Sancreek&family=Rye&family=Creepster&display=swap');
+    private incrementAttribute(attribute: AttributeType, cost: number): void {
+        const currentValue = this.character.attributes[attribute];
 
-                .character-sheet-container {
-                    font-family: 'Rye', 'Times New Roman', serif;
-                    background:
-                        repeating-linear-gradient(
-                            90deg,
-                            rgba(222,184,135,0.1) 0px,
-                            transparent 1px,
-                            transparent 3px,
-                            rgba(222,184,135,0.1) 4px
-                        ),
-                        radial-gradient(circle at center, rgba(255,248,220,0.3) 0%, transparent 70%),
-                        linear-gradient(45deg, #f4e4bc, #e6d7b7);
-                    border: 4px solid #8b4513;
-                    border-radius: 8px;
-                    padding: 20px;
-                    margin: 20px;
-                    box-shadow:
-                        inset 0 0 20px rgba(139,69,19,0.1),
-                        inset 2px 2px 10px rgba(139,69,19,0.05),
-                        0 0 30px rgba(0,0,0,0.3),
-                        0 5px 15px rgba(0,0,0,0.2);
-                    position: relative;
-                    color: #3d2914;
-                }
-
-                .character-sheet-container::before {
-                    content: '';
-                    position: absolute;
-                    top: 10px;
-                    left: 10px;
-                    right: 10px;
-                    bottom: 10px;
-                    border: 2px solid rgba(139,69,19,0.3);
-                    border-radius: 4px;
-                    pointer-events: none;
-                }
-
-                .character-header {
-                    text-align: center;
-                    margin-bottom: 30px;
-                    padding: 20px;
-                    background: rgba(222,184,135,0.5);
-                    border: 2px solid #cd853f;
-                    border-radius: 4px;
-                }
-
-                .character-header h1 {
-                    font-family: 'Sancreek', 'Rye', serif;
-                    font-size: 2.5rem;
-                    color: #8b4513;
-                    margin: 0 0 10px 0;
-                    text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
-                }
-
-                .character-description {
-                    font-style: italic;
-                    color: #654321;
-                    margin: 10px 0;
-                }
-
-                .character-stats {
-                    display: flex;
-                    justify-content: center;
-                    gap: 20px;
-                    margin-top: 15px;
-                }
-
-                .character-stats span {
-                    background: rgba(139,69,19,0.1);
-                    padding: 5px 10px;
-                    border-radius: 4px;
-                    border: 1px solid #cd853f;
-                    font-weight: bold;
-                }
-
-                .character-main-content {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 30px;
-                    margin-bottom: 30px;
-                }
-
-                .character-left-column,
-                .character-right-column {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-                }
-
-                .character-attributes,
-                .character-hollow,
-                .character-skills,
-                .character-benefits,
-                .character-equipment {
-                    background: rgba(255,248,220,0.7);
-                    border: 2px solid #deb887;
-                    border-radius: 4px;
-                    padding: 20px;
-                    position: relative;
-                }
-
-                .character-attributes h2,
-                .character-hollow h2,
-                .character-skills h2,
-                .character-benefits h2,
-                .character-equipment h2 {
-                    font-family: 'Sancreek', serif;
-                    color: #8b4513;
-                    margin: 0 0 15px 0;
-                    text-align: center;
-                    font-size: 1.8rem;
-                }
-
-                .attributes-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 10px;
-                }
-
-                .attribute-item {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 8px;
-                    background: rgba(222,184,135,0.3);
-                    border: 1px solid #cd853f;
-                    border-radius: 4px;
-                }
-
-                .attribute-item label {
-                    font-weight: bold;
-                    color: #654321;
-                }
-
-                .attribute-item input {
-                    width: 50px;
-                    padding: 4px;
-                    border: 1px solid #8b4513;
-                    border-radius: 2px;
-                    background: rgba(255,248,220,0.9);
-                    text-align: center;
-                    font-family: inherit;
-                }
-
-                .hollow-stats {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 10px;
-                }
-
-                .hollow-stats > div {
-                    padding: 8px;
-                    background: rgba(222,184,135,0.3);
-                    border: 1px solid #cd853f;
-                    border-radius: 4px;
-                    text-align: center;
-                }
-
-                .warning {
-                    background: rgba(255,69,0,0.2) !important;
-                    border-color: #ff4500 !important;
-                    color: #ff4500;
-                    font-weight: bold;
-                }
-
-                .skills-list,
-                .benefits-drawbacks,
-                .equipment-list {
-                    max-height: 300px;
-                    overflow-y: auto;
-                }
-
-                .field-item,
-                .skill-item,
-                .benefit-item,
-                .drawback-item,
-                .item-entry,
-                .companion-entry {
-                    padding: 10px;
-                    margin-bottom: 8px;
-                    background: rgba(222,184,135,0.2);
-                    border: 1px solid #cd853f;
-                    border-radius: 4px;
-                }
-
-                .benefit-item {
-                    border-left: 4px solid #228b22;
-                }
-
-                .drawback-item {
-                    border-left: 4px solid #dc143c;
-                }
-
-                .condition {
-                    font-style: italic;
-                    color: #666;
-                    margin: 5px 0;
-                    font-size: 0.9rem;
-                }
-
-                .character-actions {
-                    text-align: center;
-                    border-top: 2px solid #cd853f;
-                    padding-top: 20px;
-                    display: flex;
-                    justify-content: center;
-                    gap: 15px;
-                }
-
-                .export-btn,
-                .import-btn,
-                .validate-btn {
-                    font-family: 'Rye', serif;
-                    background: linear-gradient(45deg, #deb887, #cd853f);
-                    border: 2px solid #8b4513;
-                    color: #3d2914;
-                    padding: 10px 20px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    font-weight: bold;
-                }
-
-                .export-btn:hover,
-                .import-btn:hover,
-                .validate-btn:hover {
-                    background: linear-gradient(45deg, #f4a460, #daa520);
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                }
-
-                /* Enhanced Attribute Editor Styling from main.updated.ts */
-                .attribute-editor-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    background: rgba(255,248,220,0.9);
-                    border: 2px solid #cd853f;
-                    border-radius: 6px;
-                    padding: 12px 16px;
-                    transition: all 0.2s ease;
-                    margin-bottom: 8px;
-                }
-
-                .attribute-editor-row:hover {
-                    background: rgba(255,248,220,1);
-                    border-color: #8b4513;
-                    transform: translateY(-1px);
-                    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-                }
-
-                .attribute-info {
-                    display: flex;
-                    align-items: baseline;
-                    gap: 8px;
-                }
-
-                .attribute-name {
-                    font-family: 'Rye', serif;
-                    font-weight: bold;
-                    font-size: 1rem;
-                    color: #8b4513;
-                }
-
-                .attribute-cost {
-                    font-size: 0.85rem;
-                    color: #654321;
-                    font-style: italic;
-                }
-
-                .attribute-controls {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-
-                .attr-btn {
-                    width: 32px;
-                    height: 32px;
-                    border: 2px solid #8b4513;
-                    background: linear-gradient(45deg, #deb887, #f4a460);
-                    color: #654321;
-                    font-size: 1.2rem;
-                    font-weight: bold;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .attr-btn:hover {
-                    background: linear-gradient(45deg, #f4a460, #ffd700);
-                    transform: scale(1.1);
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-                }
-
-                .attr-btn:active {
-                    transform: scale(0.95);
-                }
-
-                .attr-btn.disabled,
-                .attr-btn:disabled {
-                    background: linear-gradient(45deg, #999, #bbb);
-                    color: #666;
-                    cursor: not-allowed;
-                    opacity: 0.6;
-                    transform: none;
-                }
-
-                .attr-btn.disabled:hover,
-                .attr-btn:disabled:hover {
-                    background: linear-gradient(45deg, #999, #bbb);
-                    transform: none;
-                    box-shadow: none;
-                }
-
-                .attribute-value {
-                    font-family: 'Rye', serif;
-                    font-weight: bold;
-                    font-size: 1.2rem;
-                    color: #654321;
-                    min-width: 30px;
-                    text-align: center;
-                    background: rgba(139,69,19,0.1);
-                    padding: 6px 10px;
-                    border: 1px solid #cd853f;
-                    border-radius: 3px;
-                }
-
-                @media (max-width: 768px) {
-                    .character-sheet-container {
-                        margin: 10px;
-                        padding: 15px;
-                    }
-
-                    .character-main-content {
-                        grid-template-columns: 1fr;
-                        gap: 20px;
-                    }
-
-                    .attributes-grid {
-                        grid-template-columns: 1fr;
-                        gap: 8px;
-                    }
-
-                    .character-stats {
-                        flex-direction: column;
-                        gap: 8px;
-                        align-items: stretch;
-                    }
-
-                    .character-stats span {
-                        text-align: center;
-                        padding: 8px;
-                    }
-
-                    .character-actions {
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 10px;
-                    }
-
-                    .export-btn, .import-btn, .validate-btn {
-                        width: 100%;
-                        max-width: 250px;
-                        padding: 12px 20px;
-                    }
-
-                    .character-header h1 {
-                        font-size: 2rem;
-                    }
-
-                    .character-attributes h2,
-                    .character-hollow h2,
-                    .character-skills h2,
-                    .character-benefits h2,
-                    .character-equipment h2 {
-                        font-size: 1.5rem;
-                    }
-
-                    .hollow-stats {
-                        grid-template-columns: 1fr;
-                        gap: 8px;
-                    }
-
-                    .skills-list,
-                    .benefits-drawbacks,
-                    .equipment-list {
-                        max-height: 250px;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    .character-sheet-container {
-                        margin: 5px;
-                        padding: 10px;
-                    }
-
-                    .character-header h1 {
-                        font-size: 1.8rem;
-                    }
-
-                    .character-attributes h2,
-                    .character-hollow h2,
-                    .character-skills h2,
-                    .character-benefits h2,
-                    .character-equipment h2 {
-                        font-size: 1.3rem;
-                    }
-
-                    .export-btn, .import-btn, .validate-btn {
-                        font-size: 0.9rem;
-                        padding: 10px 15px;
-                    }
-
-                    .attribute-item {
-                        padding: 6px;
-                        font-size: 0.9rem;
-                    }
-
-                    .attribute-item input {
-                        width: 40px;
-                        padding: 3px;
-                        font-size: 0.9rem;
-                    }
-                }
-            `;
-            document.head.appendChild(styleSheet);
+        // Check attribute range maximum
+        if (currentValue >= 15) {
+            return; // Cannot increment above maximum
         }
+
+        // Check resource availability per spec: chips first, then XP
+        const availableChips = CharacterCalculations.calculateAvailableAttributeChips(this.character);
+        const availableXP = CharacterCalculations.calculateAvailableXP(this.character);
+
+        if (availableChips >= cost) {
+            // Use attribute chips (automatically tracked by total cost calculation)
+            this.character.attributes[attribute] = currentValue + 1;
+            console.log(`Incremented ${attribute} using ${cost} attribute chips`);
+        } else if (availableXP >= cost) {
+            // Use XP when no attribute chips left
+            this.character.attributes[attribute] = currentValue + 1;
+            console.log(`Incremented ${attribute} using ${cost} XP`);
+            // Note: XP spending is handled automatically by calculateAvailableXP()
+        } else {
+            console.warn(`Cannot increment ${attribute}: insufficient resources (chips: ${availableChips}, XP: ${availableXP}, cost: ${cost})`);
+            return;
+        }
+
+        // Update displayed available XP and available Attribute Chips per spec
+        this.updateDisplay();
+        console.log(`After increment - Available chips: ${CharacterCalculations.calculateAvailableAttributeChips(this.character)}, Available XP: ${CharacterCalculations.calculateAvailableXP(this.character)}`);
+    }
+
+    private decrementAttribute(attribute: AttributeType, cost: number): void {
+        const currentValue = this.character.attributes[attribute];
+
+        // Don't allow decrement if attribute would be out of range per spec
+        if (currentValue <= -2) {
+            console.warn(`Cannot decrement ${attribute}: already at minimum (-2)`);
+            return; // Cannot decrement below minimum
+        }
+
+        console.log(`Decrementing ${attribute} from ${currentValue} (cost: ${cost})`);
+
+        // Implement smart restoration logic per spec
+        const currentTotalCosts = CharacterCalculations.calculateTotalAttributeCosts(this.character.attributes);
+
+        // Decrease the attribute
+        this.character.attributes[attribute] = currentValue - 1;
+
+        // Calculate restoration logic per spec
+        const maxAttributeChipsForRank = CharacterCalculations.calculateTotalAttributeChipsForRank(this.character.rank);
+
+        if (currentTotalCosts > maxAttributeChipsForRank) {
+            // Some points go to XP (slop-over), some become available as chips
+            // This is handled automatically by our computed functions
+            console.log(`Decrement with slop-over: total costs ${currentTotalCosts} > max chips ${maxAttributeChipsForRank}`);
+        } else {
+            console.log(`Standard decrement: all ${cost} points restored to available chips`);
+        }
+
+        // Update available XP and Attribute Chips after decrement per spec
+        this.updateDisplay();
+        console.log(`After decrement - Available chips: ${CharacterCalculations.calculateAvailableAttributeChips(this.character)}, Available XP: ${CharacterCalculations.calculateAvailableXP(this.character)}`);
+    }
+
+    private updateDisplay(): void {
+        // Update all attribute value displays
+        Object.entries(this.character.attributes).forEach(([attrType, value]) => {
+            const element = document.getElementById(`attr-${attrType}`); // Use actual enum value, not uppercase
+            console.log(`Updating element attr-${attrType} with value ${value}`, element);
+            if (element) {
+                element.textContent = value.toString();
+                console.log(`Updated attr-${attrType} textContent to:`, element.textContent);
+            } else {
+                console.warn(`Element attr-${attrType} not found in DOM`);
+            }
+        });
+
+        // Update resource displays
+        this.updateResourceDisplays();
+
+        // Update button states
+        const attributesEl = this.container?.querySelector('#character-attributes');
+        if (attributesEl) {
+            this.updateAttributeButtonStates(attributesEl);
+        }
+    }
+
+    private updateResourceDisplays(): void {
+        const availableXPEl = this.container?.querySelector('.available-xp');
+        const availableChipsEl = this.container?.querySelector('.available-chips');
+
+        if (availableXPEl) {
+            const totalXP = CharacterCalculations.calculateTotalXPForRank(this.character.rank);
+            const spentXP = CharacterCalculations.calculateSpentXP(this.character);
+            const availableXP = totalXP - spentXP; // Don't clamp to 0 here to detect negatives
+
+            const newText = `Available XP (${totalXP}): ${availableXP}`;
+            availableXPEl.textContent = newText;
+
+            // Show negative XP in red per spec
+            if (availableXP < 0) {
+                availableXPEl.style.color = '#dc143c'; // Red for negative
+                availableXPEl.style.fontWeight = 'bold';
+                availableXPEl.title = 'Character has overspent XP budget!';
+                console.log(`XP OVERSPENT: ${newText} (showing in red)`);
+            } else {
+                availableXPEl.style.color = ''; // Reset to default
+                availableXPEl.style.fontWeight = '';
+                availableXPEl.title = '';
+                console.log(`Updated XP display: ${newText}`);
+            }
+        } else {
+            console.warn('Available XP display element not found');
+        }
+
+        if (availableChipsEl) {
+            const totalChips = CharacterCalculations.calculateTotalAttributeChipsForRank(this.character.rank);
+            const availableChips = CharacterCalculations.calculateAvailableAttributeChips(this.character);
+            const newText = `Attribute Chips (${totalChips}): ${availableChips}`;
+            availableChipsEl.textContent = newText;
+            console.log(`Updated Chips display: ${newText}`);
+        } else {
+            console.warn('Available Chips display element not found');
+        }
+    }
+
+    private updateAttributeButtonStates(attributesEl: Element): void {
+        attributesEl.querySelectorAll('.attr-btn').forEach(button => {
+            const target = button as HTMLButtonElement;
+            const action = target.dataset.action;
+            const attribute = target.dataset.attribute as AttributeType;
+            const cost = parseInt(target.dataset.cost || '1');
+            const currentValue = this.character.attributes[attribute];
+
+            if (action === 'inc') {
+                // Disable increment if at maximum OR insufficient resources
+                const atMaximum = currentValue >= 15;
+                const availableChips = CharacterCalculations.calculateAvailableAttributeChips(this.character);
+                const availableXP = CharacterCalculations.calculateAvailableXP(this.character);
+                const canAfford = (availableChips >= cost) || (availableXP >= cost);
+
+                const shouldDisable = atMaximum || !canAfford;
+                target.disabled = shouldDisable;
+                target.classList.toggle('disabled', shouldDisable);
+            } else if (action === 'dec') {
+                // Disable decrement if at minimum
+                const atMinimum = currentValue <= -2;
+                target.disabled = atMinimum;
+                target.classList.toggle('disabled', atMinimum);
+            }
+        });
+    }
+
+    private applyStyles(): void {
+        // Styles now loaded via CSS import - no longer embedded in TypeScript
     }
 }

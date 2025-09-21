@@ -26,4 +26,35 @@ The audio system will:
 - Gracefully handle missing files with fallbacks
 - Continue working even if audio fails to load
 
-Place the `western-adventure-cinematic-spaghetti-loop-385618.mp3` file in this directory to enable the full western ghosttown experience.
+## License info for included files:
+
+### western-adventure-cinematic-spaghetti-loop-385618.mp3
+- creator: Luis Humanoide
+- url: https://pixabay.com/music/adventure-cinematic-spaghetti-western-music-tales-from-the-west-207360/
+- license: Free for use under the Pixabay Content License
+```
+Luis Humanoide: Music composer and VFX creator. Donations are welcome, so I can make more content.
+
+If you use my content in your production, crediting it will be appreciated.
+
+About comissions: Comissions are closed.
+Contact:
+luishumanoide@gmail.com
+```
+### western-adventure-cinematic-spaghetti-loop-385618.mp3
+- creator: Sonican
+- url: https://pixabay.com/music/adventure-western-adventure-cinematic-spaghetti-loop-385618/
+- license: Free for use under the Pixabay Content License
+```
+Donate to keep the flow of Music - Click the 'Donate' button – It's quick, easy, and secure.
+Be kind and Show your Support ✔
+Thank You!
+```
+
+### single-gunshot-54-40780.mp3
+- creator: morganpurkis (Freesound)
+- url: https://pixabay.com/sound-effects/single-gunshot-54-40780/
+- license: Free for use under the Pixabay Content License
+```
+Gunshot, War, Rifle sound effect. Free for use.
+```

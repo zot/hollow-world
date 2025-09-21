@@ -1,18 +1,19 @@
 // Updated unit tests for SplashScreen with Characters button following SOLID principles
 
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SplashScreen, ISplashScreenConfig } from './SplashScreen.js';
 
 // Mock the AudioManager
 const mockAudioManager = {
-    playRandomGunshot: jest.fn().mockResolvedValue(undefined),
-    toggleMusic: jest.fn().mockResolvedValue(undefined),
-    isMusicPlaying: jest.fn().mockReturnValue(false)
+    playRandomGunshot: vi.fn().mockResolvedValue(undefined),
+    toggleMusic: vi.fn().mockResolvedValue(undefined),
+    isMusicPlaying: vi.fn().mockReturnValue(false)
 };
 
 // Mock the NetworkProvider
 const mockNetworkProvider = {
-    initialize: jest.fn().mockResolvedValue(undefined),
-    getPeerId: jest.fn().mockReturnValue('test-peer-id-123')
+    initialize: vi.fn().mockResolvedValue(undefined),
+    getPeerId: vi.fn().mockReturnValue('test-peer-id-123')
 };
 
 // Mock DOM environment
@@ -57,12 +58,12 @@ class MockElement {
 }
 
 class MockSelection {
-    removeAllRanges = jest.fn();
-    addRange = jest.fn();
+    removeAllRanges = vi.fn();
+    addRange = vi.fn();
 }
 
 class MockRange {
-    selectNodeContents = jest.fn();
+    selectNodeContents = vi.fn();
 }
 
 class MockDocument {
@@ -130,7 +131,7 @@ describe('SplashScreen with Characters Button', () => {
         });
 
         test('should set up Characters button event listener', () => {
-            const onCharactersMock = jest.fn();
+            const onCharactersMock = vi.fn();
             splashScreen.onCharacters = onCharactersMock;
 
             splashScreen.render(mockContainer);
@@ -155,7 +156,7 @@ describe('SplashScreen with Characters Button', () => {
 
         test('should handle Characters button click without audio manager', () => {
             const noAudioSplash = new SplashScreen(mockNetworkProvider as any, undefined, undefined);
-            const onCharactersMock = jest.fn();
+            const onCharactersMock = vi.fn();
             noAudioSplash.onCharacters = onCharactersMock;
 
             noAudioSplash.render(mockContainer);
@@ -250,16 +251,16 @@ describe('SplashScreen with Characters Button', () => {
             // Test that onCharacters property exists and can be assigned
             expect(splashScreen.onCharacters).toBeUndefined();
 
-            const callback = jest.fn();
+            const callback = vi.fn();
             splashScreen.onCharacters = callback;
 
             expect(splashScreen.onCharacters).toBe(callback);
         });
 
         test('should maintain all existing functionality', () => {
-            const onJoinGameMock = jest.fn();
-            const onStartGameMock = jest.fn();
-            const onPeerIdClickMock = jest.fn();
+            const onJoinGameMock = vi.fn();
+            const onStartGameMock = vi.fn();
+            const onPeerIdClickMock = vi.fn();
 
             splashScreen.onJoinGame = onJoinGameMock;
             splashScreen.onStartGame = onStartGameMock;
@@ -303,7 +304,7 @@ describe('SplashScreen with Characters Button', () => {
         test('should handle audio error gracefully', async () => {
             mockAudioManager.playRandomGunshot.mockRejectedValueOnce(new Error('Audio failed'));
 
-            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation();
 
             splashScreen.render(mockContainer);
 

@@ -1,5 +1,6 @@
 // Unit tests for HistoryManager following SOLID principles
 
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BrowserHistoryManager, HistoryState, ViewStateFactory } from './HistoryManager.js';
 
 // Mock DOM environment for testing
@@ -123,7 +124,7 @@ describe('HistoryManager', () => {
 
     describe('HistoryState', () => {
         test('should create a history state with correct properties', () => {
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const state = new HistoryState('test-id', 'Test Title', { test: 'data' }, renderFn);
 
             expect(state.id).toBe('test-id');
@@ -132,7 +133,7 @@ describe('HistoryManager', () => {
         });
 
         test('should call render function when render is called', async () => {
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const state = new HistoryState('test-id', 'Test Title', { test: 'data' }, renderFn);
 
             await state.render(mockContainer);
@@ -156,7 +157,7 @@ describe('HistoryManager', () => {
         test('should push states correctly', () => {
             historyManager.initialize(mockContainer);
 
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const state1 = new HistoryState('state1', 'State 1', {}, renderFn);
             const state2 = new HistoryState('state2', 'State 2', {}, renderFn);
 
@@ -174,8 +175,8 @@ describe('HistoryManager', () => {
         test('should handle navigation correctly', async () => {
             historyManager.initialize(mockContainer);
 
-            const renderFn1 = jest.fn().mockResolvedValue(undefined);
-            const renderFn2 = jest.fn().mockResolvedValue(undefined);
+            const renderFn1 = vi.fn().mockResolvedValue(undefined);
+            const renderFn2 = vi.fn().mockResolvedValue(undefined);
             const state1 = new HistoryState('state1', 'State 1', {}, renderFn1);
             const state2 = new HistoryState('state2', 'State 2', {}, renderFn2);
 
@@ -200,7 +201,7 @@ describe('HistoryManager', () => {
         test('should not navigate when no states available', async () => {
             historyManager.initialize(mockContainer);
 
-            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation();
 
             await historyManager.goBack();
             expect(consoleSpy).toHaveBeenCalledWith('Cannot go back: no previous state available');
@@ -214,7 +215,7 @@ describe('HistoryManager', () => {
         test('should truncate future states when pushing after going back', () => {
             historyManager.initialize(mockContainer);
 
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const state1 = new HistoryState('state1', 'State 1', {}, renderFn);
             const state2 = new HistoryState('state2', 'State 2', {}, renderFn);
             const state3 = new HistoryState('state3', 'State 3', {}, renderFn);
@@ -234,7 +235,7 @@ describe('HistoryManager', () => {
         test('should clean up properly on destroy', () => {
             historyManager.initialize(mockContainer);
 
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const state = new HistoryState('state1', 'State 1', {}, renderFn);
             historyManager.pushState(state);
 
@@ -248,7 +249,7 @@ describe('HistoryManager', () => {
 
     describe('ViewStateFactory', () => {
         test('should create splash state correctly', () => {
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const data = { test: 'data' };
             const state = ViewStateFactory.createSplashState(renderFn, data);
 
@@ -258,7 +259,7 @@ describe('HistoryManager', () => {
         });
 
         test('should create characters state correctly', () => {
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const data = { test: 'data' };
             const state = ViewStateFactory.createCharactersState(renderFn, data);
 
@@ -268,7 +269,7 @@ describe('HistoryManager', () => {
         });
 
         test('should create game state correctly', () => {
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const data = { test: 'data' };
             const state = ViewStateFactory.createGameState(renderFn, data);
 
@@ -278,7 +279,7 @@ describe('HistoryManager', () => {
         });
 
         test('should use empty object as default data', () => {
-            const renderFn = jest.fn().mockResolvedValue(undefined);
+            const renderFn = vi.fn().mockResolvedValue(undefined);
             const state = ViewStateFactory.createSplashState(renderFn);
 
             expect(state.data).toEqual({});

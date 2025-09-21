@@ -2,9 +2,11 @@ console.log('Main.ts starting to load...');
 
 import { SplashScreen } from './ui/SplashScreen.js';
 import { CharacterManagerView } from './ui/CharacterManagerView.js';
+import { CharacterEditorView } from './ui/CharacterEditorView.js';
 import { LibP2PNetworkProvider } from './p2p.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
+import { characterStorageService } from './services/CharacterStorageService.js';
 
 console.log('All imports loaded successfully');
 
@@ -13,10 +15,11 @@ let networkProvider: LibP2PNetworkProvider;
 let audioManager: AudioManager | undefined;
 let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
+let characterEditor: CharacterEditorView;
 let appContainer: HTMLElement;
 
 // Current view components
-let currentView: 'splash' | 'characters' | 'game' = 'splash';
+let currentView: 'splash' | 'characters' | 'editor' | 'game' = 'splash';
 
 async function createApp(): Promise<void> {
     console.log('createApp called');
@@ -60,6 +63,7 @@ async function createApp(): Promise<void> {
         await splashScreen.initialize();
 
         characterManager = new CharacterManagerView();
+        characterEditor = new CharacterEditorView();
 
         // Set up route-based navigation
         setupRoutes();
@@ -109,6 +113,7 @@ function setupRoutes(): void {
 }
 
 function setupComponentCallbacks(): void {
+    // Splash screen callbacks
     splashScreen.onJoinGame = () => {
         console.log('Join Game clicked - placeholder functionality');
         // TODO: Implement join game functionality
@@ -123,23 +128,40 @@ function setupComponentCallbacks(): void {
         router.navigate('/characters');
     };
 
+    // Character manager callbacks (list only)
     characterManager.onBackToMenu = () => {
         router.navigate('/');
-    };
-
-    characterManager.onBackToCharacters = () => {
-        router.navigate('/characters');
     };
 
     characterManager.onCharacterSelected = (character: any) => {
         console.log('Character selected:', character);
         router.navigate(`/character/${character.id}`);
     };
+
+    characterManager.onNewCharacterCreated = (character: any) => {
+        console.log('New character created:', character);
+        router.navigate(`/character/${character.id}`);
+    };
+
+    // Character editor callbacks
+    characterEditor.onBackToCharacters = () => {
+        router.navigate('/characters');
+    };
+
+    characterEditor.onCharacterSaved = async (character: any) => {
+        console.log('Character saved:', character);
+        try {
+            await characterStorageService.saveCharacter(character);
+            router.navigate('/characters');
+        } catch (error) {
+            console.error('Failed to save character:', error);
+        }
+    };
 }
 
 async function renderSplashScreen(): Promise<void> {
     currentView = 'splash';
-    splashScreen.render(appContainer);
+    await splashScreen.render(appContainer);
 }
 
 async function renderCharacterManager(): Promise<void> {
@@ -148,11 +170,21 @@ async function renderCharacterManager(): Promise<void> {
 }
 
 async function renderCharacterEditor(characterId: string): Promise<void> {
-    currentView = 'characters'; // Still using character manager for editing
-    if (characterId) {
-        characterManager.editCharacter(characterId);
+    currentView = 'editor';
+
+    try {
+        const character = await characterStorageService.getCharacter(characterId);
+        if (character) {
+            characterEditor.setCharacter(character);
+            characterEditor.render(appContainer);
+        } else {
+            console.error('Character not found:', characterId);
+            router.navigate('/characters'); // Redirect to character list
+        }
+    } catch (error) {
+        console.error('Failed to load character for editing:', error);
+        router.navigate('/characters'); // Redirect to character list on error
     }
-    characterManager.render(appContainer);
 }
 
 async function renderGameView(): Promise<void> {
@@ -186,6 +218,9 @@ function cleanup(): void {
     }
     if (characterManager) {
         characterManager.destroy();
+    }
+    if (characterEditor) {
+        characterEditor.destroy();
     }
 }
 

@@ -23,6 +23,8 @@
 - **Join Game** - Connect to existing game session
 - **Start Game** - Begin new game session
 - **Characters** - Navigate to character manager view
+- Credits - display pop up with a nice Western thankyou and license info about assets taken from README.md
+  - credits get their ow line so people see 'em
 
 #### 🔫 Button Audio Effects
 - **Random gunshot sound** on each button click
