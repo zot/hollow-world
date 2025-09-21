@@ -16,11 +16,9 @@ class MockAudio {
     }
 
     load() {
-        // Simulate successful load
-        setTimeout(() => {
-            const event = new Event('canplaythrough');
-            this.dispatchEvent(event);
-        }, 10);
+        // Simulate successful load immediately to avoid timeout issues in tests
+        const event = new Event('canplaythrough');
+        this.dispatchEvent(event);
     }
 
     async play() {

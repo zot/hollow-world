@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Rye&family=Creepster&family=Sancreek&display=swap');
 
+/* Ensure no default margins/padding affect viewport calculations */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
 .splash-container {
     display: flex;
     flex-direction: column;
@@ -577,7 +585,45 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
+/* Credits popup link styling */
+.credit-item a {
+    color: #8b4513;
+    text-decoration: none;
+    border-bottom: 1px solid #8b4513;
+    transition: all 0.2s ease;
+}
+
+.credit-item a:hover {
+    color: #654321;
+    border-bottom-color: #654321;
+    text-shadow: 1px 1px 0px rgba(255,248,220,0.8);
+}
+
+.credit-item a:active {
+    color: #4a2c1a;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+}
+
+.splash-version {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #8B7355;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+    opacity: 0.8;
+    z-index: 10;
+}
+
+@media (max-width: 768px) {
+    .splash-version {
+        font-size: 0.8rem;
+        bottom: 15px;
+    }
 }

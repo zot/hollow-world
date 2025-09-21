@@ -9,6 +9,11 @@ export interface ITemplateEngine {
 
 export class TemplateEngine implements ITemplateEngine {
     private templateCache = new Map<string, string>();
+    private base: URL;
+
+    constructor(base: URL = new URL(location.toString())) {
+        this.base = base;
+    }
 
     async loadTemplate(templateName: string): Promise<string> {
         // Check cache first
@@ -17,7 +22,10 @@ export class TemplateEngine implements ITemplateEngine {
         }
 
         try {
-            const response = await fetch(`/templates/${templateName}.html`);
+            const url = new URL(`templates/${templateName}.html`, this.base).toString();
+            console.log('TemplateEngine fetching URL:', url);
+            const response = await fetch(url);
+            console.log('Template fetch response:', response.status, response.url);
             if (!response.ok) {
                 throw new Error(`Template ${templateName} not found`);
             }
@@ -34,25 +42,19 @@ export class TemplateEngine implements ITemplateEngine {
     renderTemplate(template: string, data: Record<string, any>): string {
         let result = template;
 
-        // Replace {{variable}} with data values
-        result = result.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
-            const trimmedKey = key.trim();
-            return data[trimmedKey] !== undefined ? String(data[trimmedKey]) : '';
-        });
-
-        // Handle basic conditional blocks {{#if condition}}...{{/if}}
+        // Handle basic conditional blocks {{#if condition}}...{{/if}} FIRST
         result = result.replace(/\{\{#if\s+([^}]+)\}\}(.*?)\{\{\/if\}\}/gs, (match, condition, content) => {
             const trimmedCondition = condition.trim();
             const value = data[trimmedCondition];
 
             // Show content if value is truthy
             if (value && value !== '0' && value !== 'false') {
-                return content;
+                return this.renderTemplate(content, data); // Recursively process the content
             }
             return '';
         });
 
-        // Handle basic loop blocks {{#each array}}...{{/each}}
+        // Handle basic loop blocks {{#each array}}...{{/each}} SECOND
         result = result.replace(/\{\{#each\s+([^}]+)\}\}(.*?)\{\{\/each\}\}/gs, (match, arrayKey, itemTemplate) => {
             const trimmedKey = arrayKey.trim();
             const array = data[trimmedKey];
@@ -64,6 +66,12 @@ export class TemplateEngine implements ITemplateEngine {
             return array.map(item => {
                 return this.renderTemplate(itemTemplate, { ...data, ...item });
             }).join('');
+        });
+
+        // Replace {{variable}} with data values LAST
+        result = result.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+            const trimmedKey = key.trim();
+            return data[trimmedKey] !== undefined ? String(data[trimmedKey]) : '';
         });
 
         return result;

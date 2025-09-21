@@ -235,7 +235,7 @@ export class CharacterManagerView implements ICharacterManager {
         }
     }
 
-    render(container: HTMLElement): void {
+    async render(container: HTMLElement): Promise<void> {
         if (!container) {
             throw new Error('Container element is required');
         }

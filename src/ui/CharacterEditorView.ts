@@ -8,6 +8,24 @@ import { templateEngine } from '../utils/TemplateEngine.js';
 import { CharacterCalculations } from '../character/CharacterUtils.js';
 import '../styles/CharacterEditor.css';
 
+// Embedded character editor template
+const CHARACTER_EDITOR_TEMPLATE = `<div class="character-manager-container" role="main" aria-label="Character editor for {{characterName}}">
+    <div class="character-manager-header">
+        <h1 id="editor-heading">Editing: {{characterName}}</h1>
+        <div class="editor-actions" role="group" aria-labelledby="editor-actions-heading">
+            <h2 id="editor-actions-heading" class="sr-only">Save or Cancel Changes</h2>
+            <button class="nope-btn" id="nope-character-btn"
+                    aria-label="Cancel changes and return to character list">Nope</button>
+            <button class="yep-btn" id="yep-character-btn"
+                    aria-label="Save changes to {{characterName}}">Yep</button>
+        </div>
+    </div>
+
+    <div id="character-sheet-container" role="region" aria-labelledby="editor-heading">
+        <!-- Character sheet will be rendered here -->
+    </div>
+</div>`;
+
 export interface ICharacterEditor extends IUIComponent {
     setCharacter(character: ICharacter): void;
     getCharacter(): ICharacter | null;
@@ -59,13 +77,13 @@ export class CharacterEditorView implements ICharacterEditor {
         return this.character ? { ...this.character } : null;
     }
 
-    render(container: HTMLElement): void {
+    async render(container: HTMLElement): Promise<void> {
         if (!container) {
             throw new Error('Container element is required');
         }
 
         this.container = container;
-        this.renderEditor();
+        await this.renderEditor();
     }
 
     private async renderEditor(): Promise<void> {
@@ -75,10 +93,9 @@ export class CharacterEditorView implements ICharacterEditor {
         }
 
         try {
-            const editorHtml = await templateEngine.renderTemplateFromFile('character-editor', {
+            const editorHtml = templateEngine.renderTemplate(CHARACTER_EDITOR_TEMPLATE, {
                 characterName: this.character.name
             });
-
             this.container.innerHTML = editorHtml;
 
             const sheetContainer = this.container.querySelector('#character-sheet-container') as HTMLElement;

@@ -1,0 +1,214 @@
+#!/bin/bash
+
+# HollowWorld Itch.io Deployment Script
+# Automates the complete deployment process as specified in specs/itch-io.md
+
+set -e  # Exit on any error
+
+echo "🎯 Starting HollowWorld deployment to itch.io..."
+
+# Get current directory
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PROJECT_ROOT"
+
+echo "📋 Project root: $PROJECT_ROOT"
+
+# Function to increment version number
+increment_version() {
+    if [[ ! -f "VERSION" ]]; then
+        echo "0.0.1" > VERSION
+        echo "📝 Created VERSION file with 0.0.1"
+        return
+    fi
+
+    local current_version=$(cat VERSION)
+    echo "📝 Current version: $current_version"
+
+    # Split version into parts
+    local version_parts=(${current_version//./ })
+    local major=${version_parts[0]}
+    local minor=${version_parts[1]}
+    local patch=${version_parts[2]}
+
+    # Increment patch version
+    patch=$((patch + 1))
+
+    local new_version="$major.$minor.$patch"
+    echo "$new_version" > VERSION
+    echo "// This file is auto-generated during build - do not edit manually" > src/version.ts
+    echo "export const VERSION = '$new_version';" >> src/version.ts
+    echo "📝 Incremented version to: $new_version"
+}
+
+# Function to clean temporary files
+clean_temp_files() {
+    echo "🧹 Cleaning temporary files from dist folder..."
+    if [[ -d "dist" ]]; then
+        find dist/ -name "*~" -delete 2>/dev/null || true
+        find dist/ -name "*.~undo-tree~" -delete 2>/dev/null || true
+        find dist/ -name "#*#" -delete 2>/dev/null || true
+        find dist/ -name ".#*" -delete 2>/dev/null || true
+        echo "✅ Temporary files cleaned"
+    else
+        echo "ℹ️  No dist directory found"
+    fi
+}
+
+# Function to copy missing assets
+copy_missing_assets() {
+    echo "📁 Copying missing assets to dist..."
+
+    # Create audio directory and copy audio files
+    mkdir -p dist/assets/audio
+    if [[ -d "src/assets/audio" ]] && [[ -n "$(ls src/assets/audio/*.mp3 2>/dev/null)" ]]; then
+        cp src/assets/audio/*.mp3 dist/assets/audio/
+        echo "✅ Audio files copied"
+    else
+        echo "⚠️  No audio files found in src/assets/audio/"
+    fi
+
+    # Copy VERSION file
+    if [[ -f "VERSION" ]]; then
+        cp VERSION dist/
+        echo "✅ VERSION file copied"
+    else
+        echo "⚠️  VERSION file not found"
+    fi
+}
+
+# Function to verify required files
+verify_required_files() {
+    echo "🔍 Verifying required files are present..."
+
+    local missing_files=()
+
+    # Check for essential files
+    [[ ! -f "dist/index.html" ]] && missing_files+=("dist/index.html")
+    [[ ! -d "dist/assets" ]] && missing_files+=("dist/assets/")
+    [[ ! -d "dist/templates" ]] && missing_files+=("dist/templates/")
+    [[ ! -f "dist/VERSION" ]] && missing_files+=("dist/VERSION")
+
+    if [[ ${#missing_files[@]} -gt 0 ]]; then
+        echo "❌ Missing required files:"
+        printf ' - %s\n' "${missing_files[@]}"
+        return 1
+    fi
+
+    echo "✅ All required files present"
+}
+
+# Function to create zip package
+create_zip_package() {
+    echo "📦 Creating zip package for itch.io..."
+
+    cd dist
+
+    # Remove old zip if it exists
+    [[ -f "../hollowworld-itch.zip" ]] && rm "../hollowworld-itch.zip"
+
+    # Create new zip
+    zip -r "../hollowworld-itch.zip" . -q
+
+    cd ..
+
+    local zip_size=$(du -h hollowworld-itch.zip | cut -f1)
+    echo "✅ Created hollowworld-itch.zip ($zip_size)"
+}
+
+# Function to test zip extraction
+test_zip_extraction() {
+    echo "🧪 Testing zip extraction..."
+
+    # Create temporary test directory
+    local test_dir="test-extract-$$"
+    mkdir -p "$test_dir"
+
+    # Extract zip
+    cd "$test_dir"
+    unzip -q "../hollowworld-itch.zip"
+
+    # Verify key files exist
+    local test_files=("index.html" "assets" "templates" "VERSION")
+    local missing_test_files=()
+
+    for file in "${test_files[@]}"; do
+        [[ ! -e "$file" ]] && missing_test_files+=("$file")
+    done
+
+    cd ..
+    rm -rf "$test_dir"
+
+    if [[ ${#missing_test_files[@]} -gt 0 ]]; then
+        echo "❌ Zip test failed - missing files:"
+        printf ' - %s\n' "${missing_test_files[@]}"
+        return 1
+    fi
+
+    echo "✅ Zip extraction test passed"
+}
+
+# Function to deploy to itch.io
+deploy_to_itch() {
+    echo "🚀 Deploying to itch.io using butler..."
+
+    # Check if butler is available
+    if ! command -v butler &> /dev/null; then
+        echo "❌ Butler not found. Please install butler first:"
+        echo "   https://itch.io/docs/butler/"
+        return 1
+    fi
+
+    # Deploy to itch.io
+    butler push hollowworld-itch.zip zotimer/hollow-world:html
+
+    echo "✅ Deployment completed!"
+}
+
+# Function to show final status
+show_final_status() {
+    local version=$(cat VERSION 2>/dev/null || echo "unknown")
+    echo ""
+    echo "🎉 HollowWorld v$version deployed successfully!"
+    echo "🌐 Game URL: https://zotimer.itch.io/hollow-world"
+    echo "📊 Check deployment status: butler status zotimer/hollow-world:html"
+}
+
+# Main deployment process
+main() {
+    echo "🔧 Step 1: Incrementing version..."
+    increment_version
+
+    echo ""
+    echo "🏗️  Step 2: Building production bundle..."
+    npm run build
+
+    echo ""
+    echo "🧹 Step 3: Cleaning temporary files..."
+    clean_temp_files
+
+    echo ""
+    echo "📁 Step 4: Copying missing assets..."
+    copy_missing_assets
+
+    echo ""
+    echo "🔍 Step 5: Verifying required files..."
+    verify_required_files
+
+    echo ""
+    echo "📦 Step 6: Creating zip package..."
+    create_zip_package
+
+    echo ""
+    echo "🧪 Step 7: Testing zip extraction..."
+    test_zip_extraction
+
+    echo ""
+    echo "🚀 Step 8: Deploying to itch.io..."
+    deploy_to_itch
+
+    echo ""
+    show_final_status
+}
+
+# Run main deployment process
+main "$@"

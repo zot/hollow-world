@@ -2,6 +2,8 @@
 
 **Deploy HollowWorld character management system to itch.io as a web game**
 
+## make a shell script, bin/deploy, that does this deployment
+
 ## 📋 Pre-Deployment Checklist
 
 ### 🔧 Technical Preparation
@@ -36,26 +38,31 @@ npm run build
 ```
 
 ### 2. 📦 Package for Itch.io
+- **Clean temporary files** from dist folder:
+  - Remove `*~` backup files
+  - Remove `*.~undo-tree~` files
+  - Remove any editor temporary files
+- **Copy missing assets** to dist:
+  - Copy `src/assets/audio/*.mp3` to `dist/assets/audio/`
+  - Verify all audio files (gunshots, background music) are included
+- increment minor version in top-level VERSION file
+- copy the VERSION file to dist
 - **Zip the dist folder** containing:
   - `index.html` (entry point)
   - `assets/` (JS, CSS, fonts, audio)
-  - Any additional required files
+  - `templates/` (HTML template files)
+  - ensure required project files are present and current
 - **Test the zip** by extracting and opening locally
 - **Verify file size** (itch.io has upload limits)
 
 ### 3. 🌐 Itch.io Setup
-- **Create new project** on itch.io
-- **Set project type** to "HTML"
-- **Upload game files** (the zip package)
-- **Configure iframe settings**:
-  - Width: 1200px minimum
-  - Height: 800px minimum
-  - Allow fullscreen
-- **Set game to public** when ready
+- use the zotimer/hollow-world project on itch.io
+- update the project using instructions below
+- **Upload game files** with butler
 
 ### 4. 📝 Game Page Content
-- **Title**: "Don't Go Hollow - Character Manager"
-- **Subtitle**: "Frontier Character Creation for the Hollow RPG"
+- **Title**: "Don't Go Hollow - Game Tools for the Hollow TTRPG"
+- **Subtitle**: "Frontier Character Creation for the Hollow TTRPG and more"
 - **Description**:
   ```
   Create and manage your frontier outlaws for the Hollow RPG system.

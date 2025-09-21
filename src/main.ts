@@ -1,5 +1,9 @@
 console.log('Main.ts starting to load...');
 
+// Set Base URL as specified in specs/ui.splash.md
+const Base = new URL(location.toString());
+console.log('Base URL set to:', Base);
+
 import { SplashScreen } from './ui/SplashScreen.js';
 import { CharacterManagerView } from './ui/CharacterManagerView.js';
 import { CharacterEditorView } from './ui/CharacterEditorView.js';
@@ -39,8 +43,8 @@ async function createApp(): Promise<void> {
         // Initialize audio manager (gracefully handle missing audio files)
         try {
             audioManager = new AudioManager(
-                './src/assets/audio/western-adventure-cinematic-spaghetti-loop-385618.mp3',
-                './src/assets/audio/single-gunshot-54-40780.mp3'
+                new URL('assets/audio/western-adventure-cinematic-spaghetti-loop-385618.mp3', Base).toString(),
+                new URL('assets/audio/single-gunshot-54-40780.mp3', Base).toString()
             );
             await audioManager.initialize();
 
@@ -134,7 +138,6 @@ function setupComponentCallbacks(): void {
     };
 
     characterManager.onCharacterSelected = (character: any) => {
-        console.log('Character selected:', character);
         router.navigate(`/character/${character.id}`);
     };
 

@@ -9,9 +9,11 @@ const mockFetch = vi.fn();
 
 describe('TemplateEngine', () => {
     let templateEngine: TemplateEngine;
+    const testBaseUrl = new URL('http://localhost:3000/');
 
     beforeEach(() => {
-        templateEngine = new TemplateEngine();
+        // Use consistent base URL for testing
+        templateEngine = new TemplateEngine(testBaseUrl);
         mockFetch.mockClear();
     });
 
@@ -25,7 +27,7 @@ describe('TemplateEngine', () => {
 
             const result = await templateEngine.loadTemplate('test-template');
 
-            expect(mockFetch).toHaveBeenCalledWith('/templates/test-template.html');
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/templates/test-template.html');
             expect(result).toBe(mockTemplate);
         });
 
@@ -204,8 +206,8 @@ describe('TemplateEngine', () => {
             await templateEngine.preloadTemplates(['template1', 'template2']);
 
             expect(mockFetch).toHaveBeenCalledTimes(2);
-            expect(mockFetch).toHaveBeenCalledWith('/templates/template1.html');
-            expect(mockFetch).toHaveBeenCalledWith('/templates/template2.html');
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/templates/template1.html');
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/templates/template2.html');
         });
     });
 });

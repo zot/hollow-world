@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite';
+import { copyFileSync } from 'fs';
+import { resolve } from 'path';
 
 export default defineConfig({
   base: './',
@@ -19,4 +21,14 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
   },
+  publicDir: 'public',
+  plugins: [
+    {
+      name: 'copy-version-file',
+      buildEnd() {
+        // Copy VERSION file to dist during build
+        copyFileSync('VERSION', 'dist/VERSION');
+      }
+    }
+  ]
 });

@@ -14,6 +14,19 @@
 - **"Don't Go Hollow" title** in large old-west style font
   - The word **"Hollow"** should have a **green glow** while still using Sancreek font
 - **Text color**: Medium-light brown throughout
+- min splash screen height on desktop should be 100vh
+
+### Version display
+- keep the current version number in a VERSION file at the top of the project
+- the current version starts at 0.0.1
+- display the version number at the bottom of the splash screen
+- print the current version number to the console
+
+### As soon as app loads
+- let Base = new URL(location.toString())
+
+### Pervasively: use Base as parent URL for all assets, including templates
+- use new URL(asset, Base).toString() for the asset URL
 
 ### 📡 Peer ID Display
 - **Display the peer ID** prominently
@@ -24,7 +37,8 @@
 - **Start Game** - Begin new game session
 - **Characters** - Navigate to character manager view
 - Credits - display pop up with a nice Western thankyou and license info about assets taken from README.md
-  - credits get their ow line so people see 'em
+  - credits get their own line so people see 'em
+    - make audio file titles into links with the URL to the project
 
 #### 🔫 Button Audio Effects
 - **Random gunshot sound** on each button click

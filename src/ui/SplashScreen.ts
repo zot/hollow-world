@@ -1,7 +1,26 @@
 import { INetworkProvider } from '../p2p.js';
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
+import { VERSION } from '../version.js';
 import '../styles/SplashScreen.css';
+
+// Embedded splash screen template
+const SPLASH_SCREEN_TEMPLATE = `<div class="{{containerClass}}">
+    <h1 class="{{titleClass}}">{{titleWithHollow}}</h1>
+    <div class="{{peerIdClass}}">Peer ID: {{currentPeerId}}</div>
+    <div class="{{buttonsContainerClass}}">
+        <button class="{{joinButtonClass}}">Join Game</button>
+        <button class="{{startButtonClass}}">Start Game</button>
+        <button class="{{charactersButtonClass}}">Characters</button>
+    </div>
+    <div class="splash-credits-container">
+        <button class="splash-credits-button">Credits</button>
+    </div>
+    {{#if hasAudioManager}}
+    <button class="{{musicButtonClass}}" title="Toggle Music">🎵</button>
+    {{/if}}
+    <div class="splash-version">Version {{version}}</div>
+</div>`;
 
 // Interface for UI components (Interface Segregation Principle)
 export interface IUIComponent {
@@ -93,6 +112,10 @@ export class SplashScreen implements ISplashScreen {
         this.container = container;
 
         try {
+            // Use embedded version
+            const version = VERSION;
+            console.log(`Current version: ${version}`);
+
             // Prepare template data
             const titleWithSpookyHollow = this.config.title.replace(
                 /\bHollow\b/gi,
@@ -110,11 +133,12 @@ export class SplashScreen implements ISplashScreen {
                 startButtonClass: this.config.startButtonClass,
                 charactersButtonClass: this.config.charactersButtonClass,
                 hasAudioManager: !!this.audioManager,
-                musicButtonClass: this.config.musicButtonClass
+                musicButtonClass: this.config.musicButtonClass,
+                version: version
             };
 
-            // Render template
-            const splashHtml = await templateEngine.renderTemplateFromFile('splash-screen', templateData);
+            // Render template using embedded template
+            const splashHtml = templateEngine.renderTemplate(SPLASH_SCREEN_TEMPLATE, templateData);
             container.innerHTML = splashHtml;
 
         } catch (error) {
@@ -302,7 +326,7 @@ export class SplashScreen implements ISplashScreen {
 
                         <div class="credit-item">
                             <h4>Background Music</h4>
-                            <p><strong>Western Adventure Cinematic Spaghetti Loop</strong></p>
+                            <p><strong><a href="https://pixabay.com/music/cinematic-western-adventure-cinematic-spaghetti-loop-385618/" target="_blank" rel="noopener noreferrer">Western Adventure Cinematic Spaghetti Loop</a></strong></p>
                             <p>Creator: <strong>Sonican</strong></p>
                             <p>License: Free for use under the Pixabay Content License</p>
                             <p><em>"Donate to keep the flow of Music - Be kind and Show your Support ✔"</em></p>
@@ -310,7 +334,7 @@ export class SplashScreen implements ISplashScreen {
 
                         <div class="credit-item">
                             <h4>Sound Effects</h4>
-                            <p><strong>Single Gunshot</strong></p>
+                            <p><strong><a href="https://pixabay.com/sound-effects/single-gunshot-54-40780/" target="_blank" rel="noopener noreferrer">Single Gunshot</a></strong></p>
                             <p>Creator: <strong>morganpurkis (Freesound)</strong></p>
                             <p>License: Free for use under the Pixabay Content License</p>
                             <p><em>"Gunshot, War, Rifle sound effect. Free for use."</em></p>
@@ -318,7 +342,7 @@ export class SplashScreen implements ISplashScreen {
 
                         <div class="credit-item">
                             <h4>Tales from the West</h4>
-                            <p><strong>Cinematic Spaghetti Western Music</strong></p>
+                            <p><strong><a href="https://pixabay.com/music/cinematic-tales-from-the-west-cinematic-spaghetti-western-music-385616/" target="_blank" rel="noopener noreferrer">Cinematic Spaghetti Western Music</a></strong></p>
                             <p>Creator: <strong>Luis Humanoide</strong></p>
                             <p>License: Free for use under the Pixabay Content License</p>
                             <p>Contact: luishumanoide@gmail.com</p>

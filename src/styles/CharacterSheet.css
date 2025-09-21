@@ -128,7 +128,14 @@
     gap: 20px;
 }
 
-.character-attributes,
+.character-attributes {
+    background: rgba(255,248,220,0.7);
+    border: 2px solid #deb887;
+    border-radius: 4px;
+    padding: 20px 5px; /* 20px top/bottom, 5px left/right for attributes section */
+    position: relative;
+}
+
 .character-hollow,
 .character-skills,
 .character-benefits,
@@ -154,8 +161,8 @@
 
 .attributes-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
 }
 
 .attribute-category {
@@ -174,7 +181,7 @@
 .attribute-category-row {
     display: flex;
     justify-content: center;
-    gap: 15px;
+    gap: 5px;
     flex-wrap: wrap;
 }
 
@@ -414,6 +421,13 @@
     border: 1px solid #cd853f;
     border-radius: 3px 0 0 3px; /* Connect to spinner buttons */
     margin-left: 12px; /* Space from label */
+}
+
+/* Medium screens: 2 columns for better fit on smaller desktops/tablets */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .attributes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {

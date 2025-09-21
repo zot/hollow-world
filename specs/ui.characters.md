@@ -62,6 +62,9 @@
   - 🧠 **Mental** - INT(4), PER(4) *(How smart and sharp-eyed you are)*
   - *A little space between the attr and the open paren* *(Give 'em breathing room)*
   - *A little space between the close paren and the attribute value* *(Don't crowd the numbers)*
+  - a 1145px wide character sheet editor should show 3 attributes across in the Attributes section
+    - 5px column gap between attributes
+    - 5px left/right padding on the attributes container
 - **🎨 Attribute value spacing** - Add visual spacing before each attribute input value for better readability *(Make it easy on the eyes)*
 - **🖱️ Mouse wheel interaction** - Attribute input spinners respond to mouse wheel for increment/decrement with range validation (-2 to 15) *(Scroll like you're spinning the cylinder of a six-shooter)*
 - **📈 Top stats bar** - Rank, damage capacity, dust, available XP, and Attribute Chips at top under character name *(The important stuff front and center)*
@@ -73,7 +76,8 @@
   - Available attribute chips should be total chips - the total attribute costs *(What's left after you ante up)*
     - Show negatives as 0 because the excess points are automatically removed from XP anyway *(Don't go into debt, partner)*
     - This should update whenever attributes change *(Live as a poker game)*
-  - if available XP is negative, show it in red
+  - make sure that XP shows in red whenever available XP is negative
+- available xp and attribute chips should have their proper appearance when first showing the editor
 - **⚡ Editable rank input** *(Promote your gunslinger)*:
   - Number input field with min/max validation (1-15) *(From greenhorn to legend)*
   - On blur: automatically updates total XP and Attribute Chips available, also the totals in parens *(Recalculate the pot)*

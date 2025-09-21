@@ -230,6 +230,9 @@ export class CharacterSheet implements ICharacterSheet {
         // For now, add placeholder content
         this.initializePlaceholderContent();
         this.setupActionButtons();
+
+        // Ensure proper appearance when first showing the editor
+        this.updateDisplay();
     }
 
     private initializePlaceholderContent(): void {
@@ -734,14 +737,14 @@ export class CharacterSheet implements ICharacterSheet {
 
             // Show negative XP in red per spec
             if (availableXP < 0) {
-                availableXPEl.style.color = '#dc143c'; // Red for negative
-                availableXPEl.style.fontWeight = 'bold';
-                availableXPEl.title = 'Character has overspent XP budget!';
+                (availableXPEl as HTMLElement).style.color = '#dc143c'; // Red for negative
+                (availableXPEl as HTMLElement).style.fontWeight = 'bold';
+                (availableXPEl as HTMLElement).title = 'Character has overspent XP budget!';
                 console.log(`XP OVERSPENT: ${newText} (showing in red)`);
             } else {
-                availableXPEl.style.color = ''; // Reset to default
-                availableXPEl.style.fontWeight = '';
-                availableXPEl.title = '';
+                (availableXPEl as HTMLElement).style.color = ''; // Reset to default
+                (availableXPEl as HTMLElement).style.fontWeight = '';
+                (availableXPEl as HTMLElement).title = '';
                 console.log(`Updated XP display: ${newText}`);
             }
         } else {
