@@ -5,6 +5,7 @@ import { ICharacter, AttributeType } from '../character/types.js';
 import { CharacterSheet } from '../character/CharacterSheet.js';
 import { IUIComponent } from './SplashScreen.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
+import { CharacterCalculations } from '../character/CharacterUtils.js';
 
 export interface ICharacterManager extends IUIComponent {
     getCharacters(): ICharacter[];
@@ -12,6 +13,7 @@ export interface ICharacterManager extends IUIComponent {
     editCharacter(characterId: string): void;
     deleteCharacter(characterId: string): void;
     onBackToMenu?: () => void;
+    onBackToCharacters?: () => void;
     onCharacterSelected?: (character: ICharacter) => void;
 }
 
@@ -41,9 +43,7 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
         id: 'char-1',
         name: 'Jack "Dead-Eye" Malone',
         description: 'A weathered gunslinger with a mysterious past',
-        rank: 3,
-        currentXP: 45,
-        totalXP: 120,
+        rank: 3, // totalXP computed dynamically from rank
         damageCapacity: 12,
         attributes: {
             [AttributeType.DEX]: 4,
@@ -62,9 +62,8 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
                 level: 4,
                 isListed: true,
                 isSpecialized: true,
-                attribute: 'coordination',
                 costMultiplier: 1,
-                prerequisites: []
+                prerequisite: undefined
             },
             {
                 id: 'perception',
@@ -72,9 +71,8 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
                 level: 3,
                 isListed: true,
                 isSpecialized: false,
-                attribute: 'sense',
                 costMultiplier: 1,
-                prerequisites: []
+                prerequisite: undefined
             }
         ],
         fields: [
@@ -82,6 +80,7 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
                 id: 'gunfighter',
                 name: 'Gunfighter',
                 level: 2,
+                skills: ['firearms'],
                 isFrozen: true
             }
         ],
@@ -115,19 +114,21 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
             {
                 id: 'revolver',
                 name: 'Colt Peacemaker',
+                type: 'fine_weapon',
                 description: 'Well-maintained six-shooter with ivory grips',
                 level: 1
             }
         ],
-        companions: []
+        companions: [],
+        attributeChipsSpent: { positive: 0, negative: 0 },
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01')
     },
     {
         id: 'char-2',
         name: 'Sarah "Doc" Winchester',
         description: 'Traveling physician with a keen interest in the supernatural',
-        rank: 2,
-        currentXP: 25,
-        totalXP: 75,
+        rank: 2, // totalXP computed dynamically from rank
         damageCapacity: 8,
         attributes: {
             [AttributeType.DEX]: 2,
@@ -146,9 +147,8 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
                 level: 3,
                 isListed: true,
                 isSpecialized: true,
-                attribute: 'mind',
                 costMultiplier: 1,
-                prerequisites: []
+                prerequisite: undefined
             },
             {
                 id: 'occult',
@@ -156,9 +156,8 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
                 level: 2,
                 isListed: true,
                 isSpecialized: false,
-                attribute: 'mind',
                 costMultiplier: 1,
-                prerequisites: []
+                prerequisite: undefined
             }
         ],
         fields: [
@@ -166,6 +165,7 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
                 id: 'physician',
                 name: 'Physician',
                 level: 2,
+                skills: ['medicine'],
                 isFrozen: true
             }
         ],
@@ -191,11 +191,15 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
             {
                 id: 'medical-bag',
                 name: 'Medical Bag',
+                type: 'gadget',
                 description: 'Well-stocked physician\'s kit with surgical tools',
                 level: 2
             }
         ],
-        companions: []
+        companions: [],
+        attributeChipsSpent: { positive: 0, negative: 0 },
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01')
     }
 ];
 
@@ -213,6 +217,7 @@ export class CharacterManagerView implements ICharacterManager {
     private pendingUpdate = false;
 
     public onBackToMenu?: () => void;
+    public onBackToCharacters?: () => void;
     public onCharacterSelected?: (character: ICharacter) => void;
 
     constructor(config: Partial<ICharacterManagerConfig> = {}) {
@@ -229,6 +234,16 @@ export class CharacterManagerView implements ICharacterManager {
         this.debouncedRender();
     }
 
+    // Async render method for external callers
+    async renderAsync(container: HTMLElement): Promise<void> {
+        if (!container) {
+            throw new Error('Container element is required');
+        }
+
+        this.container = container;
+        await this.debouncedRenderAsync();
+    }
+
     private debouncedRender(): void {
         if (this.isRendering) {
             this.pendingUpdate = true;
@@ -241,15 +256,16 @@ export class CharacterManagerView implements ICharacterManager {
         requestAnimationFrame(async () => {
             try {
                 if (this.currentView === 'list') {
-                    await this.renderCharacterList();
+                    await this.renderCharacterListWithFallback();
                 } else if (this.currentView === 'edit' && this.selectedCharacter) {
-                    await this.renderCharacterEditor();
+                    await this.renderCharacterEditorWithFallback();
                 }
 
                 this.applyStyles();
             } catch (error) {
                 console.error('Render failed:', error);
                 this.showErrorMessage('Failed to render interface. Please refresh the page.');
+                await this.renderFallbackUI();
             } finally {
                 this.isRendering = false;
 
@@ -260,6 +276,142 @@ export class CharacterManagerView implements ICharacterManager {
                 }
             }
         });
+    }
+
+    private async renderCharacterListWithFallback(): Promise<void> {
+        try {
+            await this.renderCharacterList();
+        } catch (error) {
+            console.warn('Template rendering failed, using fallback:', error);
+            await this.renderCharacterListFallback();
+        }
+    }
+
+    private async renderCharacterEditorWithFallback(): Promise<void> {
+        try {
+            await this.renderCharacterEditor();
+        } catch (error) {
+            console.warn('Template rendering failed, using fallback:', error);
+            await this.renderCharacterEditorFallback();
+        }
+    }
+
+    private async renderFallbackUI(): Promise<void> {
+        if (!this.container) return;
+
+        try {
+            const fallbackHtml = await templateEngine.renderTemplateFromFile('error-fallback', {});
+            this.container.innerHTML = fallbackHtml;
+            this.setupFallbackEventListeners();
+        } catch (error) {
+            // Ultimate fallback - just text
+            this.container.innerHTML = '<div><h1>Character Manager</h1><p>Error loading interface</p></div>';
+            console.error('Even fallback template failed:', error);
+        }
+    }
+
+    private async renderCharacterListFallback(): Promise<void> {
+        if (!this.container) return;
+
+        try {
+            const listHtml = await templateEngine.renderTemplateFromFile('character-list-fallback', {});
+            this.container.innerHTML = listHtml;
+
+            const cardsContainer = this.container.querySelector('.character-list');
+            if (cardsContainer) {
+                if (this.characters.length > 0) {
+                    const cardPromises = this.characters.map(async (char) => {
+                        const availableXP = CharacterCalculations.calculateAvailableXP(char);
+                        const totalXP = CharacterCalculations.calculateTotalXPForRank(char.rank);
+                        return templateEngine.renderTemplateFromFile('character-card-fallback', {
+                            id: char.id,
+                            name: char.name,
+                            rank: char.rank,
+                            availableXP: availableXP,
+                            totalXP: totalXP,
+                            damageCapacity: char.damageCapacity,
+                            dust: char.hollow.dust
+                        });
+                    });
+                    const cards = await Promise.all(cardPromises);
+                    cardsContainer.innerHTML = cards.join('');
+                } else {
+                    const emptyHtml = await templateEngine.renderTemplateFromFile('empty-state', {});
+                    cardsContainer.innerHTML = emptyHtml;
+                }
+            }
+
+            this.setupListEventListeners();
+        } catch (error) {
+            // Ultimate fallback
+            this.container.innerHTML = '<div><h1>Character Manager</h1><p>Failed to load templates</p></div>';
+            console.error('Fallback template failed:', error);
+        }
+    }
+
+    private async renderCharacterEditorFallback(): Promise<void> {
+        if (!this.container || !this.selectedCharacter) return;
+
+        try {
+            const editorHtml = await templateEngine.renderTemplateFromFile('character-editor-fallback', {
+                characterName: this.selectedCharacter.name
+            });
+            this.container.innerHTML = editorHtml;
+
+            const sheetContainer = this.container.querySelector('#character-sheet-container') as HTMLElement;
+            if (sheetContainer) {
+                this.characterSheet = new CharacterSheet(this.selectedCharacter, {
+                    readOnly: false,
+                    showCreationMode: true
+                });
+                this.characterSheet.render(sheetContainer);
+            }
+
+            this.setupEditorEventListeners();
+        } catch (error) {
+            // Ultimate fallback
+            this.container.innerHTML = '<div><h1>Character Editor</h1><p>Failed to load editor templates</p></div>';
+            console.error('Editor fallback template failed:', error);
+        }
+    }
+
+    private setupFallbackEventListeners(): void {
+        if (!this.container) return;
+
+        const backBtn = this.container.querySelector('#back-to-menu-btn');
+        if (backBtn && this.onBackToMenu) {
+            backBtn.addEventListener('click', this.onBackToMenu);
+        }
+    }
+
+    private async debouncedRenderAsync(): Promise<void> {
+        if (this.isRendering) {
+            this.pendingUpdate = true;
+            return;
+        }
+
+        this.isRendering = true;
+
+        try {
+            if (this.currentView === 'list') {
+                await this.renderCharacterList();
+            } else if (this.currentView === 'edit' && this.selectedCharacter) {
+                await this.renderCharacterEditor();
+            }
+
+            this.applyStyles();
+        } catch (error) {
+            console.error('Render failed:', error);
+            this.showErrorMessage('Failed to render interface. Please refresh the page.');
+        } finally {
+            this.isRendering = false;
+
+            // If there's a pending update, render again
+            if (this.pendingUpdate) {
+                this.pendingUpdate = false;
+                await this.debouncedRenderAsync();
+            }
+        }
     }
 
     destroy(): void {
@@ -287,9 +439,7 @@ export class CharacterManagerView implements ICharacterManager {
                 id: crypto.randomUUID(),
                 name: 'New Character',
                 description: 'A mysterious newcomer to the frontier',
-                rank: 1,
-                currentXP: 10,  // Starting XP from game rules
-                totalXP: 10,
+                rank: 1, // totalXP computed dynamically from rank
                 damageCapacity: 10,  // 10 + CON (0) = 10
                 attributes: {
                     [AttributeType.DEX]: 0,
@@ -314,7 +464,10 @@ export class CharacterManagerView implements ICharacterManager {
                     newMoonMarks: 0
                 },
                 items: [],
-                companions: []
+                companions: [],
+                attributeChipsSpent: { positive: 0, negative: 0 },
+                createdAt: new Date(),
+                updatedAt: new Date()
             };
 
             this.characters.push(newCharacter);
@@ -412,8 +565,7 @@ export class CharacterManagerView implements ICharacterManager {
                 name: character.name || 'Unknown Character',
                 description: character.description || '',
                 rank: Math.max(1, Math.min(15, parseInt(character.rank) || 1)),
-                currentXP: Math.max(0, parseInt(character.currentXP) || 0),
-                totalXP: Math.max(0, parseInt(character.totalXP) || 0),
+                // totalXP removed - now computed via CharacterCalculations.calculateTotalXPForRank()
                 damageCapacity: Math.max(1, parseInt(character.damageCapacity) || 10),
                 attributes: {
                     [AttributeType.DEX]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.DEX]) || 0)),
@@ -438,7 +590,10 @@ export class CharacterManagerView implements ICharacterManager {
                     newMoonMarks: Math.max(0, parseInt(character.hollow?.newMoonMarks) || 0)
                 },
                 items: Array.isArray(character.items) ? character.items : [],
-                companions: Array.isArray(character.companions) ? character.companions : []
+                companions: Array.isArray(character.companions) ? character.companions : [],
+                attributeChipsSpent: character.attributeChipsSpent || { positive: 0, negative: 0 },
+                createdAt: character.createdAt ? new Date(character.createdAt) : new Date(),
+                updatedAt: new Date()
             };
             return validatedCharacter;
         } catch (error) {
@@ -448,9 +603,7 @@ export class CharacterManagerView implements ICharacterManager {
                 id: crypto.randomUUID(),
                 name: 'Corrupted Character',
                 description: 'This character data was corrupted and has been reset',
-                rank: 1,
-                currentXP: 0,
-                totalXP: 0,
+                rank: 1, // totalXP computed dynamically from rank
                 damageCapacity: 10,
                 attributes: {
                     [AttributeType.DEX]: 0,
@@ -468,7 +621,10 @@ export class CharacterManagerView implements ICharacterManager {
                 drawbacks: [],
                 hollow: { dust: 0, burned: 0, hollowInfluence: 0, glimmerDebt: 0, glimmerDebtTotal: 0, newMoonMarks: 0 },
                 items: [],
-                companions: []
+                companions: [],
+                attributeChipsSpent: { positive: 0, negative: 0 },
+                createdAt: new Date(),
+                updatedAt: new Date()
             };
         }
     }
@@ -533,9 +689,12 @@ export class CharacterManagerView implements ICharacterManager {
             return this.renderCache.get(cacheKey)!;
         }
 
+        const availableXP = CharacterCalculations.calculateAvailableXP(character);
+        const totalXP = CharacterCalculations.calculateTotalXPForRank(character.rank);
+
         const primaryStats = [
             `Rank: ${character.rank}`,
-            `XP: ${character.currentXP}/${character.totalXP}`,
+            `XP: ${availableXP}/${totalXP}`,
             `DC: ${character.damageCapacity}`,
             `Dust: ${character.hollow.dust}`
         ].join(' • ');
@@ -565,7 +724,9 @@ export class CharacterManagerView implements ICharacterManager {
             // Limit cache size to prevent memory leaks
             if (this.renderCache.size > 100) {
                 const firstKey = this.renderCache.keys().next().value;
-                this.renderCache.delete(firstKey);
+                if (firstKey) {
+                    this.renderCache.delete(firstKey);
+                }
             }
 
             return cardHtml;
@@ -576,13 +737,13 @@ export class CharacterManagerView implements ICharacterManager {
     }
 
     private createCharacterCacheKey(character: ICharacter): string {
-        // Create a hash-like key from character's critical data
+        // Create a hash-like key from character's critical data using computed values
         const keyData = {
             id: character.id,
             name: character.name,
             rank: character.rank,
-            currentXP: character.currentXP,
-            totalXP: character.totalXP,
+            availableXP: CharacterCalculations.calculateAvailableXP(character),
+            totalXP: CharacterCalculations.calculateTotalXPForRank(character.rank),
             damageCapacity: character.damageCapacity,
             dust: character.hollow.dust,
             attributes: character.attributes
@@ -809,13 +970,19 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
             button.addEventListener('click', (e) => {
                 const target = e.target as HTMLElement;
                 const action = target.dataset.action;
-                const characterId = target.dataset.characterId;
+                const characterId = target.dataset.characterId || target.getAttribute('data-character-id');
 
                 if (!characterId) return;
 
                 switch (action) {
                     case 'edit':
-                        this.editCharacter(characterId);
+                        const character = this.characters.find(c => c.id === characterId);
+                        if (character && this.onCharacterSelected) {
+                            this.onCharacterSelected(character);
+                        } else {
+                            // Fallback to internal editing if no callback set
+                            this.editCharacter(characterId);
+                        }
                         break;
                     case 'delete':
                         this.deleteCharacter(characterId);
@@ -824,35 +991,37 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
             });
 
             // Add keyboard support
-            button.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    button.click();
+            button.addEventListener('keydown', (e: Event) => {
+                const keyEvent = e as KeyboardEvent;
+                if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
+                    keyEvent.preventDefault();
+                    (button as HTMLElement).click();
                 }
             });
         });
 
         // Add keyboard navigation for character items
         this.container.querySelectorAll('.character-item').forEach((item, index) => {
-            item.addEventListener('keydown', (e) => {
+            item.addEventListener('keydown', (e: Event) => {
+                const keyEvent = e as KeyboardEvent;
                 const items = Array.from(this.container!.querySelectorAll('.character-item'));
-                switch (e.key) {
+                switch (keyEvent.key) {
                     case 'ArrowDown':
-                        e.preventDefault();
+                        keyEvent.preventDefault();
                         const nextItem = items[index + 1] as HTMLElement;
                         nextItem?.focus();
                         break;
                     case 'ArrowUp':
-                        e.preventDefault();
+                        keyEvent.preventDefault();
                         const prevItem = items[index - 1] as HTMLElement;
                         prevItem?.focus();
                         break;
                     case 'Home':
-                        e.preventDefault();
+                        keyEvent.preventDefault();
                         (items[0] as HTMLElement)?.focus();
                         break;
                     case 'End':
-                        e.preventDefault();
+                        keyEvent.preventDefault();
                         (items[items.length - 1] as HTMLElement)?.focus();
                         break;
                 }
@@ -882,8 +1051,14 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
         const nopeBtn = this.container.querySelector('#nope-character-btn');
         if (nopeBtn) {
             nopeBtn.addEventListener('click', () => {
-                this.currentView = 'list';
-                this.render(this.container!);
+                // Use route-based navigation instead of internal view switching
+                if (this.onBackToCharacters) {
+                    this.onBackToCharacters(); // Triggers router.navigate('/characters')
+                } else {
+                    // Fallback to internal view switching
+                    this.currentView = 'list';
+                    this.render(this.container!);
+                }
             });
         }
 
@@ -904,8 +1079,15 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
                         if (index >= 0) {
                             this.characters[index] = updatedCharacter;
                             this.saveCharactersToStorage();
-                            this.currentView = 'list';
-                            this.render(this.container!);
+
+                            // Use route-based navigation instead of internal view switching
+                            if (this.onBackToCharacters) {
+                                this.onBackToCharacters(); // Triggers router.navigate('/characters')
+                            } else {
+                                // Fallback to internal view switching
+                                this.currentView = 'list';
+                                this.render(this.container!);
+                            }
                         } else {
                             throw new Error('Character not found in list');
                         }
@@ -1152,6 +1334,12 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
                     color: #8b4513;
                     margin: 0 0 15px 0;
                     font-size: 1.5rem;
+                    background: rgba(222,184,135,0.7);
+                    border: 2px solid #8b4513;
+                    text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    display: inline-block;
                 }
 
                 .character-stats {
@@ -1200,11 +1388,17 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
                     font-family: 'Rye', serif;
                     padding: 15px 30px;
                     border-radius: 4px;
-                    border: 2px solid;
+                    border: 4px solid;
                     cursor: pointer;
                     transition: all 0.2s ease;
                     font-weight: bold;
                     font-size: 1.2rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    position: relative;
+                    overflow: hidden;
+                    transform: perspective(150px) rotateX(-3deg);
+                    text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
                 }
 
                 .nope-btn {
@@ -1215,7 +1409,12 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
 
                 .nope-btn:hover {
                     background: linear-gradient(45deg, #ff6347, #ff4500);
-                    transform: translateY(-1px);
+                    transform: perspective(150px) rotateX(-3deg) translateY(-2px);
+                    box-shadow:
+                        inset 0 0 20px rgba(255,255,255,0.3),
+                        3px 3px 0px #8b0000,
+                        6px 6px 0px #4a0000,
+                        10px 10px 20px rgba(0,0,0,0.5);
                 }
 
                 .yep-btn {
@@ -1226,7 +1425,12 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
 
                 .yep-btn:hover {
                     background: linear-gradient(45deg, #32cd32, #00ff00);
-                    transform: translateY(-1px);
+                    transform: perspective(150px) rotateX(-3deg) translateY(-2px);
+                    box-shadow:
+                        inset 0 0 20px rgba(255,255,255,0.3),
+                        3px 3px 0px #006400,
+                        6px 6px 0px #003300,
+                        10px 10px 20px rgba(0,0,0,0.5);
                 }
 
                 .new-character-button {
@@ -1237,8 +1441,13 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
 
                 .new-character-button:hover {
                     background: linear-gradient(45deg, #f4a460, #ffd700);
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                    transform: perspective(150px) rotateX(-3deg) translateY(-2px);
+                    box-shadow:
+                        inset 0 0 20px rgba(255,248,220,0.7),
+                        3px 3px 0px #654321,
+                        6px 6px 0px #4a2c1a,
+                        10px 10px 20px rgba(0,0,0,0.5),
+                        0 0 25px rgba(255,215,0,0.4);
                 }
 
                 .back-to-menu-button {
@@ -1249,7 +1458,12 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
 
                 .back-to-menu-button:hover {
                     background: linear-gradient(45deg, #808080, #a9a9a9);
-                    transform: translateY(-1px);
+                    transform: perspective(150px) rotateX(-3deg) translateY(-2px);
+                    box-shadow:
+                        inset 0 0 20px rgba(255,255,255,0.3),
+                        3px 3px 0px #2f4f4f,
+                        6px 6px 0px #1f2f2f,
+                        10px 10px 20px rgba(0,0,0,0.5);
                 }
 
                 .character-manager-actions {

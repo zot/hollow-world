@@ -12,14 +12,82 @@ import {
 } from './types.js';
 
 export class CharacterCalculations {
-    // Calculate character rank based on total XP (1 rank per 10 XP)
+    // Note: Rank is now the primary stat, not calculated from XP
+    // This function is kept for backward compatibility with existing code
     static calculateRank(totalXP: number): number {
         return 1 + Math.floor(totalXP / 10);
+    }
+
+    // Calculate rank from earned XP (for advancement system)
+    static calculateRankFromEarnedXP(earnedXP: number): number {
+        return 1 + Math.floor(earnedXP / 10);
     }
 
     // Calculate damage capacity (10 + CON)
     static calculateDamageCapacity(constitution: number): number {
         return 10 + constitution;
+    }
+
+    // Calculate total XP for a given rank
+    static calculateTotalXPForRank(rank: number): number {
+        return 10 + (rank - 1) * 10;
+    }
+
+    // Calculate total attribute chips for a given rank
+    static calculateTotalAttributeChipsForRank(rank: number): number {
+        return 16 + (rank - 1);
+    }
+
+    // Get attribute cost multiplier
+    static getAttributeCost(attrType: AttributeType): number {
+        const definition = ATTRIBUTE_DEFINITIONS[attrType];
+        return definition.costMultiplier;
+    }
+
+    // Calculate total attribute costs (positive values only)
+    static calculateTotalAttributeCosts(attributes: IAttributes): number {
+        let totalCost = 0;
+        Object.entries(attributes).forEach(([attrType, value]) => {
+            const cost = this.getAttributeCost(attrType as AttributeType);
+            totalCost += Math.max(0, value) * cost;
+        });
+        return totalCost;
+    }
+
+    // Calculate XP spent beyond attribute chips
+    static calculateAttributeXPSpent(character: ICharacter): number {
+        const totalAttributeChips = this.calculateTotalAttributeChipsForRank(character.rank);
+        const totalAttributeCost = this.calculateTotalAttributeCosts(character.attributes);
+        return Math.max(0, totalAttributeCost - totalAttributeChips);
+    }
+
+    // Calculate total XP spent on all advancement
+    static calculateSpentXP(character: ICharacter): number {
+        let spentXP = 0;
+
+        // XP spent on attributes (beyond attribute chips)
+        spentXP += this.calculateAttributeXPSpent(character);
+
+        // TODO: Add XP spent on skills, benefits, drawbacks when implemented
+        // spentXP += this.calculateSkillXPSpent(character.skills);
+        // spentXP += this.calculateBenefitXPSpent(character.benefits);
+        // spentXP += this.calculateDrawbackXPSpent(character.drawbacks);
+
+        return spentXP;
+    }
+
+    // Calculate available (unspent) XP - this replaces the stored currentXP
+    static calculateAvailableXP(character: ICharacter): number {
+        const totalXP = this.calculateTotalXPForRank(character.rank);
+        const spentXP = this.calculateSpentXP(character);
+        return Math.max(0, totalXP - spentXP);
+    }
+
+    // Calculate available attribute chips
+    static calculateAvailableAttributeChips(character: ICharacter): number {
+        const totalChips = this.calculateTotalAttributeChipsForRank(character.rank);
+        const totalAttributeCosts = this.calculateTotalAttributeCosts(character.attributes);
+        return Math.max(0, totalChips - totalAttributeCosts);
     }
 
     // Calculate hollow influence (1 per 100 burned dust)
@@ -155,9 +223,9 @@ export class CharacterFactory {
             id: crypto.randomUUID(),
             name,
             description,
-            rank: 1,
-            totalXP: CHARACTER_CREATION_RULES.startingXP,
-            currentXP: CHARACTER_CREATION_RULES.startingXP,
+            rank: 1, // Primary stat - totalXP computed from this via CharacterCalculations.calculateTotalXPForRank()
+            // totalXP removed - now computed via CharacterCalculations.calculateTotalXPForRank()
+            // currentXP removed - now computed via CharacterCalculations.calculateAvailableXP()
             attributes: {
                 [AttributeType.DEX]: 0,
                 [AttributeType.STR]: 0,
@@ -222,8 +290,7 @@ export class CharacterUpdater {
     static updateCharacter(character: ICharacter, updates: Partial<ICharacter>): ICharacter {
         const updated = { ...character, ...updates, updatedAt: new Date() };
 
-        // Recalculate derived stats
-        updated.rank = CharacterCalculations.calculateRank(updated.totalXP);
+        // Recalculate derived stats (rank is now primary, not derived)
         updated.damageCapacity = CharacterCalculations.calculateDamageCapacity(updated.attributes.Con);
         updated.hollow.hollowInfluence = CharacterCalculations.calculateHollowInfluence(updated.hollow.burned);
 
@@ -236,22 +303,23 @@ export class CharacterUpdater {
         return this.updateCharacter(character, { attributes: newAttributes });
     }
 
-    // Add XP and handle ranking up
-    static addExperience(character: ICharacter, xp: number): ICharacter {
-        const newTotalXP = character.totalXP + xp;
-        const newCurrentXP = character.currentXP + xp;
+    // Add earned XP and handle ranking up
+    static addEarnedExperience(character: ICharacter, earnedXP: number): ICharacter {
+        // Calculate what the new rank should be based on earned XP
+        // For now, we'll track earned XP in a separate field when implemented
+        // This function is for future use when implementing XP rewards
+
+        const currentTotalEarned = 0; // TODO: Track earned XP separately from starting XP
+        const newTotalEarned = currentTotalEarned + earnedXP;
+        const newRank = CharacterCalculations.calculateRankFromEarnedXP(newTotalEarned);
 
         let updates: Partial<ICharacter> = {
-            totalXP: newTotalXP,
-            currentXP: newCurrentXP
+            rank: Math.max(character.rank, newRank) // Can only increase rank
         };
 
-        // Check for rank up (every 10 XP)
+        // Check for rank up - gain dust
         const oldRank = character.rank;
-        const newRank = CharacterCalculations.calculateRank(newTotalXP);
-
         if (newRank > oldRank) {
-            // Handle ranking up - gain dust and attribute chips
             const rankUps = newRank - oldRank;
             updates = {
                 ...updates,
@@ -263,6 +331,11 @@ export class CharacterUpdater {
         }
 
         return this.updateCharacter(character, updates);
+    }
+
+    // Directly set character rank (for character creation/editing)
+    static setRank(character: ICharacter, rank: number): ICharacter {
+        return this.updateCharacter(character, { rank: Math.max(1, Math.min(15, rank)) });
     }
 
     // Burn dust for Glimmer effects

@@ -1,19 +1,19 @@
 console.log('Main.ts starting to load...');
 
 import { SplashScreen } from './ui/SplashScreen.js';
-import { CharacterManagerView } from './ui/CharacterManagerView.simple.js';
+import { CharacterManagerView } from './ui/CharacterManagerView.js';
 import { LibP2PNetworkProvider } from './p2p.js';
 import { AudioManager } from './audio/AudioManager.js';
-import { BrowserHistoryManager, ViewStateFactory } from './ui/HistoryManager.js';
+import { router } from './utils/Router.js';
 
 console.log('All imports loaded successfully');
 
 // Global app state
-let historyManager: BrowserHistoryManager;
 let networkProvider: LibP2PNetworkProvider;
 let audioManager: AudioManager | undefined;
 let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
+let appContainer: HTMLElement;
 
 // Current view components
 let currentView: 'splash' | 'characters' | 'game' = 'splash';
@@ -28,12 +28,9 @@ async function createApp(): Promise<void> {
     }
 
     console.log('App container found');
+    appContainer = app;
 
     try {
-        // Initialize history manager
-        historyManager = new BrowserHistoryManager();
-        historyManager.initialize(app);
-
         networkProvider = new LibP2PNetworkProvider();
 
         // Initialize audio manager (gracefully handle missing audio files)
@@ -64,12 +61,12 @@ async function createApp(): Promise<void> {
 
         characterManager = new CharacterManagerView();
 
-        // Set up navigation callbacks
-        setupSplashScreenCallbacks();
-        setupCharacterManagerCallbacks();
+        // Set up route-based navigation
+        setupRoutes();
+        setupComponentCallbacks();
 
-        // Start with splash screen
-        await showSplashScreen();
+        // Initialize router
+        router.initialize();
 
         console.log('HollowWorld application initialized successfully');
         console.log('App should now be visible');
@@ -84,7 +81,34 @@ async function createApp(): Promise<void> {
     }
 }
 
-function setupSplashScreenCallbacks(): void {
+function setupRoutes(): void {
+    // Add route definitions
+    router.addRoute({
+        path: '/',
+        title: "Don't Go Hollow",
+        handler: () => renderSplashScreen()
+    });
+
+    router.addRoute({
+        path: '/characters',
+        title: "Don't Go Hollow - Characters",
+        handler: () => renderCharacterManager()
+    });
+
+    router.addRoute({
+        path: '/character/:id',
+        title: "Don't Go Hollow - Edit Character",
+        handler: (params) => renderCharacterEditor(params?.id || '')
+    });
+
+    router.addRoute({
+        path: '/game',
+        title: "Don't Go Hollow - Game",
+        handler: () => renderGameView()
+    });
+}
+
+function setupComponentCallbacks(): void {
     splashScreen.onJoinGame = () => {
         console.log('Join Game clicked - placeholder functionality');
         // TODO: Implement join game functionality
@@ -96,62 +120,66 @@ function setupSplashScreenCallbacks(): void {
     };
 
     splashScreen.onCharacters = () => {
-        showCharacterManager();
+        router.navigate('/characters');
     };
-}
 
-function setupCharacterManagerCallbacks(): void {
     characterManager.onBackToMenu = () => {
-        showSplashScreen();
+        router.navigate('/');
+    };
+
+    characterManager.onBackToCharacters = () => {
+        router.navigate('/characters');
     };
 
     characterManager.onCharacterSelected = (character: any) => {
         console.log('Character selected:', character);
-        // TODO: Start game with selected character
-        showSplashScreen(); // For now, return to splash
+        router.navigate(`/character/${character.id}`);
     };
 }
 
-async function showSplashScreen(): Promise<void> {
+async function renderSplashScreen(): Promise<void> {
     currentView = 'splash';
-
-    const state = ViewStateFactory.createSplashState(async (container) => {
-        splashScreen.render(container);
-    });
-
-    historyManager.pushState(state);
+    splashScreen.render(appContainer);
 }
 
-function showCharacterManager(): void {
+async function renderCharacterManager(): Promise<void> {
     currentView = 'characters';
-
-    const state = ViewStateFactory.createCharactersState(async (container) => {
-        characterManager.render(container);
-    });
-
-    historyManager.pushState(state);
+    characterManager.render(appContainer);
 }
 
-function showGameView(): void {
+async function renderCharacterEditor(characterId: string): Promise<void> {
+    currentView = 'characters'; // Still using character manager for editing
+    if (characterId) {
+        characterManager.editCharacter(characterId);
+    }
+    characterManager.render(appContainer);
+}
+
+async function renderGameView(): Promise<void> {
     currentView = 'game';
 
-    const state = ViewStateFactory.createGameState(async (container) => {
-        container.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: #8b4513;">
-                <h1>Game View</h1>
-                <p>Game functionality coming soon...</p>
-                <button onclick="window.history.back()">Back</button>
-            </div>
-        `;
-    });
+    try {
+        const { templateEngine } = await import('./utils/TemplateEngine.js');
+        const gameHtml = await templateEngine.renderTemplateFromFile('game-view', {});
+        appContainer.innerHTML = gameHtml;
 
-    historyManager.pushState(state);
+        // Setup back button
+        const backBtn = appContainer.querySelector('#back-to-menu-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                router.navigate('/');
+            });
+        }
+    } catch (error) {
+        console.error('Failed to render game view:', error);
+        appContainer.innerHTML = '<div><h1>Game View</h1><p>Failed to load template</p></div>';
+    }
 }
 
 // Cleanup function for when the page is unloaded
 function cleanup(): void {
-    if (historyManager) {
-        historyManager.destroy();
+    if (router) {
+        router.destroy();
     }
     if (splashScreen) {
         splashScreen.destroy();

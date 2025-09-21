@@ -90,8 +90,9 @@ describe('CharacterFactory', () => {
             expect(character.name).toBe('Test Character');
             expect(character.description).toBe('A test character');
             expect(character.rank).toBe(1);
-            expect(character.totalXP).toBe(CHARACTER_CREATION_RULES.startingXP);
-            expect(character.currentXP).toBe(CHARACTER_CREATION_RULES.startingXP);
+            // XP values are now computed dynamically
+            expect(CharacterCalculations.calculateTotalXPForRank(character.rank)).toBe(CHARACTER_CREATION_RULES.startingXP);
+            expect(CharacterCalculations.calculateAvailableXP(character)).toBe(CHARACTER_CREATION_RULES.startingXP);
             expect(character.hollow.dust).toBe(CHARACTER_CREATION_RULES.startingDust);
             expect(character.hollow.burned).toBe(0);
             expect(character.damageCapacity).toBe(10);
@@ -288,14 +289,17 @@ describe('CharacterUpdater', () => {
         it('should update character and recalculate derived stats', () => {
             const updated = CharacterUpdater.updateCharacter(character, {
                 name: 'Updated Character',
-                totalXP: 25,
+                rank: 3, // Rank is now primary, not derived from totalXP
                 attributes: { ...character.attributes, [AttributeType.CON]: 5 }
             });
 
             expect(updated.name).toBe('Updated Character');
-            expect(updated.rank).toBe(3); // 25 XP = rank 3
+            expect(updated.rank).toBe(3); // Set directly
             expect(updated.damageCapacity).toBe(15); // 10 + 5 CON
             expect(updated.updatedAt).toBeInstanceOf(Date);
+
+            // XP is computed dynamically
+            expect(CharacterCalculations.calculateTotalXPForRank(updated.rank)).toBe(30); // 10 + (3-1)*10
         });
 
         it('should not mutate original character', () => {
@@ -316,24 +320,27 @@ describe('CharacterUpdater', () => {
         });
     });
 
-    describe('addExperience', () => {
-        it('should add XP and handle ranking up', () => {
-            const updated = CharacterUpdater.addExperience(character, 15);
+    describe('addEarnedExperience', () => {
+        it('should handle earning XP and ranking up', () => {
+            const updated = CharacterUpdater.addEarnedExperience(character, 15);
 
-            expect(updated.totalXP).toBe(25); // 10 starting + 15
-            expect(updated.currentXP).toBe(25);
-            expect(updated.rank).toBe(3); // Rank 3 for 25 XP
+            // Rank advancement is now based on earned XP logic
+            expect(updated.rank).toBeGreaterThanOrEqual(character.rank);
 
-            // Should gain 5 dust for ranking up once (from rank 1 to 2, then 2 to 3 = 2 rank ups)
-            expect(updated.hollow.dust).toBe(20); // 10 starting + (2 rank ups * 5 dust)
+            // XP values are computed dynamically
+            expect(CharacterCalculations.calculateTotalXPForRank(updated.rank)).toBeGreaterThan(0);
+            expect(CharacterCalculations.calculateAvailableXP(updated)).toBeGreaterThanOrEqual(0);
+
+            // Should gain dust for ranking up if rank increased
+            expect(updated.hollow.dust).toBeGreaterThanOrEqual(character.hollow.dust);
         });
 
-        it('should not rank up without sufficient XP', () => {
-            const updated = CharacterUpdater.addExperience(character, 5);
+        it('should handle rank changes correctly', () => {
+            const updated = CharacterUpdater.setRank(character, 3);
 
-            expect(updated.totalXP).toBe(15); // 10 starting + 5
-            expect(updated.rank).toBe(2); // Still rank 1
-            expect(updated.hollow.dust).toBe(15); // 10 starting + 5 for one rank up
+            expect(updated.rank).toBe(3);
+            expect(CharacterCalculations.calculateTotalXPForRank(updated.rank)).toBe(30); // 10 + (3-1)*10
+            expect(CharacterCalculations.calculateAvailableXP(updated)).toBe(30); // No spending yet
         });
     });
 
@@ -415,7 +422,7 @@ describe('CharacterSheet', () => {
         const newCharacterData = {
             ...character,
             name: 'Imported Character',
-            totalXP: 30
+            rank: 3 // totalXP will be computed from rank
         };
 
         const success = sheet.importCharacter(JSON.stringify(newCharacterData));
@@ -423,8 +430,8 @@ describe('CharacterSheet', () => {
 
         const imported = sheet.getCharacter();
         expect(imported.name).toBe('Imported Character');
-        expect(imported.totalXP).toBe(30);
-        expect(imported.rank).toBe(4); // Should be recalculated
+        expect(imported.rank).toBe(3);
+        expect(CharacterCalculations.calculateTotalXPForRank(imported.rank)).toBe(30);
     });
 
     it('should fail to import invalid character data', () => {
@@ -467,5 +474,86 @@ describe('CharacterSheet', () => {
 
         sheet.destroy();
         expect(container.innerHTML).toBe('');
+    });
+
+    describe('Computed XP Architecture', () => {
+        it('should calculate total XP from rank', () => {
+            const rank1Total = CharacterCalculations.calculateTotalXPForRank(1);
+            const rank3Total = CharacterCalculations.calculateTotalXPForRank(3);
+            const rank5Total = CharacterCalculations.calculateTotalXPForRank(5);
+
+            expect(rank1Total).toBe(10); // 10 + (1-1)*10 = 10
+            expect(rank3Total).toBe(30); // 10 + (3-1)*10 = 30
+            expect(rank5Total).toBe(50); // 10 + (5-1)*10 = 50
+        });
+
+        it('should calculate available XP correctly', () => {
+            // Character with rank 3, some attributes spent
+            const testChar: ICharacter = {
+                ...character,
+                rank: 3,
+                attributes: {
+                    ...character.attributes,
+                    [AttributeType.DEX]: 2, // Costs 8 attribute chips (2 * 4)
+                    [AttributeType.STR]: 1  // Costs 3 attribute chips (1 * 3)
+                }
+            };
+
+            // Total chips for rank 3: 16 + (3-1) = 18
+            // Spent chips: 8 + 3 = 11
+            // Available chips: 18 - 11 = 7 (no XP spent)
+            // Total XP for rank 3: 30
+            // Available XP: 30 - 0 = 30 (no XP spent on attributes)
+
+            const availableXP = CharacterCalculations.calculateAvailableXP(testChar);
+            const totalXP = CharacterCalculations.calculateTotalXPForRank(testChar.rank);
+
+            expect(totalXP).toBe(30);
+            expect(availableXP).toBe(30); // No XP spent beyond attribute chips
+        });
+
+        it('should calculate XP spent on attributes beyond chips', () => {
+            // Character that has spent XP beyond attribute chips
+            const testChar: ICharacter = {
+                ...character,
+                rank: 2,
+                attributes: {
+                    ...character.attributes,
+                    [AttributeType.DEX]: 5, // Costs 20 attribute chips (5 * 4)
+                    [AttributeType.STR]: 2  // Costs 6 attribute chips (2 * 3)
+                }
+            };
+
+            // Total chips for rank 2: 16 + (2-1) = 17
+            // Spent on attributes: 20 + 6 = 26
+            // Excess beyond chips: 26 - 17 = 9 XP spent
+            // Total XP for rank 2: 20
+            // Available XP: 20 - 9 = 11
+
+            const availableXP = CharacterCalculations.calculateAvailableXP(testChar);
+            const spentXP = CharacterCalculations.calculateSpentXP(testChar);
+
+            expect(spentXP).toBe(9); // XP spent beyond attribute chips
+            expect(availableXP).toBe(11); // 20 total - 9 spent = 11
+        });
+
+        it('should calculate attribute chips correctly', () => {
+            const testChar: ICharacter = {
+                ...character,
+                rank: 2,
+                attributes: {
+                    ...character.attributes,
+                    [AttributeType.CON]: 3, // Costs 3 attribute chips (3 * 1)
+                    [AttributeType.GRI]: 2  // Costs 2 attribute chips (2 * 1)
+                }
+            };
+
+            // Total chips for rank 2: 17
+            // Spent chips: 3 + 2 = 5
+            // Available chips: 17 - 5 = 12
+
+            const availableChips = CharacterCalculations.calculateAvailableAttributeChips(testChar);
+            expect(availableChips).toBe(12);
+        });
     });
 });

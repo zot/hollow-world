@@ -118,9 +118,9 @@ export interface ICharacter {
     description: string;
 
     // Core Stats
-    rank: number; // 1 + (totalXP / 10)
-    totalXP: number;
-    currentXP: number;
+    rank: number; // Primary stat - determines XP pools and advancement
+    totalXP?: number; // DEPRECATED: Use CharacterCalculations.calculateTotalXPForRank(rank) instead
+    currentXP?: number; // DEPRECATED: Use CharacterCalculations.calculateAvailableXP() instead
 
     // Attributes
     attributes: IAttributes;

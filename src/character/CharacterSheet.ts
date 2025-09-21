@@ -11,7 +11,7 @@ import {
     IDrawback,
     IHollowData
 } from './types.js';
-import { CharacterUpdater, CharacterValidation } from './CharacterUtils.js';
+import { CharacterUpdater, CharacterValidation, CharacterCalculations } from './CharacterUtils.js';
 
 // Interface for UI components (Interface Segregation Principle)
 export interface ICharacterSheetComponent {
@@ -242,7 +242,7 @@ export class CharacterSheet implements ICharacterSheet {
                 <p class="character-description">${this.character.description}</p>
                 <div class="character-stats">
                     <span class="rank">Rank ${this.character.rank}</span>
-                    <span class="xp">XP: ${this.character.currentXP}/${this.character.totalXP}</span>
+                    <span class="xp">XP: ${CharacterCalculations.calculateAvailableXP(this.character)}/${CharacterCalculations.calculateTotalXPForRank(this.character.rank)}</span>
                     <span class="damage-capacity">Damage Capacity: ${this.character.damageCapacity}</span>
                 </div>
             `;
@@ -734,6 +734,106 @@ export class CharacterSheet implements ICharacterSheet {
                     background: linear-gradient(45deg, #f4a460, #daa520);
                     transform: translateY(-1px);
                     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                }
+
+                /* Enhanced Attribute Editor Styling from main.updated.ts */
+                .attribute-editor-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: rgba(255,248,220,0.9);
+                    border: 2px solid #cd853f;
+                    border-radius: 6px;
+                    padding: 12px 16px;
+                    transition: all 0.2s ease;
+                    margin-bottom: 8px;
+                }
+
+                .attribute-editor-row:hover {
+                    background: rgba(255,248,220,1);
+                    border-color: #8b4513;
+                    transform: translateY(-1px);
+                    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+                }
+
+                .attribute-info {
+                    display: flex;
+                    align-items: baseline;
+                    gap: 8px;
+                }
+
+                .attribute-name {
+                    font-family: 'Rye', serif;
+                    font-weight: bold;
+                    font-size: 1rem;
+                    color: #8b4513;
+                }
+
+                .attribute-cost {
+                    font-size: 0.85rem;
+                    color: #654321;
+                    font-style: italic;
+                }
+
+                .attribute-controls {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .attr-btn {
+                    width: 32px;
+                    height: 32px;
+                    border: 2px solid #8b4513;
+                    background: linear-gradient(45deg, #deb887, #f4a460);
+                    color: #654321;
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .attr-btn:hover {
+                    background: linear-gradient(45deg, #f4a460, #ffd700);
+                    transform: scale(1.1);
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                }
+
+                .attr-btn:active {
+                    transform: scale(0.95);
+                }
+
+                .attr-btn.disabled,
+                .attr-btn:disabled {
+                    background: linear-gradient(45deg, #999, #bbb);
+                    color: #666;
+                    cursor: not-allowed;
+                    opacity: 0.6;
+                    transform: none;
+                }
+
+                .attr-btn.disabled:hover,
+                .attr-btn:disabled:hover {
+                    background: linear-gradient(45deg, #999, #bbb);
+                    transform: none;
+                    box-shadow: none;
+                }
+
+                .attribute-value {
+                    font-family: 'Rye', serif;
+                    font-weight: bold;
+                    font-size: 1.2rem;
+                    color: #654321;
+                    min-width: 30px;
+                    text-align: center;
+                    background: rgba(139,69,19,0.1);
+                    padding: 6px 10px;
+                    border: 1px solid #cd853f;
+                    border-radius: 3px;
                 }
 
                 @media (max-width: 768px) {

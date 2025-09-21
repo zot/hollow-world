@@ -1,7 +1,7 @@
 // Demo character creation and usage examples
 // Shows how to integrate the character sheet system
 
-import { CharacterFactory, CharacterUpdater, CharacterValidation } from './CharacterUtils.js';
+import { CharacterFactory, CharacterUpdater, CharacterValidation, CharacterCalculations } from './CharacterUtils.js';
 import { CharacterSheet } from './CharacterSheet.js';
 import { AttributeType, ISkill, IBenefit, IDrawback } from './types.js';
 
@@ -93,10 +93,10 @@ export function createGunslingerDemo(): void {
 
     // Add some experience and burn some dust to show hollow progression
     console.log('\nAdding experience and burning dust...');
-    updated = CharacterUpdater.addExperience(updated, 20); // Total 30 XP = Rank 4
+    updated = CharacterUpdater.addEarnedExperience(updated, 20); // Advance rank based on earned XP
     updated = CharacterUpdater.burnDust(updated, 8);       // Burned 8 dust
 
-    console.log(`Character is now Rank ${updated.rank} with ${updated.currentXP} XP`);
+    console.log(`Character is now Rank ${updated.rank} with ${CharacterCalculations.calculateAvailableXP(updated)} available XP`);
     console.log(`Hollow status: ${updated.hollow.dust} dust remaining, ${updated.hollow.burned} burned`);
 
     // Validate the character
@@ -178,9 +178,9 @@ export function demonstrateCharacterProgression(): void {
     let updated = character;
 
     console.log('\nGaining 25 XP (2.5 sessions)...');
-    updated = CharacterUpdater.addExperience(updated, 25);
+    updated = CharacterUpdater.addEarnedExperience(updated, 25);
     console.log(`- New Rank: ${updated.rank} (gained ${updated.rank - character.rank} ranks)`);
-    console.log(`- Total XP: ${updated.totalXP}`);
+    console.log(`- Total XP: ${CharacterCalculations.calculateTotalXPForRank(updated.rank)}`);
     console.log(`- Dust: ${updated.hollow.dust} (gained dust from ranking up)`);
 
     console.log('\nBurning 50 dust for powerful effects...');

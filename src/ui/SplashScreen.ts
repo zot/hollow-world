@@ -305,7 +305,8 @@ export class SplashScreen implements ISplashScreen {
                 }
 
                 .splash-title {
-                    font-size: clamp(2.2rem, 7vw, 5.5rem);
+                    font-family: 'Sancreek', 'Rye', serif;
+                    font-size: clamp(2.5rem, 8vw, 6rem);
                     font-weight: 900;
                     text-shadow:
                         1px 1px 0px #000,
@@ -316,26 +317,21 @@ export class SplashScreen implements ISplashScreen {
                         6px 6px 15px rgba(0,0,0,0.8);
                     margin: 0 0 3rem 0;
                     letter-spacing: 0.2em;
-                    font-family: 'Sancreek', 'Rye', 'Impact', 'Franklin Gothic Bold', 'Arial Black', sans-serif;
                     text-transform: uppercase;
-                    color: #CD853F;
+                    color: #8B7355; /* medium-light brown */
                     text-stroke: 3px #000;
                     -webkit-text-stroke: 3px #000;
                     transform: perspective(300px) rotateX(-8deg) scaleY(1.2);
                     filter:
-                        drop-shadow(0 0 20px rgba(205, 133, 63, 0.8))
-                        drop-shadow(0 0 40px rgba(205, 133, 63, 0.4));
+                        drop-shadow(0 0 20px rgba(139, 115, 85, 0.8))
+                        drop-shadow(0 0 40px rgba(139, 115, 85, 0.4));
                     z-index: 10;
                     position: relative;
-                    background: linear-gradient(45deg, #CD853F, #DEB887, #F4A460, #CD853F);
-                    background-clip: text;
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
                     animation: flicker 3s ease-in-out infinite alternate;
                 }
 
-                .splash-title .hollow-word {
-                    font-family: 'Sancreek', 'Rye', cursive;
+                .hollow-word {
+                    font-family: 'Sancreek', 'Rye', serif;
                     color: #004a00;
                     background: linear-gradient(45deg, #008000, #228b22, #32cd32, #00ff00);
                     background-clip: text;
@@ -576,6 +572,53 @@ export class SplashScreen implements ISplashScreen {
                         4px 4px 8px rgba(0,0,0,0.6);
                 }
 
+                /* Global Music Toggle Button - Enhanced Version */
+                .music-toggle-button {
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    border: 3px solid #654321;
+                    background:
+                        radial-gradient(circle, #deb887, #b8860b),
+                        radial-gradient(circle at 30% 30%, rgba(255,248,220,0.8), transparent);
+                    font-size: 1.8rem;
+                    color: #2d1810;
+                    cursor: pointer;
+                    box-shadow:
+                        inset 0 0 10px rgba(255,248,220,0.5),
+                        3px 3px 0px #654321,
+                        6px 6px 10px rgba(0,0,0,0.4);
+                    transition: all 0.2s ease;
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+                }
+
+                .music-toggle-button:hover {
+                    background:
+                        radial-gradient(circle, #ffd700, #daa520),
+                        radial-gradient(circle at 30% 30%, rgba(255,248,220,0.9), transparent);
+                    box-shadow:
+                        inset 0 0 15px rgba(255,248,220,0.7),
+                        3px 3px 0px #654321,
+                        8px 8px 15px rgba(0,0,0,0.5),
+                        0 0 20px rgba(255,215,0,0.4);
+                    transform: scale(1.05);
+                }
+
+                .music-toggle-button:active {
+                    transform: scale(0.95);
+                    box-shadow:
+                        inset 0 0 15px rgba(139,69,19,0.3),
+                        2px 2px 0px #654321,
+                        4px 4px 8px rgba(0,0,0,0.6);
+                }
+
                 @media (max-width: 768px) {
                     .splash-title {
                         font-size: clamp(2rem, 10vw, 4rem);
@@ -598,6 +641,14 @@ export class SplashScreen implements ISplashScreen {
                         font-size: 1.2rem;
                         padding: 12px 25px;
                         min-width: 200px;
+                    }
+
+                    .music-toggle-button {
+                        width: 50px;
+                        height: 50px;
+                        font-size: 1.5rem;
+                        bottom: 15px;
+                        right: 15px;
                     }
                 }
             `;
