@@ -1,0 +1,16 @@
+<div class="character-manager-container" role="main" aria-label="Character editor for {{characterName}}">
+    <div class="character-manager-header">
+        <h1 id="editor-heading">Editing: {{characterName}}</h1>
+        <div class="editor-actions" role="group" aria-labelledby="editor-actions-heading">
+            <h2 id="editor-actions-heading" class="sr-only">Save or Cancel Changes</h2>
+            <button class="nope-btn" id="nope-character-btn"
+                    aria-label="Cancel changes and return to character list">Nope</button>
+            <button class="yep-btn" id="yep-character-btn"
+                    aria-label="Save changes to {{characterName}}">Yep</button>
+        </div>
+    </div>
+
+    <div id="character-sheet-container" role="region" aria-labelledby="editor-heading">
+        <!-- Character sheet will be rendered here -->
+    </div>
+</div>

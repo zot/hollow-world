@@ -1,0 +1,18 @@
+<div class="character-item" data-character-id="{{id}}" role="listitem" tabindex="0"
+     aria-label="Character {{name}}, {{primaryStats}}"
+     onkeydown="if(event.key==='Enter'||event.key===' ') event.target.querySelector('[data-action=edit]').click()">
+    <div class="character-card-content" data-action="edit" data-character-id="{{id}}"
+         role="button" tabindex="-1" aria-label="Edit character {{name}}">
+        <div class="character-name">
+            <h3>{{name}}</h3>
+        </div>
+        <div class="character-stats">
+            <div class="primary-stats" aria-label="Primary stats: {{primaryStats}}">{{primaryStats}}</div>
+            <div class="attributes" aria-label="Attributes: {{attributes}}">{{attributes}}</div>
+        </div>
+    </div>
+    <div class="character-delete">
+        <button class="delete-btn" data-action="delete" data-character-id="{{id}}"
+                aria-label="Delete character {{name}}" title="Delete Character">💀</button>
+    </div>
+</div>

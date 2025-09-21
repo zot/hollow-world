@@ -294,6 +294,12 @@ export class CharacterSheet implements ICharacterSheet {
                     <div class="hollow-influence">
                         <label>Hollow Influence: -${this.character.hollow.hollowInfluence}</label>
                     </div>
+                    <div class="glimmer-debt">
+                        <label>Glimmer Debt: ${this.character.hollow.glimmerDebt || 0}</label>
+                    </div>
+                    <div class="glimmer-debt-total">
+                        <label>Total Debt: ${this.character.hollow.glimmerDebtTotal || 0}</label>
+                    </div>
                     ${this.character.hollow.newMoonMarks > 0 ? `
                         <div class="new-moon-marks warning">
                             New Moon Marks: ${this.character.hollow.newMoonMarks}/3
@@ -497,18 +503,29 @@ export class CharacterSheet implements ICharacterSheet {
             const styleSheet = document.createElement('style');
             styleSheet.id = 'character-sheet-styles';
             styleSheet.textContent = `
-                @import url('https://fonts.googleapis.com/css2?family=Sancreek&family=Rye&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Sancreek&family=Rye&family=Creepster&display=swap');
 
                 .character-sheet-container {
                     font-family: 'Rye', 'Times New Roman', serif;
-                    background: linear-gradient(45deg, #f4e4bc, #e6d7b7);
+                    background:
+                        repeating-linear-gradient(
+                            90deg,
+                            rgba(222,184,135,0.1) 0px,
+                            transparent 1px,
+                            transparent 3px,
+                            rgba(222,184,135,0.1) 4px
+                        ),
+                        radial-gradient(circle at center, rgba(255,248,220,0.3) 0%, transparent 70%),
+                        linear-gradient(45deg, #f4e4bc, #e6d7b7);
                     border: 4px solid #8b4513;
                     border-radius: 8px;
                     padding: 20px;
                     margin: 20px;
                     box-shadow:
                         inset 0 0 20px rgba(139,69,19,0.1),
-                        0 0 30px rgba(0,0,0,0.3);
+                        inset 2px 2px 10px rgba(139,69,19,0.05),
+                        0 0 30px rgba(0,0,0,0.3),
+                        0 5px 15px rgba(0,0,0,0.2);
                     position: relative;
                     color: #3d2914;
                 }
@@ -720,22 +737,100 @@ export class CharacterSheet implements ICharacterSheet {
                 }
 
                 @media (max-width: 768px) {
+                    .character-sheet-container {
+                        margin: 10px;
+                        padding: 15px;
+                    }
+
                     .character-main-content {
                         grid-template-columns: 1fr;
+                        gap: 20px;
                     }
 
                     .attributes-grid {
                         grid-template-columns: 1fr;
+                        gap: 8px;
                     }
 
                     .character-stats {
                         flex-direction: column;
-                        gap: 10px;
+                        gap: 8px;
+                        align-items: stretch;
+                    }
+
+                    .character-stats span {
+                        text-align: center;
+                        padding: 8px;
                     }
 
                     .character-actions {
                         flex-direction: column;
                         align-items: center;
+                        gap: 10px;
+                    }
+
+                    .export-btn, .import-btn, .validate-btn {
+                        width: 100%;
+                        max-width: 250px;
+                        padding: 12px 20px;
+                    }
+
+                    .character-header h1 {
+                        font-size: 2rem;
+                    }
+
+                    .character-attributes h2,
+                    .character-hollow h2,
+                    .character-skills h2,
+                    .character-benefits h2,
+                    .character-equipment h2 {
+                        font-size: 1.5rem;
+                    }
+
+                    .hollow-stats {
+                        grid-template-columns: 1fr;
+                        gap: 8px;
+                    }
+
+                    .skills-list,
+                    .benefits-drawbacks,
+                    .equipment-list {
+                        max-height: 250px;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .character-sheet-container {
+                        margin: 5px;
+                        padding: 10px;
+                    }
+
+                    .character-header h1 {
+                        font-size: 1.8rem;
+                    }
+
+                    .character-attributes h2,
+                    .character-hollow h2,
+                    .character-skills h2,
+                    .character-benefits h2,
+                    .character-equipment h2 {
+                        font-size: 1.3rem;
+                    }
+
+                    .export-btn, .import-btn, .validate-btn {
+                        font-size: 0.9rem;
+                        padding: 10px 15px;
+                    }
+
+                    .attribute-item {
+                        padding: 6px;
+                        font-size: 0.9rem;
+                    }
+
+                    .attribute-item input {
+                        width: 40px;
+                        padding: 3px;
+                        font-size: 0.9rem;
                     }
                 }
             `;
