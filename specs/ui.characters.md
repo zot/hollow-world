@@ -36,9 +36,10 @@
 - **Character card list entries** showing *(Like a deck of playing cards, but deadlier)*:
   - Character name, rank, xp, dc, dust *(The vital statistics)*
     - *The 4 stats should be bottom aligned in the row like bullets in a chamber*
-  - Physical attrs *(How tough they are)*
-  - Social attrs *(How smooth they talk)*
-  - Mental attrs *(How sharp they think)*
+  - Attributes section -- don't label the sections but put an emoji before each row instead
+    - Physical attrs *(How tough they are)*
+    - Social attrs *(How smooth they talk)*
+    - Mental attrs *(How sharp they think)*
   - **Delete button** on the right (💀 skull and crossbones) *(Send 'em to Boot Hill)*
 
 ### 🖱️ Interaction *(How to Wrangle Your Characters)*

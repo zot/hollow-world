@@ -7,6 +7,7 @@
 ## 🎯 Core Principles
 - Use **SOLID principles** in all implementations
 - Create comprehensive **unit tests** for all components
+- Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
 - Follow specifications for consistent western frontier theme
 
 ## 📋 Component Specifications
@@ -15,7 +16,7 @@
 - 🏜️ [`ui.splash.md`](ui.splash.md) - Main splash screen with western styling
 - 👤 [`ui.characters.md`](ui.characters.md) - Character management system
 - 📊 [`character-sheet-plan.md`](character-sheet-plan.md) - Comprehensive character sheet design
-- play/mute button at lower right should appear in all views and retain state across views
+- **Play/mute button** at lower right should appear in all views and retain state across views
 
 ### System Architecture
 - 🌐 [`p2p.md`](p2p.md) - Peer-to-peer networking with LibP2P

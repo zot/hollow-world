@@ -7,38 +7,60 @@
 ---
 
 ## 🎯 Core Requirements
-- [x] **Use SOLID principles in all implementations** ✅ **IMPLEMENTED** - Single Responsibility, Open/Closed, Interface Segregation, Dependency Inversion applied throughout
-- [x] **Use HTML templates instead of JavaScript template literals** ✅ **IMPLEMENTED** - TemplateEngine utility with external HTML files, even fallback methods use templates
-- [x] **Route based history navigation** ✅ **IMPLEMENTED** - Router utility with URL-based navigation (`/`, `/characters`, `/character/:id`, `/game`)
-- [x] **Create comprehensive unit tests for all components** ✅ **IMPLEMENTED** - Updated test suites for computed XP architecture, route-based navigation, and HTML template system. Core functionality tests passing, some DOM integration tests need further refinement for async template loading
+- [x] **Use SOLID principles in all implementations** ✅ **IMPLEMENTED**
+  Single Responsibility, Open/Closed, Interface Segregation, Dependency Inversion applied throughout
+- [x] **Use HTML templates instead of JavaScript template literals** ✅ **IMPLEMENTED**
+  TemplateEngine utility with external HTML files, even fallback methods use templates
+- [x] **Route based history navigation** ✅ **IMPLEMENTED**
+  Router utility with URL-based navigation (`/`, `/characters`, `/character/:id`, `/game`)
+- [x] **Create comprehensive unit tests for all components** ✅ **IMPLEMENTED**
+  Updated test suites for computed XP architecture, route-based navigation, and HTML template system. Core functionality tests passing, some DOM integration tests need further refinement for async template loading
 
 ## 🏗️ Architectural Guidelines
-- [x] **Single Source of Truth** ✅ **IMPLEMENTED** - Rank as primary stat, all XP values computed dynamically to prevent data inconsistency
-- [x] **Computed Properties over Stored Data** ✅ **IMPLEMENTED** - Dynamic calculation of derived stats (totalXP, availableXP, damageCapacity) instead of storing redundant data
-- [x] **Graceful Degradation** ✅ **IMPLEMENTED** - Fallback templates and error recovery ensure system continues working when components fail
-- [x] **Defensive Programming** ✅ **IMPLEMENTED** - Input validation, bounds checking, null safety throughout
-- [x] **Fail-Safe Design** ✅ **IMPLEMENTED** - System remains functional even with corrupted data, missing templates, or component failures
+- [x] **Single Source of Truth** ✅ **IMPLEMENTED**
+  Rank as primary stat, all XP values computed dynamically to prevent data inconsistency
+- [x] **Computed Properties over Stored Data** ✅ **IMPLEMENTED**
+  Dynamic calculation of derived stats (totalXP, availableXP, damageCapacity) instead of storing redundant data
+- [x] **Graceful Degradation** ✅ **IMPLEMENTED**
+  Fallback templates and error recovery ensure system continues working when components fail
+- [x] **Defensive Programming** ✅ **IMPLEMENTED**
+  Input validation, bounds checking, null safety throughout
+- [x] **Fail-Safe Design** ✅ **IMPLEMENTED**
+  System remains functional even with corrupted data, missing templates, or component failures
 
 ## 🛡️ Error Handling Principles
-- [x] **User-Friendly Error Messages** ✅ **IMPLEMENTED** - Toast notifications with clear messages instead of technical console errors
-- [x] **Progressive Enhancement** ✅ **IMPLEMENTED** - Core functionality works, enhanced features (templates, animations) layer on top
-- [x] **Error Recovery** ✅ **IMPLEMENTED** - Corrupted character data validation and repair, template fallbacks
+- [x] **User-Friendly Error Messages** ✅ **IMPLEMENTED**
+  Toast notifications with clear messages instead of technical console errors
+- [x] **Progressive Enhancement** ✅ **IMPLEMENTED**
+  Core functionality works, enhanced features (templates, animations) layer on top
+- [x] **Error Recovery** ✅ **IMPLEMENTED**
+  Corrupted character data validation and repair, template fallbacks
 
 ## 📱 Responsive & Accessibility Principles
-- [x] **Mobile-First Design** ✅ **IMPLEMENTED** - Touch-friendly interfaces with responsive breakpoints (768px, 480px)
-- [x] **Accessibility-First** ✅ **IMPLEMENTED** - ARIA labels, keyboard navigation (arrow keys, home/end), screen reader support
-- [x] **Progressive Disclosure** ✅ **IMPLEMENTED** - Adaptive UI showing appropriate detail level for screen size
+- [x] **Mobile-First Design** ✅ **IMPLEMENTED**
+  Touch-friendly interfaces with responsive breakpoints (768px, 480px)
+- [x] **Accessibility-First** ✅ **IMPLEMENTED**
+  ARIA labels, keyboard navigation (arrow keys, home/end), screen reader support
+- [x] **Progressive Disclosure** ✅ **IMPLEMENTED**
+  Adaptive UI showing appropriate detail level for screen size
 
 ## ⚡ Performance Principles
-- [x] **Lazy Loading** ✅ **IMPLEMENTED** - Virtual scrolling for large character lists, load-more functionality
-- [x] **Debounced Updates** ✅ **IMPLEMENTED** - requestAnimationFrame-based rendering to prevent rapid re-renders
-- [x] **Efficient Caching** ✅ **IMPLEMENTED** - Template caching, render caching with memory management
-- [x] **Memory Management** ✅ **IMPLEMENTED** - Cache size limits, proper cleanup on component destroy
+- [x] **Lazy Loading** ✅ **IMPLEMENTED**
+  Virtual scrolling for large character lists, load-more functionality
+- [x] **Debounced Updates** ✅ **IMPLEMENTED**
+  requestAnimationFrame-based rendering to prevent rapid re-renders
+- [x] **Efficient Caching** ✅ **IMPLEMENTED**
+  Template caching, render caching with memory management
+- [x] **Memory Management** ✅ **IMPLEMENTED**
+  Cache size limits, proper cleanup on component destroy
 
 ## 🎯 Game Design Principles
-- [x] **Rule Consistency** ✅ **IMPLEMENTED** - All calculations follow Hollow RPG rules exactly (XP formulas, attribute costs, damage capacity)
-- [x] **Data Integrity** ✅ **IMPLEMENTED** - Impossible to create invalid character states through computed properties and validation
-- [x] **Audit Trail** ✅ **IMPLEMENTED** - Character creation and modification timestamps, validation tracking
+- [x] **Rule Consistency** ✅ **IMPLEMENTED**
+  All calculations follow Hollow RPG rules exactly (XP formulas, attribute costs, damage capacity)
+- [x] **Data Integrity** ✅ **IMPLEMENTED**
+  Impossible to create invalid character states through computed properties and validation
+- [x] **Audit Trail** ✅ **IMPLEMENTED**
+  Character creation and modification timestamps, validation tracking
 
 ## 🎯 Core System Features
 
@@ -142,11 +164,18 @@
 
 ### 🐛 Known Issues
 *Track bugs and technical debt items*
-- [x] ~~available XP should be dynamically computed~~ ✅ **RESOLVED** - XP is dynamically computed from rank with proper formulas
-- [x] ~~**available XP should be dynamically computed, i.e. a function, not a variable and not stored**~~ ✅ **RESOLVED** - Refactored architecture: removed stored `currentXP`, implemented `CharacterCalculations.calculateAvailableXP()` function that computes available XP as totalXP - spentXP, ensuring single source of truth and data integrity
-- [x] ~~**total XP should be dynamic and based on rank, not stored**~~ ✅ **RESOLVED** - Refactored architecture: removed stored `totalXP`, made rank the primary stat with `CharacterCalculations.calculateTotalXPForRank(rank)` computing total XP dynamically, ensuring data consistency and eliminating redundant storage
-- [x] ~~**the project should be MIT-licensed**~~ ✅ **RESOLVED** - Added MIT LICENSE file and updated package.json license field
-- [x] ~~**check the attribute organization against the spec in ui.characters.md**~~ ✅ **RESOLVED** - Updated attribute display to organize by category and cost order: Physical (DEX(4), STR(3), CON(1)), Social (CHA(4), WIS(3), GRI(1)), Mental (INT(4), PER(4))
+
+- [x] ~~Available XP should be dynamically computed~~ ✅ **RESOLVED**
+  XP is dynamically computed from rank with proper formulas
+- [x] ~~Available XP should be dynamically computed, i.e. a function, not a variable and not stored~~ ✅ **RESOLVED**
+  Refactored architecture: removed stored `currentXP`, implemented `CharacterCalculations.calculateAvailableXP()` function that computes available XP as totalXP - spentXP, ensuring single source of truth and data integrity
+- [x] ~~Total XP should be dynamic and based on rank, not stored~~ ✅ **RESOLVED**
+  Refactored architecture: removed stored `totalXP`, made rank the primary stat with `CharacterCalculations.calculateTotalXPForRank(rank)` computing total XP dynamically, ensuring data consistency and eliminating redundant storage
+- [x] ~~The project should be MIT-licensed~~ ✅ **RESOLVED**
+  Added MIT LICENSE file and updated package.json license field
+- [x] ~~Check the attribute organization against the spec in ui.characters.md~~ ✅ **RESOLVED**
+  Updated attribute display to organize by category and cost order: Physical (DEX(4), STR(3), CON(1)), Social (CHA(4), WIS(3), GRI(1)), Mental (INT(4), PER(4))
+- [ ] Peer ID fails to load in Firefox
 
 ### 💡 Future Enhancements
 *Ideas for post-MVP features and improvements*

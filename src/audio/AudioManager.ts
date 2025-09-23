@@ -21,6 +21,12 @@ export interface IAudioManager {
     isMusicPlaying(): boolean;
     toggleMusic(): Promise<void>;
     playRandomGunshot(): Promise<void>;
+    // Enhanced cycling functionality
+    skipToNextTrack(): Promise<void>;
+    skipToPreviousTrack(): Promise<void>;
+    getCurrentTrackInfo(): { index: number; name: string; total: number } | null;
+    setCyclingEnabled(enabled: boolean): void;
+    isCyclingEnabled(): boolean;
 }
 
 // HTML5 Audio implementation (Single Responsibility)
@@ -76,7 +82,11 @@ export class HTMLAudioProvider implements IAudioProvider {
     }
 
     isPlaying(): boolean {
-        return !this.audio.paused && this.audio.currentTime > 0;
+        // Check if audio is not paused and either currentTime > 0 or readyState indicates playing
+        return !this.audio.paused && !this.audio.ended && (
+            this.audio.currentTime > 0 || 
+            this.audio.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+        );
     }
 
     getCurrentTime(): number {
@@ -94,49 +104,85 @@ export class HTMLAudioProvider implements IAudioProvider {
     }
 }
 
-// Audio Manager implementation (Single Responsibility)
+// Enhanced Audio Manager implementation with music cycling (Single Responsibility)
 export class AudioManager implements IAudioManager {
-    private musicProvider: IAudioProvider;
+    private musicProviders: IAudioProvider[] = [];
     private gunshotProvider: IAudioProvider;
-    private musicSrc: string;
+    private musicSources: string[];
     private gunshotSrc: string;
-    private defaultVolume: number = 0.5;
+    private currentTrackIndex: number = 0;
+    private defaultVolume: number = 0.3; // Lower volume for background ambiance
     private sfxVolume: number = 0.7;
     private activeGunshots: HTMLAudioElement[] = [];
+    private isCycling: boolean = true;
+    private cyclingTimeoutId: number | null = null;
+    private isTransitioning: boolean = false;
 
     constructor(
-        musicSrc: string,
-        gunshotSrc: string,
-        musicProvider: IAudioProvider = new HTMLAudioProvider()
+        musicSources: string | string[],
+        gunshotSrc: string
     ) {
-        this.musicSrc = musicSrc;
+        // Support both single string (backward compatibility) and array of strings
+        this.musicSources = Array.isArray(musicSources) ? musicSources : [musicSources];
         this.gunshotSrc = gunshotSrc;
-        this.musicProvider = musicProvider;
         this.gunshotProvider = new HTMLAudioProvider();
+
+        // Initialize music providers for each track
+        this.musicProviders = this.musicSources.map(() => new HTMLAudioProvider());
     }
 
     async initialize(): Promise<void> {
         try {
-            // Initialize background music
-            await this.musicProvider.load(this.musicSrc);
-            this.musicProvider.setVolume(this.defaultVolume);
-            this.musicProvider.setLoop(true);
+            console.log(`Initializing audio system with ${this.musicSources.length} music tracks`);
+
+            // Initialize all background music tracks
+            for (let i = 0; i < this.musicSources.length; i++) {
+                const provider = this.musicProviders[i];
+                const src = this.musicSources[i];
+
+                try {
+                    await provider.load(src);
+                    provider.setVolume(this.defaultVolume);
+                    provider.setLoop(false); // Individual tracks don't loop, we handle cycling
+                    console.log(`Loaded music track ${i + 1}: ${this.getTrackName(src)}`);
+                } catch (trackError) {
+                    console.warn(`Failed to load music track ${i + 1} (${src}):`, trackError);
+                    // Continue initializing other tracks even if one fails
+                }
+            }
 
             // Initialize gunshot sound effect
             if (this.gunshotSrc) {
                 await this.gunshotProvider.load(this.gunshotSrc);
                 this.gunshotProvider.setVolume(this.sfxVolume);
                 this.gunshotProvider.setLoop(false);
+                console.log('Gunshot sound effect loaded');
             }
+
+            console.log('Audio system initialization completed');
         } catch (error) {
-            console.warn('Failed to initialize audio:', error);
+            console.warn('Failed to initialize audio system:', error);
             throw error;
         }
     }
 
     async playBackgroundMusic(): Promise<void> {
         try {
-            await this.musicProvider.play();
+            if (this.musicProviders.length === 0) {
+                console.warn('No music tracks available to play');
+                return;
+            }
+
+            const currentProvider = this.getCurrentMusicProvider();
+            if (currentProvider) {
+                await currentProvider.play();
+                console.log(`Playing track ${this.currentTrackIndex + 1}: ${this.getCurrentTrackName()}`);
+
+                // Set up automatic cycling to next track when current track ends
+                if (this.isCycling) {
+                    this.setupAutoAdvance(currentProvider);
+                }
+            }
         } catch (error) {
             console.warn('Failed to play background music:', error);
             throw error;
@@ -144,19 +190,25 @@ export class AudioManager implements IAudioManager {
     }
 
     pauseBackgroundMusic(): void {
-        this.musicProvider.pause();
+        this.stopAllMusicTracks();
+        this.clearCyclingTimeout();
     }
 
     stopBackgroundMusic(): void {
-        this.musicProvider.stop();
+        this.stopAllMusicTracks();
+        this.clearCyclingTimeout();
     }
 
     setMusicVolume(volume: number): void {
-        this.musicProvider.setVolume(volume);
+        this.defaultVolume = Math.max(0, Math.min(1, volume));
+        // Apply to all music providers
+        this.musicProviders.forEach(provider => {
+            provider.setVolume(this.defaultVolume);
+        });
     }
 
     isMusicPlaying(): boolean {
-        return this.musicProvider.isPlaying();
+        return this.musicProviders.some(provider => provider.isPlaying());
     }
 
     async toggleMusic(): Promise<void> {
@@ -298,5 +350,170 @@ export class AudioManager implements IAudioManager {
         if (index > -1) {
             this.activeGunshots.splice(index, 1);
         }
+    }
+
+    // Enhanced cycling functionality implementation
+    async skipToNextTrack(): Promise<void> {
+        if (this.musicProviders.length <= 1) {
+            console.log('Only one track available, cannot skip');
+            return;
+        }
+
+        const wasPlaying = this.isMusicPlaying();
+
+        // Stop current track with smooth fade out
+        await this.fadeOutCurrentTrack();
+
+        // Advance to next track
+        this.currentTrackIndex = (this.currentTrackIndex + 1) % this.musicProviders.length;
+
+        // Start new track if music was playing
+        if (wasPlaying) {
+            await this.playBackgroundMusic();
+        }
+
+        console.log(`Skipped to track ${this.currentTrackIndex + 1}: ${this.getCurrentTrackName()}`);
+    }
+
+    async skipToPreviousTrack(): Promise<void> {
+        if (this.musicProviders.length <= 1) {
+            console.log('Only one track available, cannot skip');
+            return;
+        }
+
+        const wasPlaying = this.isMusicPlaying();
+
+        // Stop current track with smooth fade out
+        await this.fadeOutCurrentTrack();
+
+        // Go to previous track
+        this.currentTrackIndex = this.currentTrackIndex === 0
+            ? this.musicProviders.length - 1
+            : this.currentTrackIndex - 1;
+
+        // Start new track if music was playing
+        if (wasPlaying) {
+            await this.playBackgroundMusic();
+        }
+
+        console.log(`Skipped to previous track ${this.currentTrackIndex + 1}: ${this.getCurrentTrackName()}`);
+    }
+
+    getCurrentTrackInfo(): { index: number; name: string; total: number } | null {
+        if (this.musicProviders.length === 0) {
+            return null;
+        }
+
+        return {
+            index: this.currentTrackIndex,
+            name: this.getCurrentTrackName(),
+            total: this.musicProviders.length
+        };
+    }
+
+    setCyclingEnabled(enabled: boolean): void {
+        this.isCycling = enabled;
+        if (!enabled) {
+            this.clearCyclingTimeout();
+            // Set current track to loop if cycling is disabled
+            const currentProvider = this.getCurrentMusicProvider();
+            if (currentProvider) {
+                currentProvider.setLoop(true);
+            }
+        } else {
+            // Remove looping from current track and set up cycling
+            const currentProvider = this.getCurrentMusicProvider();
+            if (currentProvider) {
+                currentProvider.setLoop(false);
+                if (currentProvider.isPlaying()) {
+                    this.setupAutoAdvance(currentProvider);
+                }
+            }
+        }
+        console.log(`Music cycling ${enabled ? 'enabled' : 'disabled'}`);
+    }
+
+    isCyclingEnabled(): boolean {
+        return this.isCycling;
+    }
+
+    // Private helper methods for cycling functionality
+    private getCurrentMusicProvider(): IAudioProvider | null {
+        if (this.currentTrackIndex >= 0 && this.currentTrackIndex < this.musicProviders.length) {
+            return this.musicProviders[this.currentTrackIndex];
+        }
+        return null;
+    }
+
+    private getCurrentTrackName(): string {
+        if (this.currentTrackIndex >= 0 && this.currentTrackIndex < this.musicSources.length) {
+            return this.getTrackName(this.musicSources[this.currentTrackIndex]);
+        }
+        return 'Unknown Track';
+    }
+
+    private getTrackName(src: string): string {
+        // Extract filename from URL/path and make it human-readable
+        const filename = src.split('/').pop() || src;
+        return filename
+            .replace(/\.(mp3|wav|ogg)$/i, '')
+            .replace(/[-_]/g, ' ')
+            .replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    private stopAllMusicTracks(): void {
+        this.musicProviders.forEach(provider => {
+            if (provider.isPlaying()) {
+                provider.pause();
+            }
+        });
+    }
+
+    private clearCyclingTimeout(): void {
+        if (this.cyclingTimeoutId !== null) {
+            clearTimeout(this.cyclingTimeoutId);
+            this.cyclingTimeoutId = null;
+        }
+    }
+
+    private setupAutoAdvance(provider: IAudioProvider): void {
+        this.clearCyclingTimeout();
+
+        // Calculate when to start next track (slightly before current track ends)
+        const duration = provider.getDuration();
+        const currentTime = provider.getCurrentTime();
+        const remainingTime = Math.max(0, duration - currentTime - 1); // 1 second before end
+
+        if (duration > 0 && remainingTime > 0) {
+            this.cyclingTimeoutId = window.setTimeout(async () => {
+                if (this.isCycling && provider.isPlaying()) {
+                    console.log(`Auto-advancing from track ${this.currentTrackIndex + 1} to next track`);
+                    await this.skipToNextTrack();
+                }
+            }, remainingTime * 1000);
+        }
+    }
+
+    private async fadeOutCurrentTrack(fadeTime: number = 1000): Promise<void> {
+        const currentProvider = this.getCurrentMusicProvider();
+        if (!currentProvider || !currentProvider.isPlaying()) {
+            return;
+        }
+
+        this.isTransitioning = true;
+        const originalVolume = this.defaultVolume;
+        const steps = 20;
+        const stepTime = fadeTime / steps;
+        const volumeStep = originalVolume / steps;
+
+        for (let i = 0; i < steps; i++) {
+            const newVolume = Math.max(0, originalVolume - (volumeStep * (i + 1)));
+            currentProvider.setVolume(newVolume);
+            await new Promise(resolve => setTimeout(resolve, stepTime));
+        }
+
+        currentProvider.stop();
+        currentProvider.setVolume(originalVolume);
+        this.isTransitioning = false;
     }
 }

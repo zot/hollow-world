@@ -7,6 +7,7 @@
 ## 🎯 Core Requirements
 - Use **SOLID principles** in all implementations
 - Create comprehensive **unit tests** for all components
+- Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
 
 ## 🔧 Technology Stack
 - **LibP2P** - Decentralized networking protocol

@@ -137,6 +137,13 @@ export class SplashScreen implements ISplashScreen {
                 version: version
             };
 
+            // Debug: Show audioManager state
+            console.log('🎵 SplashScreen audioManager debug:');
+            console.log('  - audioManager exists:', !!this.audioManager);
+            console.log('  - audioManager type:', typeof this.audioManager);
+            console.log('  - audioManager:', this.audioManager);
+            console.log('  - hasAudioManager template value:', templateData.hasAudioManager);
+
             // Render template using embedded template
             const splashHtml = templateEngine.renderTemplate(SPLASH_SCREEN_TEMPLATE, templateData);
             container.innerHTML = splashHtml;
@@ -184,26 +191,59 @@ export class SplashScreen implements ISplashScreen {
     }
 
     private createSplashHTMLFallback(): string {
-        const titleWithSpookyHollow = this.config.title.replace(
-            /\bHollow\b/gi,
-            '<span class="hollow-word">Hollow</span>'
-        );
+        try {
+            // Prepare template data same as main render method
+            const titleWithSpookyHollow = this.config.title.replace(
+                /\bHollow\b/gi,
+                '<span class="hollow-word">Hollow</span>'
+            );
 
-        return `
-            <div class="${this.config.containerClass}">
-                <h1 class="${this.config.titleClass}">${titleWithSpookyHollow}</h1>
-                <div class="${this.config.peerIdClass}">Peer ID: ${this.currentPeerId}</div>
-                <div class="${this.config.buttonsContainerClass}">
-                    <button class="${this.config.joinButtonClass}">Join Game</button>
-                    <button class="${this.config.startButtonClass}">Start Game</button>
-                    <button class="${this.config.charactersButtonClass}">Characters</button>
-                </div>
-                <div class="splash-credits-container">
-                    <button class="splash-credits-button">Credits</button>
-                </div>
-                ${this.audioManager ? `<button class="${this.config.musicButtonClass}" title="Toggle Music">🎵</button>` : ''}
-            </div>
-        `;
+            const templateData = {
+                containerClass: this.config.containerClass,
+                titleClass: this.config.titleClass,
+                titleWithHollow: titleWithSpookyHollow,
+                peerIdClass: this.config.peerIdClass,
+                currentPeerId: this.currentPeerId,
+                buttonsContainerClass: this.config.buttonsContainerClass,
+                joinButtonClass: this.config.joinButtonClass,
+                startButtonClass: this.config.startButtonClass,
+                charactersButtonClass: this.config.charactersButtonClass,
+                hasAudioManager: !!this.audioManager,
+                musicButtonClass: this.config.musicButtonClass,
+                version: VERSION
+            };
+
+            // Use HTML template instead of template literals
+            return templateEngine.renderTemplate(
+                // Load the template synchronously from cache or use embedded fallback
+                this.getSplashFallbackTemplate(),
+                templateData
+            );
+        } catch (error) {
+            console.warn('Failed to use template for fallback, using minimal HTML:', error);
+            // Ultra-minimal fallback if template system fails
+            return `<div class="splash-container"><h1>Don't Go Hollow</h1><p>Peer ID: ${this.currentPeerId}</p><p>Failed to load interface</p></div>`;
+        }
+    }
+
+    private getSplashFallbackTemplate(): string {
+        // Inline template as last resort fallback
+        return `<div class="{{containerClass}}">
+    <h1 class="{{titleClass}}">{{titleWithHollow}}</h1>
+    <div class="{{peerIdClass}}">Peer ID: {{currentPeerId}}</div>
+    <div class="{{buttonsContainerClass}}">
+        <button class="{{joinButtonClass}}">Join Game</button>
+        <button class="{{startButtonClass}}">Start Game</button>
+        <button class="{{charactersButtonClass}}">Characters</button>
+    </div>
+    <div class="splash-credits-container">
+        <button class="splash-credits-button">Credits</button>
+    </div>
+    {{#if hasAudioManager}}
+    <button class="{{musicButtonClass}}" title="Toggle Music">🎵</button>
+    {{/if}}
+    <div class="splash-version">Version {{version}}</div>
+</div>`;
     }
 
     private setupPeerIdInteraction(): void {
@@ -265,7 +305,9 @@ export class SplashScreen implements ISplashScreen {
                     this.onCredits();
                 } else {
                     // Default credits popup if no callback set
-                    this.showCreditsPopup();
+                    this.showCreditsPopup().catch(error => {
+                        console.warn('Failed to show credits popup:', error);
+                    });
                 }
             });
         }
@@ -296,6 +338,10 @@ export class SplashScreen implements ISplashScreen {
         this.musicButtonElement.title = isPlaying ? 'Pause Music' : 'Play Music';
     }
 
+    refreshMusicButtonState(): void {
+        this.updateMusicButtonState();
+    }
+
     private selectPeerIdText(): void {
         if (!this.peerIdElement) return;
 
@@ -311,53 +357,53 @@ export class SplashScreen implements ISplashScreen {
         }
     }
 
-    private showCreditsPopup(): void {
-        // Create credits popup with western theme and licensing info
-        const creditsHtml = `
-            <div class="credits-overlay">
-                <div class="credits-popup">
-                    <div class="credits-header">
-                        <h2>🤠 Credits & Licenses</h2>
-                        <p><em>"Much obliged to these fine folks for their contributions"</em></p>
-                    </div>
+    private async showCreditsPopup(): Promise<void> {
+        try {
+            // Define credits data for template
+            const creditsData = {
+                audioCredits: [
+                    {
+                        title: "Background Music",
+                        name: "Western Adventure Cinematic Spaghetti Loop",
+                        url: "https://pixabay.com/music/cinematic-western-adventure-cinematic-spaghetti-loop-385618/",
+                        creator: "Sonican",
+                        license: "Free for use under the Pixabay Content License",
+                        description: "Donate to keep the flow of Music - Be kind and Show your Support ✔"
+                    },
+                    {
+                        title: "Sound Effects",
+                        name: "Single Gunshot",
+                        url: "https://pixabay.com/sound-effects/single-gunshot-54-40780/",
+                        creator: "morganpurkis (Freesound)",
+                        license: "Free for use under the Pixabay Content License",
+                        description: "Gunshot, War, Rifle sound effect. Free for use."
+                    },
+                    {
+                        title: "Tales from the West",
+                        name: "Cinematic Spaghetti Western Music",
+                        url: "https://pixabay.com/music/cinematic-tales-from-the-west-cinematic-spaghetti-western-music-385616/",
+                        creator: "Luis Humanoide",
+                        license: "Free for use under the Pixabay Content License",
+                        contact: "luishumanoide@gmail.com",
+                        description: "Music composer and VFX creator. Donations are welcome, so I can make more content."
+                    }
+                ]
+            };
 
-                    <div class="credits-content">
-                        <h3>🎵 Audio Assets</h3>
+            // Use HTML template instead of template literals
+            const creditsHtml = await templateEngine.renderTemplateFromFile('credits-popup', creditsData);
 
-                        <div class="credit-item">
-                            <h4>Background Music</h4>
-                            <p><strong><a href="https://pixabay.com/music/cinematic-western-adventure-cinematic-spaghetti-loop-385618/" target="_blank" rel="noopener noreferrer">Western Adventure Cinematic Spaghetti Loop</a></strong></p>
-                            <p>Creator: <strong>Sonican</strong></p>
-                            <p>License: Free for use under the Pixabay Content License</p>
-                            <p><em>"Donate to keep the flow of Music - Be kind and Show your Support ✔"</em></p>
-                        </div>
+            // Add popup to page
+            this.displayCreditsPopup(creditsHtml);
+        } catch (error) {
+            console.warn('Failed to load credits template, using fallback:', error);
+            // Fallback to minimal credits display
+            const fallbackHtml = '<div class="credits-overlay"><div class="credits-popup"><div class="credits-header"><h2>🤠 Credits</h2></div><div class="credits-content"><p>Audio assets from Pixabay and Freesound</p><p>Thanks to all the creators who make this frontier adventure possible!</p></div><div class="credits-footer"><button class="credits-close-btn">Close</button></div></div></div>';
+            this.displayCreditsPopup(fallbackHtml);
+        }
+    }
 
-                        <div class="credit-item">
-                            <h4>Sound Effects</h4>
-                            <p><strong><a href="https://pixabay.com/sound-effects/single-gunshot-54-40780/" target="_blank" rel="noopener noreferrer">Single Gunshot</a></strong></p>
-                            <p>Creator: <strong>morganpurkis (Freesound)</strong></p>
-                            <p>License: Free for use under the Pixabay Content License</p>
-                            <p><em>"Gunshot, War, Rifle sound effect. Free for use."</em></p>
-                        </div>
-
-                        <div class="credit-item">
-                            <h4>Tales from the West</h4>
-                            <p><strong><a href="https://pixabay.com/music/cinematic-tales-from-the-west-cinematic-spaghetti-western-music-385616/" target="_blank" rel="noopener noreferrer">Cinematic Spaghetti Western Music</a></strong></p>
-                            <p>Creator: <strong>Luis Humanoide</strong></p>
-                            <p>License: Free for use under the Pixabay Content License</p>
-                            <p>Contact: luishumanoide@gmail.com</p>
-                            <p><em>"Music composer and VFX creator. Donations are welcome, so I can make more content."</em></p>
-                        </div>
-                    </div>
-
-                    <div class="credits-footer">
-                        <p><strong>🏜️ Don't Go Hollow</strong></p>
-                        <p><em>A frontier adventure powered by open-source audio</em></p>
-                        <button class="credits-close-btn">Close</button>
-                    </div>
-                </div>
-            </div>
-        `;
+    private displayCreditsPopup(creditsHtml: string): void {
 
         // Add popup to page
         const popupDiv = document.createElement('div');

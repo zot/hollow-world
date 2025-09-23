@@ -1,6 +1,6 @@
-# Hollow World
+# 🏜️ Hollow World
 
-https://github.com/zot/hollow-world
+**[https://github.com/zot/hollow-world](https://github.com/zot/hollow-world)**
 
 A P2P web-based RPG client for the Hollow frontier game system.
 
@@ -77,8 +77,8 @@ Built with:
 ## 🧪 Testing
 
 ```bash
-npm test        # Run unit tests
-npm run test:ui # Run tests with UI
+npm test         # Run unit tests
+npm run test:ui  # Run tests with UI
 ```
 
 ---

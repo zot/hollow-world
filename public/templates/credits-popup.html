@@ -1,0 +1,33 @@
+<div class="credits-overlay">
+    <div class="credits-popup">
+        <div class="credits-header">
+            <h2>🤠 Credits & Licenses</h2>
+            <p><em>"Much obliged to these fine folks for their contributions"</em></p>
+        </div>
+
+        <div class="credits-content">
+            <h3>🎵 Audio Assets</h3>
+
+            {{#each audioCredits}}
+            <div class="credit-item">
+                <h4>{{title}}</h4>
+                <p><strong><a href="{{url}}" target="_blank" rel="noopener noreferrer">{{name}}</a></strong></p>
+                <p>Creator: <strong>{{creator}}</strong></p>
+                <p>License: {{license}}</p>
+                {{#if contact}}
+                <p>Contact: {{contact}}</p>
+                {{/if}}
+                {{#if description}}
+                <p><em>"{{description}}"</em></p>
+                {{/if}}
+            </div>
+            {{/each}}
+        </div>
+
+        <div class="credits-footer">
+            <p><strong>🏜️ Don't Go Hollow</strong></p>
+            <p><em>A frontier adventure powered by open-source audio</em></p>
+            <button class="credits-close-btn">Close</button>
+        </div>
+    </div>
+</div>

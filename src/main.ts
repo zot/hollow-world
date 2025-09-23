@@ -40,29 +40,38 @@ async function createApp(): Promise<void> {
     try {
         networkProvider = new LibP2PNetworkProvider();
 
-        // Initialize audio manager (gracefully handle missing audio files)
+        // Initialize enhanced audio manager with multiple music tracks
         try {
-            audioManager = new AudioManager(
+            // List of all available background music tracks for cycling
+            const musicTracks = [
                 new URL('assets/audio/western-adventure-cinematic-spaghetti-loop-385618.mp3', Base).toString(),
+                new URL('assets/audio/cinematic-spaghetti-western-music-tales-from-the-west-207360.mp3', Base).toString(),
+                new URL('assets/audio/picker_s-grove-folk.mp3', Base).toString(),
+                new URL('assets/audio/picker_s-grove-shanty.mp3', Base).toString(),
+                new URL('assets/audio/picker_s-grove-western.mp3', Base).toString(),
+                new URL('assets/audio/picker_s-grove-western-ballad.mp3', Base).toString(),
+                new URL('assets/audio/mining-incident-waltz-hoedown.mp3', Base).toString(),
+                new URL('assets/audio/mining-incident-waltz-polka.mp3', Base).toString()
+            ];
+
+            audioManager = new AudioManager(
+                musicTracks,
                 new URL('assets/audio/single-gunshot-54-40780.mp3', Base).toString()
             );
             await audioManager.initialize();
 
-            // Start background music automatically
-            try {
-                await audioManager.playBackgroundMusic();
-                console.log('Background music started');
-            } catch (musicError) {
-                console.warn('Failed to start background music (user interaction may be required):', musicError);
-            }
-
-            console.log('Audio system initialized successfully');
+            console.log('🎶 Enhanced audio system initialized successfully');
         } catch (error) {
             console.warn('Audio system failed to initialize, continuing without audio:', error);
             audioManager = undefined;
         }
 
         // Initialize views
+        console.log('🎵 main.ts audioManager debug before SplashScreen creation:');
+        console.log('  - audioManager exists:', !!audioManager);
+        console.log('  - audioManager type:', typeof audioManager);
+        console.log('  - audioManager:', audioManager);
+
         splashScreen = new SplashScreen(networkProvider, undefined, audioManager);
         await splashScreen.initialize();
 
@@ -75,6 +84,27 @@ async function createApp(): Promise<void> {
 
         // Initialize router
         router.initialize();
+
+        // Start background music after splash screen is initialized
+        if (audioManager) {
+            try {
+                await audioManager.playBackgroundMusic();
+                const trackInfo = audioManager.getCurrentTrackInfo();
+                console.log('🎵 Background music started with cycling enabled');
+                if (trackInfo) {
+                    console.log(`🎵 Now playing track ${trackInfo.index + 1}/${trackInfo.total}: ${trackInfo.name}`);
+                    console.log(`🔄 Music cycling: ${audioManager.isCyclingEnabled() ? 'ON' : 'OFF'}`);
+                }
+                
+                // Wait a brief moment for audio state to settle, then update button
+                setTimeout(() => {
+                    splashScreen.refreshMusicButtonState();
+                    console.log('🎵 Button state refreshed, isPlaying:', audioManager!.isMusicPlaying());
+                }, 100);
+            } catch (musicError) {
+                console.warn('Failed to start background music (user interaction may be required):', musicError);
+            }
+        }
 
         console.log('HollowWorld application initialized successfully');
         console.log('App should now be visible');
