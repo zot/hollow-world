@@ -7,7 +7,8 @@ import { IUIComponent } from './SplashScreen.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { CharacterCalculations } from '../character/CharacterUtils.js';
 import { IAudioManager } from '../audio/AudioManager.js';
-import { AudioControlUtils, IAudioControlSupport } from '../utils/AudioControlUtils.js';
+import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
+import '../styles/EnhancedAudioControl.css';
 import '../styles/CharacterEditor.css';
 
 // Embedded character editor template
@@ -23,9 +24,7 @@ const CHARACTER_EDITOR_TEMPLATE = `<div class="character-manager-container" role
         </div>
     </div>
 
-    {{#if hasAudioManager}}
-    <button class="audio-control-button" id="music-toggle-btn" title="Toggle Music">🎵</button>
-    {{/if}}
+    <!-- Enhanced audio control will be inserted here -->
 
     <div id="character-sheet-container" role="region" aria-labelledby="editor-heading">
         <!-- Character sheet will be rendered here -->
@@ -55,9 +54,9 @@ const DEFAULT_CONFIG: ICharacterEditorConfig = {
     showCreationMode: true
 };
 
-export class CharacterEditorView implements ICharacterEditor, IAudioControlSupport {
+export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioControlSupport {
     private config: ICharacterEditorConfig;
-    private container: HTMLElement | null = null;
+    public container: HTMLElement | null = null;
     private character: ICharacter | null = null;
     private originalCharacter: ICharacter | null = null; // For change tracking
     private characterSheet: CharacterSheet | null = null;
@@ -108,6 +107,16 @@ export class CharacterEditorView implements ICharacterEditor, IAudioControlSuppo
             });
             this.container.innerHTML = editorHtml;
 
+            // Inject enhanced audio control after the header
+            if (this.audioManager) {
+                const audioControlHtml = await AudioControlUtils.renderEnhancedAudioControl(this);
+                const headerElement = this.container.querySelector('.character-manager-header');
+                
+                if (headerElement) {
+                    headerElement.insertAdjacentHTML('afterend', audioControlHtml);
+                }
+            }
+
             const sheetContainer = this.container.querySelector('#character-sheet-container') as HTMLElement;
             if (sheetContainer) {
                 this.characterSheet = new CharacterSheet(this.character, {
@@ -118,11 +127,12 @@ export class CharacterEditorView implements ICharacterEditor, IAudioControlSuppo
                 this.characterSheet.render(sheetContainer);
             }
 
-            // Set up music button reference
+            // Set up music button reference (for legacy compatibility)
             this.musicButtonElement = this.container.querySelector('#music-toggle-btn');
 
             this.setupEventListeners();
-            AudioControlUtils.updateMusicButtonState(this);
+            AudioControlUtils.setupEnhancedAudioControls(this);
+            AudioControlUtils.updateEnhancedAudioState(this);
             this.applyStyles();
         } catch (error) {
             console.error('Failed to render character editor:', error);

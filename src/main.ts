@@ -45,20 +45,20 @@ async function createApp(): Promise<void> {
 
         // List of all available background music tracks for cycling
         const musicTracks = [
-            new URL('src/assets/audio/western-adventure-cinematic-spaghetti-loop-385618.mp3', Base).toString(),
-            new URL('src/assets/audio/cinematic-spaghetti-western-music-tales-from-the-west-207360.mp3', Base).toString(),
-            new URL('src/assets/audio/picker_s-grove-folk.mp3', Base).toString(),
-            new URL('src/assets/audio/picker_s-grove-shanty.mp3', Base).toString(),
-            new URL('src/assets/audio/picker_s-grove-western.mp3', Base).toString(),
-            new URL('src/assets/audio/picker_s-grove-western-ballad.mp3', Base).toString(),
-            new URL('src/assets/audio/mining-incident-waltz-hoedown.mp3', Base).toString(),
-            new URL('src/assets/audio/mining-incident-waltz-polka.mp3', Base).toString()
+            new URL('assets/audio/western-adventure-cinematic-spaghetti-loop-385618.mp3', Base).toString(),
+            new URL('assets/audio/cinematic-spaghetti-western-music-tales-from-the-west-207360.mp3', Base).toString(),
+            new URL('assets/audio/picker_s-grove-folk.mp3', Base).toString(),
+            new URL('assets/audio/picker_s-grove-shanty.mp3', Base).toString(),
+            new URL('assets/audio/picker_s-grove-western.mp3', Base).toString(),
+            new URL('assets/audio/picker_s-grove-western-ballad.mp3', Base).toString(),
+            new URL('assets/audio/mining-incident-waltz-hoedown.mp3', Base).toString(),
+            new URL('assets/audio/mining-incident-waltz-polka.mp3', Base).toString()
         ];
 
         console.log('🎶 Creating AudioManager with', musicTracks.length, 'tracks');
         audioManager = new AudioManager(
             musicTracks,
-            new URL('src/assets/audio/single-gunshot-54-40780.mp3', Base).toString()
+            new URL('assets/audio/single-gunshot-54-40780.mp3', Base).toString()
         );
         console.log('🎶 AudioManager created:', !!audioManager);
 

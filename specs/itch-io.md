@@ -43,7 +43,7 @@ npm run build
   - Remove `*.~undo-tree~` files
   - Remove any editor temporary files
 - **Copy missing assets** to dist:
-  - Copy `src/assets/audio/*.mp3` to `dist/assets/audio/`
+  - Copy `public/assets/audio/*.mp3` to `dist/assets/audio/` (handled automatically by Vite)
   - Verify all audio files (gunshots, background music) are included
 - increment minor version in top-level VERSION file
 - copy the VERSION file to dist

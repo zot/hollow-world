@@ -2,7 +2,8 @@ import { INetworkProvider } from '../p2p.js';
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { VERSION } from '../version.js';
-import { AudioControlUtils, IAudioControlSupport } from '../utils/AudioControlUtils.js';
+import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
+import '../styles/EnhancedAudioControl.css';
 import '../styles/SplashScreen.css';
 
 // Embedded splash screen template
@@ -17,9 +18,6 @@ const SPLASH_SCREEN_TEMPLATE = `<div class="{{containerClass}}">
     <div class="splash-credits-container">
         <button class="splash-credits-button">Credits</button>
     </div>
-    {{#if hasAudioManager}}
-    <button class="{{musicButtonClass}}" title="Toggle Music">🎵</button>
-    {{/if}}
     <div class="splash-version">Version {{version}}</div>
 </div>`;
 
@@ -67,11 +65,11 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
 };
 
 // Splash screen implementation following SOLID principles
-export class SplashScreen implements ISplashScreen, IAudioControlSupport {
+export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport {
     private networkProvider: INetworkProvider;
     public audioManager?: IAudioManager;
     private config: ISplashScreenConfig;
-    private container: HTMLElement | null = null;
+    public container: HTMLElement | null = null;
     private peerIdElement: HTMLElement | null = null;
     private currentPeerId: string = '';
     public onPeerIdClick?: () => void;
@@ -149,6 +147,16 @@ export class SplashScreen implements ISplashScreen, IAudioControlSupport {
             const splashHtml = templateEngine.renderTemplate(SPLASH_SCREEN_TEMPLATE, templateData);
             container.innerHTML = splashHtml;
 
+            // Inject enhanced audio control if audio manager is available
+            if (this.audioManager) {
+                const audioControlHtml = await AudioControlUtils.renderEnhancedAudioControl(this);
+                const splashContainer = container.querySelector(`.${this.config.containerClass}`);
+                
+                if (splashContainer) {
+                    splashContainer.insertAdjacentHTML('beforeend', audioControlHtml);
+                }
+            }
+
         } catch (error) {
             console.error('Failed to render splash screen template:', error);
             // Fallback to inline HTML for error recovery
@@ -161,14 +169,15 @@ export class SplashScreen implements ISplashScreen, IAudioControlSupport {
         this.startButtonElement = container.querySelector(`.${this.config.startButtonClass}`);
         this.charactersButtonElement = container.querySelector(`.${this.config.charactersButtonClass}`);
         this.creditsButtonElement = container.querySelector('.splash-credits-button');
-        this.musicButtonElement = container.querySelector(`.${this.config.musicButtonClass}`);
+        this.musicButtonElement = container.querySelector('#music-toggle-btn'); // Enhanced control only
 
         if (this.peerIdElement) {
             this.setupPeerIdInteraction();
         }
 
         this.setupButtonInteractions();
-        AudioControlUtils.updateMusicButtonState(this); // Set initial state
+        AudioControlUtils.setupEnhancedAudioControls(this);
+        AudioControlUtils.updateEnhancedAudioState(this);
         this.applyStyles();
     }
 
@@ -243,9 +252,6 @@ export class SplashScreen implements ISplashScreen, IAudioControlSupport {
     <div class="splash-credits-container">
         <button class="splash-credits-button">Credits</button>
     </div>
-    {{#if hasAudioManager}}
-    <button class="{{musicButtonClass}}" title="Toggle Music">🎵</button>
-    {{/if}}
     <div class="splash-version">Version {{version}}</div>
 </div>`;
     }
@@ -308,8 +314,8 @@ export class SplashScreen implements ISplashScreen, IAudioControlSupport {
             });
         }
 
-        // Set up music button event listener using shared utility
-        AudioControlUtils.setupMusicButtonEventListener(this);
+        // Enhanced audio controls handle both collapsed and expanded music buttons
+        // No need for separate setupMusicButtonEventListener call
     }
 
     
@@ -337,33 +343,81 @@ export class SplashScreen implements ISplashScreen, IAudioControlSupport {
 
     private async showCreditsPopup(): Promise<void> {
         try {
-            // Define credits data for template
+            // Define credits data based on actual audio assets from README.md
             const creditsData = {
                 audioCredits: [
                     {
                         title: "Background Music",
                         name: "Western Adventure Cinematic Spaghetti Loop",
-                        url: "https://pixabay.com/music/cinematic-western-adventure-cinematic-spaghetti-loop-385618/",
+                        url: "https://pixabay.com/music/adventure-western-adventure-cinematic-spaghetti-loop-385618/",
                         creator: "Sonican",
                         license: "Free for use under the Pixabay Content License",
-                        description: "Donate to keep the flow of Music - Be kind and Show your Support ✔"
+                        description: "Donate to keep the flow of Music - Click the 'Donate' button – It's quick, easy, and secure. Be kind and Show your Support ✔ Thank You!"
+                    },
+                    {
+                        title: "Background Music",
+                        name: "Cinematic Spaghetti Western Music - Tales from the West",
+                        url: "https://pixabay.com/music/adventure-cinematic-spaghetti-western-music-tales-from-the-west-207360/",
+                        creator: "Luis Humanoide",
+                        license: "Free for use under the Pixabay Content License",
+                        contact: "luishumanoide@gmail.com",
+                        description: "Music composer and VFX creator. Donations are welcome, so I can make more content. If you use my content in your production, crediting it will be appreciated."
                     },
                     {
                         title: "Sound Effects",
-                        name: "Single Gunshot",
+                        name: "Single Gunshot 5.4",
                         url: "https://pixabay.com/sound-effects/single-gunshot-54-40780/",
                         creator: "morganpurkis (Freesound)",
                         license: "Free for use under the Pixabay Content License",
                         description: "Gunshot, War, Rifle sound effect. Free for use."
                     },
                     {
-                        title: "Tales from the West",
-                        name: "Cinematic Spaghetti Western Music",
-                        url: "https://pixabay.com/music/cinematic-tales-from-the-west-cinematic-spaghetti-western-music-385616/",
-                        creator: "Luis Humanoide",
+                        title: "Background Music",
+                        name: "Picker's Grove Folk",
+                        url: "https://pixabay.com/music/",
+                        creator: "Various Artists",
                         license: "Free for use under the Pixabay Content License",
-                        contact: "luishumanoide@gmail.com",
-                        description: "Music composer and VFX creator. Donations are welcome, so I can make more content."
+                        description: "Folk music for ambient background."
+                    },
+                    {
+                        title: "Background Music", 
+                        name: "Picker's Grove Shanty",
+                        url: "https://pixabay.com/music/",
+                        creator: "Various Artists",
+                        license: "Free for use under the Pixabay Content License",
+                        description: "Sea shanty style music adapted for western themes."
+                    },
+                    {
+                        title: "Background Music",
+                        name: "Picker's Grove Western",
+                        url: "https://pixabay.com/music/",
+                        creator: "Various Artists", 
+                        license: "Free for use under the Pixabay Content License",
+                        description: "Traditional western music themes."
+                    },
+                    {
+                        title: "Background Music",
+                        name: "Picker's Grove Western Ballad",
+                        url: "https://pixabay.com/music/",
+                        creator: "Various Artists",
+                        license: "Free for use under the Pixabay Content License", 
+                        description: "Slower western ballad for atmospheric moments."
+                    },
+                    {
+                        title: "Background Music",
+                        name: "Mining Incident Waltz - Hoedown",
+                        url: "https://pixabay.com/music/",
+                        creator: "Various Artists",
+                        license: "Free for use under the Pixabay Content License",
+                        description: "Upbeat hoedown music for lively frontier scenes."
+                    },
+                    {
+                        title: "Background Music",
+                        name: "Mining Incident Waltz - Polka",
+                        url: "https://pixabay.com/music/",
+                        creator: "Various Artists", 
+                        license: "Free for use under the Pixabay Content License",
+                        description: "Polka-style music for diverse western atmosphere."
                     }
                 ]
             };

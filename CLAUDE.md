@@ -11,7 +11,7 @@
 - html templates are in public/templates
 
 ## UI principles
-- audio control should appear on all pages
+- audio control should appear on all pages at the bottom-right
 
 ### 🚀 App Initialization
 - [x] `let Base = new URL(location.toString())` ✅ **IMPLEMENTED**
@@ -22,7 +22,7 @@
 
 ### 🔫 Button Audio Effects
 - [x] **Random gunshot sound** on each button click ✅ **IMPLEMENTED**
-- [x] Use [`single-gunshot-54-40780.mp3`](../src/assets/audio/single-gunshot-54-40780.mp3) ✅ **IMPLEMENTED**
+- [x] Use [`single-gunshot-54-40780.mp3`](../public/assets/audio/single-gunshot-54-40780.mp3) ✅ **IMPLEMENTED**
 - [x] **Randomly vary** pitch and duration on each click ✅ **IMPLEMENTED**
 - [x] **Interrupt functionality**: New gunshot stops any currently playing ✅ **IMPLEMENTED**
 
@@ -39,7 +39,7 @@
 
 ### 🔧 Audio Asset Requirements
 - [ ] **All audio files must be accessible via HTTP** - Audio files must be properly served by dev server
-  - **File locations**: All audio files must exist in `src/assets/audio/` directory
+  - **File locations**: All audio files must exist in `public/assets/audio/` directory
   - **URL construction**: Audio URLs must resolve correctly with Base URL
   - **Network loading**: Audio files must be loadable without CORS or 404 errors
   - **File format support**: Browser must support MP3 format for all audio files

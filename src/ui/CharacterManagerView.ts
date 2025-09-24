@@ -8,7 +8,8 @@ import { templateEngine } from '../utils/TemplateEngine.js';
 import { CharacterCalculations } from '../character/CharacterUtils.js';
 import { characterStorageService } from '../services/CharacterStorageService.js';
 import { IAudioManager } from '../audio/AudioManager.js';
-import { AudioControlUtils, IAudioControlSupport } from '../utils/AudioControlUtils.js';
+import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
+import '../styles/EnhancedAudioControl.css';
 import '../styles/CharacterManager.css';
 
 export interface ICharacterManager extends IUIComponent {
@@ -206,9 +207,9 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
     }
 ];
 
-export class CharacterManagerView implements ICharacterManager, IAudioControlSupport {
+export class CharacterManagerView implements ICharacterManager, IEnhancedAudioControlSupport {
     private config: ICharacterManagerConfig;
-    private container: HTMLElement | null = null;
+    public container: HTMLElement | null = null;
     private characters: ICharacter[] = [];
     public audioManager?: IAudioManager;
     public musicButtonElement: HTMLElement | null = null;
@@ -457,7 +458,17 @@ export class CharacterManagerView implements ICharacterManager, IAudioControlSup
 
             this.container.innerHTML = listHtml;
 
-            // Set up music button reference
+            // Inject enhanced audio control after the header
+            if (this.audioManager) {
+                const audioControlHtml = await AudioControlUtils.renderEnhancedAudioControl(this);
+                const headerEl = this.container.querySelector('.character-manager-header');
+                
+                if (headerEl) {
+                    headerEl.insertAdjacentHTML('afterend', audioControlHtml);
+                }
+            }
+
+            // Set up music button reference (for legacy compatibility)
             this.musicButtonElement = this.container.querySelector('#music-toggle-btn');
 
             // Populate character cards or empty state
@@ -473,7 +484,8 @@ export class CharacterManagerView implements ICharacterManager, IAudioControlSup
             }
 
             this.setupListEventListeners();
-            AudioControlUtils.updateMusicButtonState(this);
+            AudioControlUtils.setupEnhancedAudioControls(this);
+            AudioControlUtils.updateEnhancedAudioState(this);
         } catch (error) {
             console.error('Failed to render character list:', error);
             this.showErrorMessage('Failed to render character list. Please refresh the page.');

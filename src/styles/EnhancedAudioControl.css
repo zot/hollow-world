@@ -1,0 +1,276 @@
+/* Enhanced Audio Control Panel - Western Theme */
+
+.audio-control-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    font-family: 'Rye', serif;
+    background: linear-gradient(45deg, #deb887, #f4a460);
+    border: 3px solid #8b4513;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Collapsed State */
+.audio-control-collapsed {
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    order: 2; /* Always at bottom */
+}
+
+.current-track-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.track-name-container {
+    width: 140px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.track-name {
+    font-size: 0.9rem;
+    color: #3d2914;
+    font-weight: bold;
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 8s linear infinite;
+}
+
+.track-name.short {
+    animation: none;
+}
+
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+.audio-control-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+/* Expanded State */
+.audio-control-expanded {
+    padding: 15px;
+    min-width: 260px;
+    order: 1; /* Above collapsed state */
+    border-bottom: 2px solid #8b4513;
+}
+
+.audio-control-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #8b4513;
+}
+
+.track-info {
+    flex: 1;
+}
+
+.track-title {
+    display: block;
+    font-size: 1rem;
+    color: #3d2914;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.track-position {
+    font-size: 0.8rem;
+    color: #654321;
+    font-style: italic;
+}
+
+.audio-control-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Track Navigation */
+.track-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 8px;
+    background: rgba(139, 69, 19, 0.1);
+    border-radius: 6px;
+}
+
+/* Volume Control */
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(139, 69, 19, 0.1);
+    border-radius: 6px;
+}
+
+.volume-control label {
+    font-size: 0.9rem;
+    color: #3d2914;
+    font-weight: bold;
+    min-width: 55px;
+}
+
+#volume-slider {
+    flex: 1;
+    height: 20px;
+    background: #8b4513;
+    border-radius: 10px;
+    outline: none;
+    cursor: pointer;
+}
+
+#volume-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #deb887;
+    border: 2px solid #8b4513;
+    cursor: pointer;
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #deb887;
+    border: 2px solid #8b4513;
+    cursor: pointer;
+}
+
+.volume-display {
+    font-size: 0.8rem;
+    color: #654321;
+    font-weight: bold;
+    min-width: 35px;
+    text-align: right;
+}
+
+/* Cycling Control */
+.cycling-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    background: rgba(139, 69, 19, 0.1);
+    border-radius: 6px;
+}
+
+.cycling-control label {
+    font-size: 0.9rem;
+    color: #3d2914;
+    font-weight: bold;
+}
+
+/* Buttons */
+.audio-btn {
+    font-family: 'Rye', serif;
+    padding: 6px 10px;
+    border: 2px solid #8b4513;
+    border-radius: 4px;
+    background: linear-gradient(45deg, #f4a460, #deb887);
+    color: #3d2914;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.audio-btn:hover {
+    background: linear-gradient(45deg, #deb887, #f4a460);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.audio-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.play-pause-btn {
+    font-size: 1.2rem;
+    min-width: 36px;
+}
+
+.nav-btn {
+    font-size: 1.1rem;
+    min-width: 36px;
+}
+
+.expand-btn, .collapse-btn {
+    font-size: 1rem;
+    min-width: 32px;
+}
+
+.toggle-btn {
+    min-width: 45px;
+    font-size: 0.8rem;
+}
+
+.toggle-btn.active {
+    background: linear-gradient(45deg, #32cd32, #228b22);
+    color: white;
+    border-color: #006400;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .audio-control-panel {
+        top: 10px;
+        right: 10px;
+        max-width: 240px;
+    }
+
+    .audio-control-expanded {
+        padding: 12px;
+        min-width: 220px;
+    }
+
+    .track-navigation {
+        gap: 10px;
+    }
+
+    .audio-btn {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .audio-control-panel {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin: 10px auto;
+        max-width: 100%;
+    }
+
+    .volume-control {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 5px;
+    }
+
+    .volume-control label {
+        min-width: auto;
+        text-align: center;
+    }
+}

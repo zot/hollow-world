@@ -1,0 +1,51 @@
+{{#if hasAudioManager}}
+<div class="audio-control-panel" id="audio-control-panel">
+    <!-- Expanded State (Hidden by default) - Positioned above collapsed state -->
+    <div class="audio-control-expanded" id="audio-control-expanded" style="display: none;">
+        <div class="audio-control-header">
+            <div class="track-info">
+                <span class="track-title" id="expanded-track-name">{{currentTrackName}}</span>
+                <span class="track-position" id="track-position">Track {{currentTrackIndex}}/{{totalTracks}}</span>
+            </div>
+            <button class="audio-btn collapse-btn" id="audio-collapse-btn" title="Hide audio controls">▲</button>
+        </div>
+
+        <div class="audio-control-body">
+            <!-- Track Navigation -->
+            <div class="track-navigation">
+                <button class="audio-btn nav-btn" id="prev-track-btn" title="Previous track">⏮️</button>
+                <button class="audio-btn play-pause-btn" id="expanded-music-toggle-btn" title="{{playPauseTitle}}">{{playPauseIcon}}</button>
+                <button class="audio-btn nav-btn" id="next-track-btn" title="Next track">⏭️</button>
+            </div>
+
+            <!-- Volume Control -->
+            <div class="volume-control">
+                <label for="volume-slider">Volume:</label>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="{{currentVolume}}" title="Adjust background music volume">
+                <span class="volume-display" id="volume-display">{{volumePercent}}%</span>
+            </div>
+
+            <!-- Cycling Control -->
+            <div class="cycling-control">
+                <label for="cycling-toggle">Auto-cycle tracks:</label>
+                <button class="audio-btn toggle-btn {{#if isCyclingEnabled}}active{{/if}}" id="cycling-toggle-btn" title="Toggle automatic track cycling">
+                    {{#if isCyclingEnabled}}ON{{else}}OFF{{/if}}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collapsed State (Default) - Always at bottom -->
+    <div class="audio-control-collapsed" id="audio-control-collapsed">
+        <div class="current-track-info">
+            <div class="track-name-container">
+                <span class="track-name" id="current-track-name">{{currentTrackName}}</span>
+            </div>
+        </div>
+        <div class="audio-control-buttons">
+            <button class="audio-btn play-pause-btn" id="music-toggle-btn" title="{{playPauseTitle}}">{{playPauseIcon}}</button>
+            <button class="audio-btn expand-btn" id="audio-expand-btn" title="Show audio controls">🎛️</button>
+        </div>
+    </div>
+</div>
+{{/if}}

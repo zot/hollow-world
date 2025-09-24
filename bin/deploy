@@ -58,13 +58,11 @@ clean_temp_files() {
 copy_missing_assets() {
     echo "📁 Copying missing assets to dist..."
 
-    # Create audio directory and copy audio files
-    mkdir -p dist/assets/audio
-    if [[ -d "src/assets/audio" ]] && [[ -n "$(ls src/assets/audio/*.mp3 2>/dev/null)" ]]; then
-        cp src/assets/audio/*.mp3 dist/assets/audio/
-        echo "✅ Audio files copied"
+    # Audio files are now automatically copied by Vite from public/assets/audio/ to dist/assets/audio/
+    if [[ -d "public/assets/audio" ]] && [[ -n "$(ls public/assets/audio/*.mp3 2>/dev/null)" ]]; then
+        echo "✅ Audio files will be automatically copied by Vite build process"
     else
-        echo "⚠️  No audio files found in src/assets/audio/"
+        echo "⚠️  No audio files found in public/assets/audio/"
     fi
 
     # Copy VERSION file
@@ -176,7 +174,7 @@ show_final_status() {
 # Main deployment process
 main() {
     echo "🔧 Step 1: Incrementing version..."
-    increment_version
+    #increment_version
 
     echo ""
     echo "🏗️  Step 2: Building production bundle..."
