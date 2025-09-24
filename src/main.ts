@@ -11,6 +11,7 @@ import { LibP2PNetworkProvider } from './p2p.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
 import { characterStorageService } from './services/CharacterStorageService.js';
+import { ICharacter } from './character/types.js';
 
 console.log('All imports loaded successfully');
 
@@ -37,34 +38,48 @@ async function createApp(): Promise<void> {
     console.log('App container found');
     appContainer = app;
 
+    // Initialize enhanced audio manager FIRST - as early as possible per CLAUDE.md
     try {
+        console.log('🎶 Initializing audio system as early as possible...');
+        console.log('🎶 AudioManager class available:', typeof AudioManager);
+
+        // List of all available background music tracks for cycling
+        const musicTracks = [
+            new URL('src/assets/audio/western-adventure-cinematic-spaghetti-loop-385618.mp3', Base).toString(),
+            new URL('src/assets/audio/cinematic-spaghetti-western-music-tales-from-the-west-207360.mp3', Base).toString(),
+            new URL('src/assets/audio/picker_s-grove-folk.mp3', Base).toString(),
+            new URL('src/assets/audio/picker_s-grove-shanty.mp3', Base).toString(),
+            new URL('src/assets/audio/picker_s-grove-western.mp3', Base).toString(),
+            new URL('src/assets/audio/picker_s-grove-western-ballad.mp3', Base).toString(),
+            new URL('src/assets/audio/mining-incident-waltz-hoedown.mp3', Base).toString(),
+            new URL('src/assets/audio/mining-incident-waltz-polka.mp3', Base).toString()
+        ];
+
+        console.log('🎶 Creating AudioManager with', musicTracks.length, 'tracks');
+        audioManager = new AudioManager(
+            musicTracks,
+            new URL('src/assets/audio/single-gunshot-54-40780.mp3', Base).toString()
+        );
+        console.log('🎶 AudioManager created:', !!audioManager);
+
+        console.log('🎶 Starting AudioManager initialization...');
+        await audioManager.initialize();
+        console.log('🎶 AudioManager initialization completed successfully');
+
+        console.log('🎶 Enhanced audio system initialized successfully');
+    } catch (error) {
+        console.error('🚨 Audio system failed to initialize:', error);
+        console.error('🚨 Error details:', {
+            name: error instanceof Error ? error.name : 'Unknown',
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : 'No stack trace'
+        });
+        audioManager = undefined;
+    }
+
+    try {
+        // Initialize network provider after audio system
         networkProvider = new LibP2PNetworkProvider();
-
-        // Initialize enhanced audio manager with multiple music tracks
-        try {
-            // List of all available background music tracks for cycling
-            const musicTracks = [
-                new URL('assets/audio/western-adventure-cinematic-spaghetti-loop-385618.mp3', Base).toString(),
-                new URL('assets/audio/cinematic-spaghetti-western-music-tales-from-the-west-207360.mp3', Base).toString(),
-                new URL('assets/audio/picker_s-grove-folk.mp3', Base).toString(),
-                new URL('assets/audio/picker_s-grove-shanty.mp3', Base).toString(),
-                new URL('assets/audio/picker_s-grove-western.mp3', Base).toString(),
-                new URL('assets/audio/picker_s-grove-western-ballad.mp3', Base).toString(),
-                new URL('assets/audio/mining-incident-waltz-hoedown.mp3', Base).toString(),
-                new URL('assets/audio/mining-incident-waltz-polka.mp3', Base).toString()
-            ];
-
-            audioManager = new AudioManager(
-                musicTracks,
-                new URL('assets/audio/single-gunshot-54-40780.mp3', Base).toString()
-            );
-            await audioManager.initialize();
-
-            console.log('🎶 Enhanced audio system initialized successfully');
-        } catch (error) {
-            console.warn('Audio system failed to initialize, continuing without audio:', error);
-            audioManager = undefined;
-        }
 
         // Initialize views
         console.log('🎵 main.ts audioManager debug before SplashScreen creation:');
@@ -75,8 +90,8 @@ async function createApp(): Promise<void> {
         splashScreen = new SplashScreen(networkProvider, undefined, audioManager);
         await splashScreen.initialize();
 
-        characterManager = new CharacterManagerView();
-        characterEditor = new CharacterEditorView();
+        characterManager = new CharacterManagerView(undefined, audioManager);
+        characterEditor = new CharacterEditorView(undefined, audioManager);
 
         // Set up route-based navigation
         setupRoutes();
@@ -167,11 +182,11 @@ function setupComponentCallbacks(): void {
         router.navigate('/');
     };
 
-    characterManager.onCharacterSelected = (character: any) => {
+    characterManager.onCharacterSelected = (character: ICharacter) => {
         router.navigate(`/character/${character.id}`);
     };
 
-    characterManager.onNewCharacterCreated = (character: any) => {
+    characterManager.onNewCharacterCreated = (character: ICharacter) => {
         console.log('New character created:', character);
         router.navigate(`/character/${character.id}`);
     };
@@ -181,7 +196,7 @@ function setupComponentCallbacks(): void {
         router.navigate('/characters');
     };
 
-    characterEditor.onCharacterSaved = async (character: any) => {
+    characterEditor.onCharacterSaved = async (character: ICharacter) => {
         console.log('Character saved:', character);
         try {
             await characterStorageService.saveCharacter(character);

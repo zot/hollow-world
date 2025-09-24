@@ -339,10 +339,11 @@
     font-size: 0.85rem;
     color: #654321;
     font-style: italic;
+    margin-left: 0.25em; /* A little space before open paren per spec */
 }
 
 .attribute-cost::after {
-    content: ' '; /* Add space after close paren per spec */
+    content: '\2009'; /* Thin space character between close paren and attribute value per spec */
 }
 
 .attribute-controls {
@@ -420,7 +421,6 @@
     padding: 6px 10px;
     border: 1px solid #cd853f;
     border-radius: 3px 0 0 3px; /* Connect to spinner buttons */
-    margin-left: 12px; /* Space from label */
 }
 
 /* Medium screens: 2 columns for better fit on smaller desktops/tablets */

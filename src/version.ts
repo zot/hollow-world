@@ -1,2 +1,2 @@
 // This file is auto-generated during build - do not edit manually
-export const VERSION = '0.0.13';
+export const VERSION = '0.0.16';

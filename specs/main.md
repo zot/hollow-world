@@ -6,6 +6,7 @@
 
 ## 🎯 Core Principles
 - Use **SOLID principles** in all implementations
+- **🔒 Strict TypeScript typing** - All function parameters, return values, and object properties must use explicit TypeScript types. Never use `any` type except for truly dynamic content. Interface types like `AttributeType` must be used when indexing typed objects like `IAttributes` *(Type your code tighter than a hangman's noose)*
 - Create comprehensive **unit tests** for all components
 - Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
 - Follow specifications for consistent western frontier theme

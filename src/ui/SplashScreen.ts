@@ -2,6 +2,7 @@ import { INetworkProvider } from '../p2p.js';
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { VERSION } from '../version.js';
+import { AudioControlUtils, IAudioControlSupport } from '../utils/AudioControlUtils.js';
 import '../styles/SplashScreen.css';
 
 // Embedded splash screen template
@@ -66,9 +67,9 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
 };
 
 // Splash screen implementation following SOLID principles
-export class SplashScreen implements ISplashScreen {
+export class SplashScreen implements ISplashScreen, IAudioControlSupport {
     private networkProvider: INetworkProvider;
-    private audioManager?: IAudioManager;
+    public audioManager?: IAudioManager;
     private config: ISplashScreenConfig;
     private container: HTMLElement | null = null;
     private peerIdElement: HTMLElement | null = null;
@@ -82,7 +83,7 @@ export class SplashScreen implements ISplashScreen {
     private startButtonElement: HTMLElement | null = null;
     private charactersButtonElement: HTMLElement | null = null;
     private creditsButtonElement: HTMLElement | null = null;
-    private musicButtonElement: HTMLElement | null = null;
+    public musicButtonElement: HTMLElement | null = null;
 
     constructor(
         networkProvider: INetworkProvider,
@@ -151,7 +152,7 @@ export class SplashScreen implements ISplashScreen {
         } catch (error) {
             console.error('Failed to render splash screen template:', error);
             // Fallback to inline HTML for error recovery
-            container.innerHTML = this.createSplashHTMLFallback();
+            container.innerHTML = await this.createSplashHTMLFallback();
         }
 
         // Set up element references and interactions
@@ -167,7 +168,7 @@ export class SplashScreen implements ISplashScreen {
         }
 
         this.setupButtonInteractions();
-        this.updateMusicButtonState(); // Set initial state
+        AudioControlUtils.updateMusicButtonState(this); // Set initial state
         this.applyStyles();
     }
 
@@ -190,7 +191,7 @@ export class SplashScreen implements ISplashScreen {
         this.musicButtonElement = null;
     }
 
-    private createSplashHTMLFallback(): string {
+    private async createSplashHTMLFallback(): Promise<string> {
         try {
             // Prepare template data same as main render method
             const titleWithSpookyHollow = this.config.title.replace(
@@ -214,15 +215,18 @@ export class SplashScreen implements ISplashScreen {
             };
 
             // Use HTML template instead of template literals
-            return templateEngine.renderTemplate(
-                // Load the template synchronously from cache or use embedded fallback
-                this.getSplashFallbackTemplate(),
-                templateData
-            );
+            return await templateEngine.renderTemplateFromFile('splash-fallback', templateData);
         } catch (error) {
             console.warn('Failed to use template for fallback, using minimal HTML:', error);
             // Ultra-minimal fallback if template system fails
-            return `<div class="splash-container"><h1>Don't Go Hollow</h1><p>Peer ID: ${this.currentPeerId}</p><p>Failed to load interface</p></div>`;
+            try {
+                return await templateEngine.renderTemplateFromFile('splash-minimal', {
+                    currentPeerId: this.currentPeerId
+                });
+            } catch (minimalError) {
+                console.error('Even minimal template failed:', minimalError);
+                return '<div class="splash-container"><h1>Don\'t Go Hollow</h1><p>Failed to load interface</p></div>';
+            }
         }
     }
 
@@ -265,9 +269,7 @@ export class SplashScreen implements ISplashScreen {
     private setupButtonInteractions(): void {
         if (this.joinButtonElement) {
             this.joinButtonElement.addEventListener('click', async () => {
-                if (this.audioManager) {
-                    await this.audioManager.playRandomGunshot();
-                }
+                await AudioControlUtils.playButtonSound(this.audioManager);
                 if (this.onJoinGame) {
                     this.onJoinGame();
                 }
@@ -276,9 +278,7 @@ export class SplashScreen implements ISplashScreen {
 
         if (this.startButtonElement) {
             this.startButtonElement.addEventListener('click', async () => {
-                if (this.audioManager) {
-                    await this.audioManager.playRandomGunshot();
-                }
+                await AudioControlUtils.playButtonSound(this.audioManager);
                 if (this.onStartGame) {
                     this.onStartGame();
                 }
@@ -287,9 +287,7 @@ export class SplashScreen implements ISplashScreen {
 
         if (this.charactersButtonElement) {
             this.charactersButtonElement.addEventListener('click', async () => {
-                if (this.audioManager) {
-                    await this.audioManager.playRandomGunshot();
-                }
+                await AudioControlUtils.playButtonSound(this.audioManager);
                 if (this.onCharacters) {
                     this.onCharacters();
                 }
@@ -298,9 +296,7 @@ export class SplashScreen implements ISplashScreen {
 
         if (this.creditsButtonElement) {
             this.creditsButtonElement.addEventListener('click', async () => {
-                if (this.audioManager) {
-                    await this.audioManager.playRandomGunshot();
-                }
+                await AudioControlUtils.playButtonSound(this.audioManager);
                 if (this.onCredits) {
                     this.onCredits();
                 } else {
@@ -312,34 +308,16 @@ export class SplashScreen implements ISplashScreen {
             });
         }
 
-        if (this.musicButtonElement && this.audioManager) {
-            this.musicButtonElement.addEventListener('click', async () => {
-                await this.toggleMusic();
-            });
-        }
+        // Set up music button event listener using shared utility
+        AudioControlUtils.setupMusicButtonEventListener(this);
     }
 
-    async toggleMusic(): Promise<void> {
-        if (!this.audioManager) return;
+    
 
-        try {
-            await this.audioManager.toggleMusic();
-            this.updateMusicButtonState();
-        } catch (error) {
-            console.warn('Failed to toggle music:', error);
-        }
-    }
-
-    private updateMusicButtonState(): void {
-        if (!this.musicButtonElement || !this.audioManager) return;
-
-        const isPlaying = this.audioManager.isMusicPlaying();
-        this.musicButtonElement.textContent = isPlaying ? '🎵' : '🔇';
-        this.musicButtonElement.title = isPlaying ? 'Pause Music' : 'Play Music';
-    }
+    
 
     refreshMusicButtonState(): void {
-        this.updateMusicButtonState();
+        AudioControlUtils.updateMusicButtonState(this);
     }
 
     private selectPeerIdText(): void {

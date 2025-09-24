@@ -15,6 +15,7 @@
 - Use **SOLID principles** in all implementations *(Keep it cleaner than a Sunday church service)*
 - Create comprehensive **unit tests** for all components *(Test everything twice, trust nothing once)*
 - Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
+- **🔒 Strict TypeScript typing** - All function parameters, return values, and object properties must use explicit TypeScript types. Never use `any` type except for truly dynamic content. Interface types like `AttributeType` must be used when indexing typed objects like `IAttributes` *(Type your code tighter than a hangman's noose)*
 
 ### Character structure
 - total XP and total Attribute Chips are based on rank
@@ -36,7 +37,6 @@
 - **Character card list entries** showing *(Like a deck of playing cards, but deadlier)*:
   - Character name, rank, xp, dc, dust *(The vital statistics)*
     - *The 4 stats should be bottom aligned in the row like bullets in a chamber*
-  - Attributes section -- don't label the sections but put an emoji before each row instead
     - Physical attrs *(How tough they are)*
     - Social attrs *(How smooth they talk)*
     - Mental attrs *(How sharp they think)*
@@ -58,14 +58,18 @@
 - **🤠 Western styling** consistent with splash screen theme *(Prettier than a painted lady)*
 - **📊 Resource displays** - Show unspent XP and attribute chips for current rank *(Keep track of your gold and gunpowder)*
 - **🏷️ Attribute organization** - Arrange attributes in rows by cost order (4, 3, 1) *(Most expensive to cheapest, like whiskey pricing)*:
-  - 💪 **Physical** - DEX(4), STR(3), CON(1) *(How fast, strong, and tough you are)*
-  - 🗣️ **Social** - CHA(4), WIS(3), GRI(1) *(How charming, wise, and gritty you are)*
-  - 🧠 **Mental** - INT(4), PER(4) *(How smart and sharp-eyed you are)*
-  - *A little space between the attr and the open paren* *(Give 'em breathing room)*
-  - *A little space between the close paren and the attribute value* *(Don't crowd the numbers)*
-  - a 1145px wide character sheet editor should show 3 attributes across in the Attributes section
-    - 5px column gap between attributes
-    - 5px left/right padding on the attributes container
+  - 💪: DEX(4), STR(3), CON(1) *(How fast, strong, and tough you are)*
+  - 🗣️: CHA(4), WIS(3), GRI(1) *(How charming, wise, and gritty you are)*
+  - 🧠: INT(4), PER(4) *(How smart and sharp-eyed you are)*
+  - group them in rows according to the lists below
+    - [emoji] [attr] [attr] [attr (if there is a third one)]
+    - put each attribute into a box with its value and spinner, all on one line
+      - see "Attribute Spinner Button" for more layout information
+    - *A little space between the attr and the open paren* *(Give 'em breathing room)*
+    - *Use a thin space character between the close paren and the attribute value* *(Don't crowd the numbers)*
+    - a 1145px wide character sheet editor should show 3 attributes across in the Attributes section
+      - 5px column gap between attributes
+      - 5px left/right padding on the attributes container
 - **🎨 Attribute value spacing** - Add visual spacing before each attribute input value for better readability *(Make it easy on the eyes)*
 - **🖱️ Mouse wheel interaction** - Attribute input spinners respond to mouse wheel for increment/decrement with range validation (-2 to 15) *(Scroll like you're spinning the cylinder of a six-shooter)*
 - **📈 Top stats bar** - Rank, damage capacity, dust, available XP, and Attribute Chips at top under character name *(The important stuff front and center)*
@@ -82,6 +86,9 @@
 - **⚡ Editable rank input** *(Promote your gunslinger)*:
   - Number input field with min/max validation (1-15) *(From greenhorn to legend)*
   - On blur: automatically updates total XP and Attribute Chips available, also the totals in parens *(Recalculate the pot)*
+
+### Skills and Fields
+#### Skills in
 
 ### 🌟 New Characters *(Fresh Meat for the Frontier)*
 - New characters start with points given in game rules (XP and Attribute Chips) *(Everyone gets a fair shake)*

@@ -47,7 +47,11 @@ export class HTMLAudioProvider implements IAudioProvider {
                 resolve();
             }, { once: true });
             this.audio.addEventListener('error', (e) => {
-                reject(new Error(`Failed to load audio: ${e.message}`));
+                const error = this.audio.error;
+                const errorMessage = error ? 
+                    `Audio error code ${error.code}: ${this.getMediaErrorMessage(error.code)}` : 
+                    `Failed to load audio from ${src}`;
+                reject(new Error(errorMessage));
             }, { once: true });
             this.audio.load();
         });
@@ -101,6 +105,21 @@ export class HTMLAudioProvider implements IAudioProvider {
         this.audio.addEventListener('error', (e) => {
             console.warn('Audio error:', e);
         });
+    }
+
+    private getMediaErrorMessage(code: number): string {
+        switch (code) {
+            case MediaError.MEDIA_ERR_ABORTED:
+                return 'Media loading aborted by user';
+            case MediaError.MEDIA_ERR_NETWORK:
+                return 'Network error occurred while loading media';
+            case MediaError.MEDIA_ERR_DECODE:
+                return 'Media decoding error';
+            case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                return 'Media format not supported or source not found';
+            default:
+                return 'Unknown media error';
+        }
     }
 }
 

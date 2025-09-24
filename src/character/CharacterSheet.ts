@@ -259,7 +259,7 @@ export class CharacterSheet implements ICharacterSheet {
         // Attributes placeholder
         const attributesEl = this.container.querySelector('#character-attributes');
         if (attributesEl) {
-            // Organize attributes by category and cost order per spec
+            // Organize attributes by category and cost order per spec - group them in rows
             const physicalAttrs = [
                 { type: AttributeType.DEX, cost: 4 },
                 { type: AttributeType.STR, cost: 3 },
@@ -275,76 +275,79 @@ export class CharacterSheet implements ICharacterSheet {
                 { type: AttributeType.PER, cost: 4 }
             ];
 
+            const createAttributeBox = ({ type, cost }: { type: AttributeType; cost: number }) => `
+                <div class="attribute-box" data-attribute="${type}" style="
+                    border: 1px solid #8b7355; 
+                    border-radius: 5px; 
+                    padding: 8px; 
+                    margin-right: 5px; 
+                    background: rgba(139, 115, 85, 0.1);
+                    min-width: 120px;
+                    text-align: center;
+                ">
+                    <div class="attribute-line" style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <span class="attribute-name" style="font-weight: bold;">${type}</span>
+                        <span class="attribute-cost">(${cost})</span>
+                        <span class="attribute-value" id="attr-${type}" style="
+                            min-width: 25px; 
+                            text-align: center; 
+                            font-weight: bold; 
+                            font-size: 16px;
+                        ">${this.character.attributes[type]}</span>
+                        <div class="attribute-spinner" style="display: flex; flex-direction: column;">
+                            <button class="attr-btn inc-btn" data-action="inc" data-attribute="${type}" data-cost="${cost}"
+                                    ${this.config.readOnly ? 'disabled' : ''} style="
+                                        background: #8b7355; 
+                                        color: white; 
+                                        border: none; 
+                                        border-radius: 2px; 
+                                        width: 16px; 
+                                        height: 16px; 
+                                        cursor: pointer;
+                                        font-size: 10px;
+                                        line-height: 1;
+                                        margin-bottom: 1px;
+                                    ">▲</button>
+                            <button class="attr-btn dec-btn" data-action="dec" data-attribute="${type}" data-cost="${cost}"
+                                    ${this.config.readOnly ? 'disabled' : ''} style="
+                                        background: #8b7355; 
+                                        color: white; 
+                                        border: none; 
+                                        border-radius: 2px; 
+                                        width: 16px; 
+                                        height: 16px; 
+                                        cursor: pointer;
+                                        font-size: 10px;
+                                        line-height: 1;
+                                    ">▼</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const createAttributeRow = (emoji: string, attrs: any[]) => `
+                <div class="attribute-category-row" style="
+                    display: flex; 
+                    align-items: center; 
+                    margin-bottom: 15px;
+                    gap: 5px;
+                ">
+                    <span class="category-emoji" style="
+                        margin-right: 10px; 
+                        font-size: 20px;
+                        min-width: 30px;
+                    ">${emoji}</span>
+                    ${attrs.map(createAttributeBox).join('')}
+                </div>
+            `;
+
             attributesEl.innerHTML = `
                 <h2>Attributes</h2>
-
-                <div class="attribute-category">
-                    <h3>💪 Physical</h3>
-                    <div class="attribute-category-row">
-                        ${physicalAttrs.map(({ type, cost }) => `
-                            <div class="attribute-editor-row" data-attribute="${type}">
-                                <div class="attribute-info">
-                                    <span class="attribute-name">${type}</span>
-                                    <span class="attribute-cost">(${cost})</span>
-                                </div>
-                                <div class="attribute-controls">
-                                    <span class="attribute-value" id="attr-${type}">${this.character.attributes[type]}</span>
-                                    <div class="attribute-spinner">
-                                        <button class="attr-btn inc-btn" data-action="inc" data-attribute="${type}" data-cost="${cost}"
-                                                ${this.config.readOnly ? 'disabled' : ''}>▲</button>
-                                        <button class="attr-btn dec-btn" data-action="dec" data-attribute="${type}" data-cost="${cost}"
-                                                ${this.config.readOnly ? 'disabled' : ''}>▼</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <div class="attribute-category">
-                    <h3>🗣️ Social</h3>
-                    <div class="attribute-category-row">
-                        ${socialAttrs.map(({ type, cost }) => `
-                            <div class="attribute-editor-row" data-attribute="${type}">
-                                <div class="attribute-info">
-                                    <span class="attribute-name">${type}</span>
-                                    <span class="attribute-cost">(${cost})</span>
-                                </div>
-                                <div class="attribute-controls">
-                                    <span class="attribute-value" id="attr-${type}">${this.character.attributes[type]}</span>
-                                    <div class="attribute-spinner">
-                                        <button class="attr-btn inc-btn" data-action="inc" data-attribute="${type}" data-cost="${cost}"
-                                                ${this.config.readOnly ? 'disabled' : ''}>▲</button>
-                                        <button class="attr-btn dec-btn" data-action="dec" data-attribute="${type}" data-cost="${cost}"
-                                                ${this.config.readOnly ? 'disabled' : ''}>▼</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <div class="attribute-category">
-                    <h3>🧠 Mental</h3>
-                    <div class="attribute-category-row">
-                        ${mentalAttrs.map(({ type, cost }) => `
-                            <div class="attribute-editor-row" data-attribute="${type}">
-                                <div class="attribute-info">
-                                    <span class="attribute-name">${type}</span>
-                                    <span class="attribute-cost">(${cost})</span>
-                                </div>
-                                <div class="attribute-controls">
-                                    <span class="attribute-value" id="attr-${type}">${this.character.attributes[type]}</span>
-                                    <div class="attribute-spinner">
-                                        <button class="attr-btn inc-btn" data-action="inc" data-attribute="${type}" data-cost="${cost}"
-                                                ${this.config.readOnly ? 'disabled' : ''}>▲</button>
-                                        <button class="attr-btn dec-btn" data-action="dec" data-attribute="${type}" data-cost="${cost}"
-                                                ${this.config.readOnly ? 'disabled' : ''}>▼</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
+                
+                <div class="attributes-container" style="padding: 0 5px;">
+                    ${createAttributeRow('💪', physicalAttrs)}
+                    ${createAttributeRow('🗣️', socialAttrs)}  
+                    ${createAttributeRow('🧠', mentalAttrs)}
                 </div>
             `;
 
@@ -365,22 +368,21 @@ export class CharacterSheet implements ICharacterSheet {
                     });
                 });
 
-                // Add mouse wheel support per specs - make the whole attribute row responsive
-                attributesEl.querySelectorAll('.attribute-editor-row').forEach(attributeRow => {
-                    attributeRow.addEventListener('wheel', (e: Event) => {
+                // Add mouse wheel support per specs - make the whole attribute box responsive
+                attributesEl.querySelectorAll('.attribute-box').forEach(attributeBox => {
+                    attributeBox.addEventListener('wheel', (e: Event) => {
                         const wheelEvent = e as WheelEvent;
 
                         // Prevent page scroll - must be called before any other logic
                         wheelEvent.preventDefault();
                         wheelEvent.stopPropagation();
 
-                        console.log('Mouse wheel on attribute spinner:', wheelEvent.deltaY);
+                        console.log('Mouse wheel on attribute box:', wheelEvent.deltaY);
 
-                        const target = e.target as HTMLElement;
-                        const attributeRowElement = attributeRow as HTMLElement;
+                        const attributeBoxElement = attributeBox as HTMLElement;
 
-                        const attribute = attributeRowElement.dataset.attribute as AttributeType;
-                        const costElement = attributeRowElement.querySelector('.attribute-cost');
+                        const attribute = attributeBoxElement.dataset.attribute as AttributeType;
+                        const costElement = attributeBoxElement.querySelector('.attribute-cost');
                         const costText = costElement?.textContent || '(1)';
                         const cost = parseInt(costText.match(/\((\d+)\)/)?.[1] || '1');
 
@@ -396,19 +398,19 @@ export class CharacterSheet implements ICharacterSheet {
                         }
                     }, { passive: false }); // Explicitly set passive to false for preventDefault to work
 
-                    // Add visual feedback for mouse wheel interaction on whole row
-                    attributeRow.addEventListener('mouseenter', (e) => {
+                    // Add visual feedback for mouse wheel interaction
+                    attributeBox.addEventListener('mouseenter', (e) => {
                         const target = e.target as HTMLElement;
                         target.style.cursor = 'ns-resize';
+                        target.style.backgroundColor = 'rgba(139, 115, 85, 0.2)'; // Slightly darker on hover
                         target.title = 'Use mouse wheel to increment/decrement';
-                        target.style.backgroundColor = 'rgba(255,248,220,1)'; // Highlight on hover
                     });
 
-                    attributeRow.addEventListener('mouseleave', (e) => {
+                    attributeBox.addEventListener('mouseleave', (e) => {
                         const target = e.target as HTMLElement;
                         target.style.cursor = '';
+                        target.style.backgroundColor = 'rgba(139, 115, 85, 0.1)'; // Back to original
                         target.title = '';
-                        target.style.backgroundColor = ''; // Remove highlight
                     });
                 });
 
@@ -468,7 +470,7 @@ export class CharacterSheet implements ICharacterSheet {
                         <h3>Skills</h3>
                         ${this.character.skills.map(skill => `
                             <div class="skill-item">
-                                <label>${skill.isListed ? '🞐' : ''} ${skill.name}</label>
+                                <label>${skill.isListed ? '⭐' : ''} ${skill.name}</label>
                                 <span class="level">Level ${skill.level}</span>
                                 ${skill.isSpecialized ? '<span class="specialized">✓</span>' : ''}
                                 ${skill.costMultiplier === 2 ? '<span class="x2">x2</span>' : ''}

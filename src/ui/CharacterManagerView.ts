@@ -7,6 +7,8 @@ import { IUIComponent } from './SplashScreen.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { CharacterCalculations } from '../character/CharacterUtils.js';
 import { characterStorageService } from '../services/CharacterStorageService.js';
+import { IAudioManager } from '../audio/AudioManager.js';
+import { AudioControlUtils, IAudioControlSupport } from '../utils/AudioControlUtils.js';
 import '../styles/CharacterManager.css';
 
 export interface ICharacterManager extends IUIComponent {
@@ -204,10 +206,12 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
     }
 ];
 
-export class CharacterManagerView implements ICharacterManager {
+export class CharacterManagerView implements ICharacterManager, IAudioControlSupport {
     private config: ICharacterManagerConfig;
     private container: HTMLElement | null = null;
     private characters: ICharacter[] = [];
+    public audioManager?: IAudioManager;
+    public musicButtonElement: HTMLElement | null = null;
 
     // Performance optimization properties
     private renderCache = new Map<string, string>();
@@ -218,8 +222,9 @@ export class CharacterManagerView implements ICharacterManager {
     public onCharacterSelected?: (character: ICharacter) => void;
     public onNewCharacterCreated?: (character: ICharacter) => void;
 
-    constructor(config: Partial<ICharacterManagerConfig> = {}) {
+    constructor(config: Partial<ICharacterManagerConfig> = {}, audioManager?: IAudioManager) {
         this.config = { ...DEFAULT_CONFIG, ...config };
+        this.audioManager = audioManager;
         this.loadCharacters();
     }
 
@@ -359,6 +364,7 @@ export class CharacterManagerView implements ICharacterManager {
 
         this.characters = [];
         this.renderCache.clear();
+        this.musicButtonElement = null;
     }
 
     getCharacters(): ICharacter[] {
@@ -415,17 +421,20 @@ export class CharacterManagerView implements ICharacterManager {
         }
     }
 
-    private showErrorMessage(message: string): void {
-        // Create a temporary error notification
+    private async showErrorMessage(message: string): Promise<void> {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-notification';
-        errorDiv.innerHTML = `
-            <div class="error-content">
-                <span class="error-icon">⚠️</span>
-                <span class="error-text">${message}</span>
-                <button class="error-close" onclick="this.parentElement.parentElement.remove()">×</button>
-            </div>
-        `;
+        
+        try {
+            const errorHtml = await templateEngine.renderTemplateFromFile('error-notification', {
+                message: message
+            });
+            errorDiv.innerHTML = errorHtml;
+        } catch (error) {
+            console.error('Failed to render error notification template:', error);
+            // Fallback to minimal HTML
+            errorDiv.innerHTML = `<div class="error-content"><span class="error-icon">⚠️</span><span class="error-text">${message}</span><button class="error-close" onclick="this.parentElement.parentElement.remove()">×</button></div>`;
+        }
 
         document.body.appendChild(errorDiv);
 
@@ -442,10 +451,14 @@ export class CharacterManagerView implements ICharacterManager {
 
         try {
             const listHtml = await templateEngine.renderTemplateFromFile('character-list', {
-                characterCount: this.characters.length
+                characterCount: this.characters.length,
+                hasAudioManager: !!this.audioManager
             });
 
             this.container.innerHTML = listHtml;
+
+            // Set up music button reference
+            this.musicButtonElement = this.container.querySelector('#music-toggle-btn');
 
             // Populate character cards or empty state
             const cardsContainer = this.container.querySelector('.character-cards');
@@ -460,6 +473,7 @@ export class CharacterManagerView implements ICharacterManager {
             }
 
             this.setupListEventListeners();
+            AudioControlUtils.updateMusicButtonState(this);
         } catch (error) {
             console.error('Failed to render character list:', error);
             this.showErrorMessage('Failed to render character list. Please refresh the page.');
@@ -558,14 +572,17 @@ export class CharacterManagerView implements ICharacterManager {
         let html = firstChunkCards.join('');
 
         if (chunks.length > 1) {
-            // For larger lists, we'll implement a simpler load more button
-            html += `
-                <div id="lazy-load-trigger" class="lazy-load-more">
-                    <button class="load-more-btn" data-remaining="${this.characters.length - CHUNK_SIZE}">
-                        Load ${this.characters.length - CHUNK_SIZE} more characters...
-                    </button>
-                </div>
-            `;
+            // Use template for load more button
+            try {
+                const loadMoreHtml = await templateEngine.renderTemplateFromFile('load-more-button', {
+                    remaining: this.characters.length - CHUNK_SIZE
+                });
+                html += loadMoreHtml;
+            } catch (error) {
+                console.error('Failed to render load-more template:', error);
+                // Fallback to minimal HTML
+                html += `<div class="lazy-load-more"><button class="load-more-btn" data-remaining="${this.characters.length - CHUNK_SIZE}">Load ${this.characters.length - CHUNK_SIZE} more characters...</button></div>`;
+            }
         }
 
         return html;
@@ -712,7 +729,7 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
         if (!this.container) return;
 
         this.container.querySelectorAll('[data-action]').forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => {
                 // Find the element with data-action (might be parent/child)
                 let target = e.target as HTMLElement;
                 let actionElement = target;
@@ -726,6 +743,9 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
 
                 const action = actionElement.dataset.action;
                 const characterId = actionElement.dataset.characterId || actionElement.getAttribute('data-character-id');
+
+                // Play gunshot sound for all button clicks
+                await AudioControlUtils.playButtonSound(this.audioManager);
 
                 if (!characterId) return;
 
@@ -782,21 +802,29 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
 
         const addCharacterBtn = this.container.querySelector('#add-character-btn');
         if (addCharacterBtn) {
-            addCharacterBtn.addEventListener('click', () => {
+            addCharacterBtn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
                 this.createNewCharacter();
             });
         }
 
         const backBtn = this.container.querySelector('#back-to-menu-btn');
         if (backBtn) {
-            backBtn.addEventListener('click', () => {
+            backBtn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
                 if (this.onBackToMenu) {
                     this.onBackToMenu();
                 }
             });
         }
+
+        // Set up music button event listener using shared utility
+        AudioControlUtils.setupMusicButtonEventListener(this);
     }
 
+    
+
+    
 
     private applyStyles(): void {
         // Styles now loaded via CSS import - no longer embedded in TypeScript

@@ -6,6 +6,8 @@ import { CharacterSheet } from '../character/CharacterSheet.js';
 import { IUIComponent } from './SplashScreen.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { CharacterCalculations } from '../character/CharacterUtils.js';
+import { IAudioManager } from '../audio/AudioManager.js';
+import { AudioControlUtils, IAudioControlSupport } from '../utils/AudioControlUtils.js';
 import '../styles/CharacterEditor.css';
 
 // Embedded character editor template
@@ -20,6 +22,10 @@ const CHARACTER_EDITOR_TEMPLATE = `<div class="character-manager-container" role
                     aria-label="Save changes to {{characterName}}">Yep</button>
         </div>
     </div>
+
+    {{#if hasAudioManager}}
+    <button class="audio-control-button" id="music-toggle-btn" title="Toggle Music">🎵</button>
+    {{/if}}
 
     <div id="character-sheet-container" role="region" aria-labelledby="editor-heading">
         <!-- Character sheet will be rendered here -->
@@ -49,19 +55,22 @@ const DEFAULT_CONFIG: ICharacterEditorConfig = {
     showCreationMode: true
 };
 
-export class CharacterEditorView implements ICharacterEditor {
+export class CharacterEditorView implements ICharacterEditor, IAudioControlSupport {
     private config: ICharacterEditorConfig;
     private container: HTMLElement | null = null;
     private character: ICharacter | null = null;
     private originalCharacter: ICharacter | null = null; // For change tracking
     private characterSheet: CharacterSheet | null = null;
     private hasUnsavedChanges: boolean = false;
+    public audioManager?: IAudioManager;
+    public musicButtonElement: HTMLElement | null = null;
 
     public onBackToCharacters?: () => void;
     public onCharacterSaved?: (character: ICharacter) => void;
 
-    constructor(config: Partial<ICharacterEditorConfig> = {}) {
+    constructor(config: Partial<ICharacterEditorConfig> = {}, audioManager?: IAudioManager) {
         this.config = { ...DEFAULT_CONFIG, ...config };
+        this.audioManager = audioManager;
     }
 
     setCharacter(character: ICharacter): void {
@@ -88,13 +97,14 @@ export class CharacterEditorView implements ICharacterEditor {
 
     private async renderEditor(): Promise<void> {
         if (!this.container || !this.character) {
-            this.renderNoCharacterError();
+            await this.renderNoCharacterError();
             return;
         }
 
         try {
             const editorHtml = templateEngine.renderTemplate(CHARACTER_EDITOR_TEMPLATE, {
-                characterName: this.character.name
+                characterName: this.character.name,
+                hasAudioManager: !!this.audioManager
             });
             this.container.innerHTML = editorHtml;
 
@@ -108,28 +118,33 @@ export class CharacterEditorView implements ICharacterEditor {
                 this.characterSheet.render(sheetContainer);
             }
 
+            // Set up music button reference
+            this.musicButtonElement = this.container.querySelector('#music-toggle-btn');
+
             this.setupEventListeners();
+            AudioControlUtils.updateMusicButtonState(this);
             this.applyStyles();
         } catch (error) {
             console.error('Failed to render character editor:', error);
-            this.renderErrorFallback();
+            await this.renderErrorFallback();
         }
     }
 
-    private renderNoCharacterError(): void {
+    private async renderNoCharacterError(): Promise<void> {
         if (!this.container) return;
 
-        this.container.innerHTML = `
-            <div class="${this.config.containerClass}">
-                <div class="${this.config.headerClass}">
-                    <h1>No Character Selected</h1>
-                    <p style="color: red;">No character available for editing.</p>
-                </div>
-                <div class="${this.config.actionsClass}">
-                    <button id="back-to-characters-btn">Back to Characters</button>
-                </div>
-            </div>
-        `;
+        try {
+            const errorHtml = await templateEngine.renderTemplateFromFile('character-editor-no-character-error', {
+                containerClass: this.config.containerClass,
+                headerClass: this.config.headerClass,
+                actionsClass: this.config.actionsClass
+            });
+            this.container.innerHTML = errorHtml;
+        } catch (error) {
+            console.error('Failed to render no-character error template:', error);
+            // Fallback to minimal HTML
+            this.container.innerHTML = '<div><h1>No Character Selected</h1><p>No character available for editing.</p><button id="back-to-characters-btn">Back to Characters</button></div>';
+        }
 
         this.setupErrorEventListeners();
     }
@@ -154,22 +169,31 @@ export class CharacterEditorView implements ICharacterEditor {
 
         const nopeBtn = this.container.querySelector('#nope-character-btn') as HTMLButtonElement;
         if (nopeBtn) {
-            nopeBtn.addEventListener('click', () => {
+            nopeBtn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
                 this.revertChanges();
             });
         }
 
         const yepBtn = this.container.querySelector('#yep-character-btn') as HTMLButtonElement;
         if (yepBtn) {
-            yepBtn.addEventListener('click', () => {
+            yepBtn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
                 this.saveCharacter();
             });
         }
+
+        // Set up music button event listener using shared utility
+        AudioControlUtils.setupMusicButtonEventListener(this);
 
         // Set up change tracking on the character sheet
         this.setupChangeTracking();
         this.updateButtonStates();
     }
+
+    
+
+    
 
     private setupChangeTracking(): void {
         if (!this.characterSheet) return;
@@ -275,17 +299,20 @@ export class CharacterEditorView implements ICharacterEditor {
         }
     }
 
-    private showErrorMessage(message: string): void {
-        // Create a temporary error notification
+    private async showErrorMessage(message: string): Promise<void> {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-notification';
-        errorDiv.innerHTML = `
-            <div class="error-content">
-                <span class="error-icon">⚠️</span>
-                <span class="error-text">${message}</span>
-                <button class="error-close" onclick="this.parentElement.parentElement.remove()">×</button>
-            </div>
-        `;
+        
+        try {
+            const errorHtml = await templateEngine.renderTemplateFromFile('error-notification', {
+                message: message
+            });
+            errorDiv.innerHTML = errorHtml;
+        } catch (error) {
+            console.error('Failed to render error notification template:', error);
+            // Fallback to minimal HTML
+            errorDiv.innerHTML = `<div class="error-content"><span class="error-icon">⚠️</span><span class="error-text">${message}</span><button class="error-close" onclick="this.parentElement.parentElement.remove()">×</button></div>`;
+        }
 
         document.body.appendChild(errorDiv);
 
@@ -309,6 +336,7 @@ export class CharacterEditorView implements ICharacterEditor {
         }
 
         this.character = null;
+        this.musicButtonElement = null;
     }
 
     private applyStyles(): void {
