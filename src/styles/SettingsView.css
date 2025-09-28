@@ -1,0 +1,309 @@
+@import url('https://fonts.googleapis.com/css2?family=Rye&family=Creepster&family=Sancreek&display=swap');
+
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at center, rgba(255,248,220,0.1) 0%, transparent 50%),
+        linear-gradient(45deg, #8b4513 0%, #deb887 25%, #f4a460 50%, #deb887 75%, #8b4513 100%);
+    position: relative;
+    padding: 20px;
+    overflow-x: hidden;
+}
+
+.settings-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px,
+            rgba(139,69,19,0.1) 1px,
+            rgba(139,69,19,0.1) 2px,
+            transparent 3px,
+            transparent 20px
+        );
+    pointer-events: none;
+}
+
+.settings-container::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 8px solid #8b4513;
+    border-image: repeating-linear-gradient(
+        45deg,
+        #8b4513,
+        #8b4513 10px,
+        #654321 10px,
+        #654321 20px
+    ) 8;
+    pointer-events: none;
+    box-shadow:
+        inset 0 0 50px rgba(0,0,0,0.3),
+        0 0 50px rgba(0,0,0,0.5);
+}
+
+.settings-title {
+    font-family: 'Sancreek', 'Rye', serif;
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 900;
+    text-shadow:
+        1px 1px 0px #000,
+        2px 2px 0px #654321,
+        3px 3px 0px #4a2c1a,
+        4px 4px 15px rgba(0,0,0,0.8);
+    margin: 2rem 0;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #8B7355;
+    text-align: center;
+    z-index: 10;
+    position: relative;
+}
+
+.settings-section {
+    background: rgba(255,248,220,0.9);
+    border: 3px solid #8b4513;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px auto;
+    max-width: 600px;
+    width: 100%;
+    box-shadow:
+        inset 0 0 15px rgba(139,69,19,0.2),
+        3px 3px 0px #654321,
+        6px 6px 15px rgba(0,0,0,0.4);
+    z-index: 10;
+    position: relative;
+}
+
+.settings-section h2 {
+    font-family: 'Sancreek', serif;
+    color: #8b4513;
+    font-size: 1.5rem;
+    margin: 0 0 15px 0;
+    text-align: center;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
+}
+
+.settings-field {
+    margin-bottom: 15px;
+}
+
+.settings-field label {
+    font-family: 'Rye', serif;
+    color: #654321;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+    position: relative;
+    z-index: 1;
+    background: rgba(255,248,220,0.9);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.settings-field input,
+.settings-field textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #8b4513;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    background: rgba(255,248,220,0.8);
+    color: #2d1810;
+    box-sizing: border-box;
+}
+
+.settings-field textarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.settings-field input:focus,
+.settings-field textarea:focus {
+    outline: none;
+    border-color: #654321;
+    background: rgba(255,248,220,0.95);
+    box-shadow: 0 0 10px rgba(139,69,19,0.3);
+}
+
+/* Peer ID field with enhanced label protection */
+.settings-field:has(.peer-id-readonly) {
+    padding: 8px;
+    background: rgba(255,248,220,0.5);
+    border-radius: 6px;
+    border: 1px solid rgba(139,69,19,0.2);
+}
+
+.peer-id-readonly {
+    font-family: 'Courier New', monospace;
+    background: rgba(222,184,135,0.8);
+    padding: 12px;
+    border: 2px solid #cd853f;
+    border-radius: 4px;
+    word-break: break-all;
+    color: #2d1810;
+    font-weight: bold;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 8px;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+    min-height: 20px;
+    font-size: 0.9rem;
+}
+
+.friend-entry {
+    background: rgba(244,164,96,0.7);
+    border: 2px solid #cd853f;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.friend-info {
+    margin-bottom: 10px;
+}
+
+.friend-name {
+    font-weight: bold;
+    color: #654321;
+    font-size: 1.1rem;
+}
+
+.friend-peer-id {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #8b4513;
+    word-break: break-all;
+}
+
+.friend-notes textarea {
+    min-height: 60px;
+    margin-top: 5px;
+}
+
+.settings-button,
+.settings-back-button {
+    font-family: 'Rye', 'Impact', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 12px 25px;
+    border: 3px solid #654321;
+    background: linear-gradient(45deg, #deb887, #f4a460, #daa520, #deb887);
+    color: #2d1810;
+    text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
+    box-shadow:
+        inset 0 0 10px rgba(255,248,220,0.5),
+        3px 3px 0px #654321,
+        6px 6px 10px rgba(0,0,0,0.4);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 10px 5px;
+}
+
+.settings-button:hover,
+.settings-back-button:hover {
+    background: linear-gradient(45deg, #f4a460, #ffd700, #ffb347, #f4a460);
+    box-shadow:
+        inset 0 0 15px rgba(255,248,220,0.7),
+        3px 3px 0px #654321,
+        8px 8px 15px rgba(0,0,0,0.5),
+        0 0 20px rgba(255,215,0,0.4);
+    transform: translateY(-1px);
+}
+
+.settings-button:active,
+.settings-back-button:active {
+    transform: translateY(1px);
+    box-shadow:
+        inset 0 0 15px rgba(139,69,19,0.3),
+        2px 2px 0px #654321,
+        4px 4px 8px rgba(0,0,0,0.6);
+}
+
+.settings-actions {
+    text-align: center;
+    margin: 30px 0;
+    z-index: 10;
+    position: relative;
+}
+
+.remove-friend-btn {
+    background: linear-gradient(45deg, #cd853f, #daa520);
+    border: 2px solid #8b4513;
+    color: #2d1810;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+.remove-friend-btn:hover {
+    background: linear-gradient(45deg, #daa520, #ffd700);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 15px;
+    }
+
+    .settings-title {
+        font-size: clamp(1.8rem, 8vw, 3rem);
+        margin: 1.5rem 0;
+    }
+
+    .settings-section {
+        margin: 10px auto;
+        padding: 15px;
+        max-width: 100%;
+    }
+
+    .settings-button,
+    .settings-back-button {
+        font-size: 1rem;
+        padding: 10px 20px;
+        margin: 8px 3px;
+    }
+
+    /* Enhanced mobile styling for peer ID field */
+    .settings-field label {
+        font-size: 1rem;
+        margin-bottom: 8px;
+        padding: 4px 6px;
+    }
+
+    .peer-id-readonly {
+        font-size: 0.8rem;
+        padding: 10px;
+        line-height: 1.5;
+        word-break: break-all;
+        overflow-wrap: anywhere;
+    }
+
+    .settings-field:has(.peer-id-readonly) {
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+}

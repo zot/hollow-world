@@ -1,0 +1,46 @@
+<div class="{{containerClass}}">
+    <h1 class="{{titleClass}}">⚙️ Settings</h1>
+
+    <div class="{{sectionClass}}">
+        <h2>Player Information</h2>
+        <div class="{{fieldClass}}">
+            <label for="player-name-input">Player Name:</label>
+            <input type="text" id="player-name-input" value="{{playerName}}" placeholder="Enter your player name" />
+        </div>
+        <div class="{{fieldClass}}">
+            <label>Peer ID:</label>
+            <span id="peer-id-display" class="peer-id-readonly">{{peerId}}</span>
+        </div>
+    </div>
+
+    <div class="{{sectionClass}}">
+        <h2>Private Notes</h2>
+        <div class="{{fieldClass}}">
+            <label for="private-notes-textarea">Notes (not shared with other players):</label>
+            <textarea id="private-notes-textarea" placeholder="Write your private notes here...">{{privateNotes}}</textarea>
+        </div>
+    </div>
+
+    <div class="{{sectionClass}}">
+        <h2>Friends List</h2>
+        <div id="friends-list">
+            {{#each friends}}
+            <div class="friend-entry" data-friend-id="{{id}}">
+                <div class="friend-info">
+                    <div class="friend-name">{{playerName}}</div>
+                    <div class="friend-peer-id">{{peerId}}</div>
+                </div>
+                <div class="friend-notes">
+                    <textarea placeholder="Notes about {{playerName}}...">{{notes}}</textarea>
+                </div>
+                <button class="remove-friend-btn" data-friend-id="{{id}}">Remove</button>
+            </div>
+            {{/each}}
+        </div>
+        <button class="{{buttonClass}}" id="add-friend-btn">Add Friend</button>
+    </div>
+
+    <div class="settings-actions">
+        <button class="{{backButtonClass}}">Back to Menu</button>
+    </div>
+</div>

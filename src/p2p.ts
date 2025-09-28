@@ -103,79 +103,67 @@ export class LibP2PNetworkProvider implements INetworkProvider {
     }
 
     async initialize(): Promise<void> {
-        // Restore peer ID from persisted private key as per specs
-        let restoredPeerId;
-        let privateKeyForRestore;
+        try {
+            console.log('🔗 Starting peer ID initialization...');
+            
+            // Try to restore peer ID from stored private key first
+            let peerId;
+            const storedPrivateKey = await this.storageProvider.load<any>('privateKeyData');
 
-        // Check for stored private key data
-        const storedPrivateKey = await this.storageProvider.load<any>('privateKeyData');
-
-        if (storedPrivateKey) {
-            try {
-                // Get the raw bytes and recreate the private key object
-                const privateKeyBytes = new Uint8Array(storedPrivateKey.rawBytes || storedPrivateKey.privateKey);
-                const { privateKeyFromProtobuf } = await import('@libp2p/crypto/keys');
-                privateKeyForRestore = await privateKeyFromProtobuf(privateKeyBytes);
-
-                // Restore the peer ID from the private key
-                const { peerIdFromPrivateKey } = await import('@libp2p/peer-id');
-                restoredPeerId = await peerIdFromPrivateKey(privateKeyForRestore);
-            } catch (error: any) {
-                console.warn('Failed to restore peer ID from private key:', error.message);
-                restoredPeerId = null;
-                privateKeyForRestore = null;
-            }
-        }
-
-        // If no stored data or restoration failed, create new one
-        if (!restoredPeerId) {
-            const newPeerId = await createEd25519PeerId();
-
-            // Save the private key for future sessions
-            if (newPeerId.privateKey) {
+            if (storedPrivateKey) {
                 try {
-                    const privateKeyData = {
-                        rawBytes: Array.from(newPeerId.privateKey)
-                    };
-                    await this.storageProvider.save('privateKeyData', privateKeyData);
-                } catch (saveError) {
-                    console.warn('Failed to save private key:', saveError);
+                    console.log('🔑 Found stored private key, restoring peer ID...');
+                    const privateKeyBytes = new Uint8Array(storedPrivateKey.rawBytes || storedPrivateKey.privateKey);
+                    const { privateKeyFromProtobuf } = await import('@libp2p/crypto/keys');
+                    const privateKey = await privateKeyFromProtobuf(privateKeyBytes);
+
+                    const { peerIdFromPrivateKey } = await import('@libp2p/peer-id');
+                    peerId = await peerIdFromPrivateKey(privateKey);
+                    console.log('🔑 Successfully restored peer ID from stored private key:', peerId.toString());
+                } catch (error: any) {
+                    console.warn('Failed to restore peer ID from private key:', error.message);
+                    peerId = null;
                 }
             }
 
-            restoredPeerId = newPeerId;
-            privateKeyForRestore = newPeerId.privateKey;
+            // If no stored data or restoration failed, create new one
+            if (!peerId) {
+                console.log('🔑 Creating new peer ID...');
+                peerId = await createEd25519PeerId();
+                console.log('🔑 New peer ID created:', peerId.toString());
+
+                // Save the private key for future sessions
+                if (peerId.privateKey) {
+                    try {
+                        const privateKeyData = {
+                            rawBytes: Array.from(peerId.privateKey)
+                        };
+                        await this.storageProvider.save('privateKeyData', privateKeyData);
+                        console.log('🔑 Private key saved to storage for persistence');
+                    } catch (saveError) {
+                        console.warn('Failed to save private key:', saveError);
+                    }
+                }
+            }
+
+            // Store the peer ID
+            this.peerId = peerId.toString();
+            console.log('🔗 P2P network initialized with peer ID:', this.peerId);
+
+            // Clean up old persistence data
+            await this.loadSerializedPeerId();
+
+            console.log('🔗 Peer ID initialization completed successfully');
+
+        } catch (initError: any) {
+            console.error('🚨 Peer ID initialization failed:', initError);
+            console.error('🚨 Error details:', {
+                name: initError.name,
+                message: initError.message,
+                stack: initError.stack
+            });
+            throw initError;
         }
-
-        // Clean up old persistence data from previous attempts
-        await this.loadSerializedPeerId();
-
-        // Configure libp2p with the private key
-        let libp2pInit: any = {
-            addresses: {
-                listen: []
-            },
-            transports: [],
-            streamMuxers: [],
-            connectionEncryption: [],
-            services: {}
-        };
-
-        // Use the restored private key if available
-        if (privateKeyForRestore) {
-            libp2pInit.privateKey = privateKeyForRestore;
-        }
-
-        this.libp2p = await createLibp2p(libp2pInit);
-
-        this.helia = await createHelia({
-            libp2p: this.libp2p
-        });
-
-        this.peerId = this.libp2p.peerId.toString();
-
-        // Save the peer ID for future sessions
-        await this.persistPeerId();
     }
 
     private async loadSerializedPeerId(): Promise<any> {

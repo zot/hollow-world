@@ -7,6 +7,7 @@ console.log('Base URL set to:', Base);
 import { SplashScreen } from './ui/SplashScreen.js';
 import { CharacterManagerView } from './ui/CharacterManagerView.js';
 import { CharacterEditorView } from './ui/CharacterEditorView.js';
+import { SettingsView } from './ui/SettingsView.js';
 import { LibP2PNetworkProvider } from './p2p.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
@@ -21,10 +22,11 @@ let audioManager: AudioManager | undefined;
 let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
 let characterEditor: CharacterEditorView;
+let settingsView: SettingsView;
 let appContainer: HTMLElement;
 
 // Current view components
-let currentView: 'splash' | 'characters' | 'editor' | 'game' = 'splash';
+let currentView: 'splash' | 'characters' | 'editor' | 'game' | 'settings' = 'splash';
 
 async function createApp(): Promise<void> {
     console.log('createApp called');
@@ -77,10 +79,23 @@ async function createApp(): Promise<void> {
         audioManager = undefined;
     }
 
+    // Initialize network provider with proper error handling
     try {
-        // Initialize network provider after audio system
+        console.log('🔗 Initializing P2P network provider...');
         networkProvider = new LibP2PNetworkProvider();
+        await networkProvider.initialize();
+        console.log('🔗 P2P network provider initialized successfully');
+    } catch (error) {
+        console.error('🚨 Failed to initialize network provider:', error);
+        console.error('🚨 Network error details:', {
+            name: error instanceof Error ? error.name : 'Unknown',
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : 'No stack trace'
+        });
+        networkProvider = undefined;
+    }
 
+    try {
         // Initialize views
         console.log('🎵 main.ts audioManager debug before SplashScreen creation:');
         console.log('  - audioManager exists:', !!audioManager);
@@ -92,6 +107,7 @@ async function createApp(): Promise<void> {
 
         characterManager = new CharacterManagerView(undefined, audioManager);
         characterEditor = new CharacterEditorView(undefined, audioManager);
+        settingsView = new SettingsView(undefined, audioManager);
 
         // Set up route-based navigation
         setupRoutes();
@@ -159,6 +175,12 @@ function setupRoutes(): void {
         title: "Don't Go Hollow - Game",
         handler: () => renderGameView()
     });
+
+    router.addRoute({
+        path: '/settings',
+        title: "Don't Go Hollow - Settings",
+        handler: () => renderSettingsView()
+    });
 }
 
 function setupComponentCallbacks(): void {
@@ -175,6 +197,10 @@ function setupComponentCallbacks(): void {
 
     splashScreen.onCharacters = () => {
         router.navigate('/characters');
+    };
+
+    splashScreen.onSettings = () => {
+        router.navigate('/settings');
     };
 
     // Character manager callbacks (list only)
@@ -204,6 +230,11 @@ function setupComponentCallbacks(): void {
         } catch (error) {
             console.error('Failed to save character:', error);
         }
+    };
+
+    // Settings view callbacks
+    settingsView.onBackToMenu = () => {
+        router.navigate('/');
     };
 }
 
@@ -252,7 +283,39 @@ async function renderGameView(): Promise<void> {
         }
     } catch (error) {
         console.error('Failed to render game view:', error);
-        appContainer.innerHTML = '<div><h1>Game View</h1><p>Failed to load template</p></div>';
+        try {
+            const { templateEngine: fallbackTemplateEngine } = await import('./utils/TemplateEngine.js');
+            const fallbackHtml = await fallbackTemplateEngine.renderTemplateFromFile('game-view-fallback', {});
+            appContainer.innerHTML = fallbackHtml;
+        } catch (templateError) {
+            console.error('Even fallback template failed:', templateError);
+            appContainer.innerHTML = '<div><h1>Game View</h1><p>Failed to load template</p></div>';
+        }
+    }
+}
+
+async function renderSettingsView(): Promise<void> {
+    currentView = 'settings';
+
+    try {
+        // Update settings view with current peer ID if network provider is available
+        if (networkProvider) {
+            try {
+                settingsView.updatePeerId(networkProvider.getPeerId());
+            } catch (peerIdError) {
+                console.warn('Failed to get peer ID from network provider:', peerIdError);
+                settingsView.updatePeerId('Failed to load peer ID');
+            }
+        } else {
+            console.warn('Network provider not available, using fallback peer ID');
+            settingsView.updatePeerId('Network not initialized');
+        }
+
+        await settingsView.render(appContainer);
+    } catch (error) {
+        console.error('Failed to render settings view:', error);
+        // Fallback: navigate back to splash on error
+        router.navigate('/');
     }
 }
 
