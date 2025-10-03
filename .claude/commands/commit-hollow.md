@@ -8,6 +8,7 @@ Analyze recent changes and create a git commit with terse bullet points for each
 2. Stop and ask about new files to make sure test/temp things are not added to the repo by accident. Unless it's in .gitignore
 3. git add everything
 4. Generate a commit message with:
+   - A summary line at the top, followed by a blank line
    - Terse bullet points (• prefix) for each distinct change/fix
    - Brief, descriptive language following existing commit style
    - Include version bumps, new features, bug fixes, and file additions

@@ -12,6 +12,113 @@
 
 ## UI principles
 - audio control should appear on all pages at the bottom-right
+- use Milkdown crepe for markdown editing
+  - use `crepe.on` for events like in the docs about using Crepe
+  - don't put padding around the editor content
+  - support all available crepe features
+
+### URL-Based Navigation
+- **Single-page app location** represented by browser URL
+- **Each view** gets its own URL path
+
+### Browser History Integration
+- **History array of objects** for browser back/forward navigation
+- **Forward/back buttons** enabled only when history objects are available
+- **Self-rendering objects**: Each history object knows what view to display
+
+### Navigation Behavior
+- **Going back**: User can navigate backward through history
+  - **Forward navigation**: Can advance through existing history
+  - **New navigation**: Can navigate to different object
+    - **Future deletion**: Removes "future" history objects
+    - **New object**: Pushes new object to history array
+
+## Log
+- keep a persistent log in local storage
+  - keep a running serial number for log lines, incremented with each log entry
+  - keep a running total of log message characters
+  - each log entry is a JSON object with a date and a message
+  - when log exceeds 512K characters after storing a log message, trim it
+    - start with the oldest messages
+    - continue until it is below 256K characters
+      - however, if there is only one message left, if is allowed to be larger than 256K characters
+
+## Testing
+
+### General Principles
+- tests should be in a top-level `test` directory
+- use playwright for integration tests
+- each UI spec should have a corresponding `.testing.md` file with specific test requirements
+- see [`specs/main.tests.md`](specs/main.tests.md) for integration test requirements
+
+### SPA Routing Requirements
+**Critical**: All routes must work on both direct navigation AND page refresh
+- **Vite dev server configuration**: Must include SPA fallback middleware
+  ```typescript
+  // In vite.config.ts
+  {
+    name: 'spa-fallback',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        // Serve index.html for all non-file requests
+        if (req.url && !req.url.includes('.') && !req.url.startsWith('/@')) {
+          req.url = '/index.html';
+        }
+        next();
+      });
+    }
+  }
+  ```
+- **Router implementation**: Must use browser History API
+  - `window.history.pushState()` for navigation
+  - `popstate` event listener for back/forward buttons
+- **Test all routes**: `/`, `/settings`, `/settings/log`, `/characters`, `/character/:id`, `/game`
+  - Navigate to route programmatically
+  - Refresh page (F5 or browser refresh button)
+  - Verify view renders correctly
+
+### Base URL Construction Requirements
+**Critical**: Asset and template paths must resolve from origin, not current route
+- **Correct pattern**: `new URL(window.location.origin + '/')`
+  - ✅ Works on all routes: `/`, `/settings`, `/settings/log`
+  - ✅ Assets load from: `http://localhost:3000/assets/...`
+- **Incorrect pattern**: `new URL(location.toString())`
+  - ❌ Breaks on nested routes like `/settings/log`
+  - ❌ Assets try to load from: `http://localhost:3000/settings/log/assets/...`
+- **Apply to**:
+  - `src/main.ts`: Base URL initialization
+  - `src/utils/TemplateEngine.ts`: Template path resolution
+  - Any component that constructs asset URLs
+- **Test from all routes**:
+  - Verify audio files load correctly
+  - Verify templates load correctly
+  - Verify images/other assets load correctly
+
+### Playwright Testing Guidance
+- Use Playwright MCP for manual integration testing
+- Test patterns:
+  - **Navigation**: Use `browser_navigate` to visit routes
+  - **Verification**: Use `browser_snapshot` to check page state
+  - **Interaction**: Use `browser_click`, `browser_type` for UI interactions
+- **Routing test pattern**:
+  ```typescript
+  // 1. Navigate to route
+  await browser_navigate('/settings/log');
+  // 2. Take snapshot to verify render
+  const snapshot = await browser_snapshot();
+  // 3. Refresh page
+  await browser_navigate('/settings/log'); // or use refresh
+  // 4. Verify still works
+  const afterRefresh = await browser_snapshot();
+  ```
+- **Asset loading test pattern**:
+  ```typescript
+  // 1. Navigate to nested route
+  await browser_navigate('/settings/log');
+  // 2. Check console for 404 errors
+  const messages = await browser_console_messages({ onlyErrors: true });
+  // Should be empty or not contain asset 404s
+  ```
 
 ### 🚀 App Initialization
 - [x] `let Base = new URL(location.toString())` ✅ **IMPLEMENTED**

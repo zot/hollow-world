@@ -31,4 +31,6 @@ Thumbs.db
 # Temporary files
 .tmp/
 tmp/
-hollowworld-itch.zip
+hollowworld*.zip
+butler.zip
+/.playwright-mcp/

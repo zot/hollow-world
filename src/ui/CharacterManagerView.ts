@@ -47,6 +47,7 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
         id: 'char-1',
         name: 'Jack "Dead-Eye" Malone',
         description: 'A weathered gunslinger with a mysterious past',
+        version: '0.0.17',
         rank: 3, // totalXP computed dynamically from rank
         damageCapacity: 12,
         attributes: {
@@ -63,20 +64,18 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
             {
                 id: 'firearms',
                 name: 'Firearms',
-                level: 4,
                 isListed: true,
-                isSpecialized: true,
                 costMultiplier: 1,
-                prerequisite: undefined
+                prerequisite: undefined,
+                description: 'Skill with firearms'
             },
             {
                 id: 'perception',
                 name: 'Perception',
-                level: 3,
                 isListed: true,
-                isSpecialized: false,
                 costMultiplier: 1,
-                prerequisite: undefined
+                prerequisite: undefined,
+                description: 'Awareness and observation'
             }
         ],
         fields: [
@@ -84,7 +83,7 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
                 id: 'gunfighter',
                 name: 'Gunfighter',
                 level: 2,
-                skills: ['firearms'],
+                skillEntries: [{ skillId: 'firearms', hasExperience: false }],
                 isFrozen: true
             }
         ],
@@ -132,6 +131,7 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
         id: 'char-2',
         name: 'Sarah "Doc" Winchester',
         description: 'Traveling physician with a keen interest in the supernatural',
+        version: '0.0.17',
         rank: 2, // totalXP computed dynamically from rank
         damageCapacity: 8,
         attributes: {
@@ -148,20 +148,18 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
             {
                 id: 'medicine',
                 name: 'Medicine',
-                level: 3,
                 isListed: true,
-                isSpecialized: true,
                 costMultiplier: 1,
-                prerequisite: undefined
+                prerequisite: undefined,
+                description: 'Medical knowledge and treatment'
             },
             {
                 id: 'occult',
                 name: 'Occult',
-                level: 2,
                 isListed: true,
-                isSpecialized: false,
                 costMultiplier: 1,
-                prerequisite: undefined
+                prerequisite: undefined,
+                description: 'Knowledge of supernatural and mystical'
             }
         ],
         fields: [
@@ -169,7 +167,7 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
                 id: 'physician',
                 name: 'Physician',
                 level: 2,
-                skills: ['medicine'],
+                skillEntries: [{ skillId: 'medicine', hasExperience: false }],
                 isFrozen: true
             }
         ],
@@ -302,7 +300,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
             this.setupFallbackEventListeners();
         } catch (error) {
             // Ultimate fallback - just text
-            this.container.innerHTML = '<div><h1>Character Manager</h1><p>Error loading interface</p></div>';
+            this.container.innerHTML = await templateEngine.renderTemplateFromFile('character-manager-error', {});
             console.error('Even fallback template failed:', error);
         }
     }
@@ -341,7 +339,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
             this.setupListEventListeners();
         } catch (error) {
             // Ultimate fallback
-            this.container.innerHTML = '<div><h1>Character Manager</h1><p>Failed to load templates</p></div>';
+            this.container.innerHTML = await templateEngine.renderTemplateFromFile('character-manager-templates-error', {});
             console.error('Fallback template failed:', error);
         }
     }
@@ -433,8 +431,14 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
             errorDiv.innerHTML = errorHtml;
         } catch (error) {
             console.error('Failed to render error notification template:', error);
-            // Fallback to minimal HTML
-            errorDiv.innerHTML = `<div class="error-content"><span class="error-icon">⚠️</span><span class="error-text">${message}</span><button class="error-close" onclick="this.parentElement.parentElement.remove()">×</button></div>`;
+            // Fallback to minimal HTML using template
+            try {
+                const fallbackHtml = await templateEngine.renderTemplateFromFile('error-content', { message });
+                errorDiv.innerHTML = fallbackHtml;
+            } catch (fallbackError) {
+                console.error('Even fallback template failed:', fallbackError);
+                errorDiv.innerHTML = '<div class="error-content"><span class="error-icon">⚠️</span><span class="error-text">Error occurred</span></div>';
+            }
         }
 
         document.body.appendChild(errorDiv);
@@ -540,7 +544,12 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
             return cardHtml;
         } catch (error) {
             console.error('Failed to render character card:', error);
-            return `<div class="error">Failed to render character: ${character.name}</div>`;
+            try {
+                return await templateEngine.renderTemplateFromFile('character-render-error', { characterName: character.name });
+            } catch (templateError) {
+                console.error('Failed to render error template:', templateError);
+                return '<div class="error">Failed to render character</div>';
+            }
         }
     }
 
@@ -592,8 +601,17 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
                 html += loadMoreHtml;
             } catch (error) {
                 console.error('Failed to render load-more template:', error);
-                // Fallback to minimal HTML
-                html += `<div class="lazy-load-more"><button class="load-more-btn" data-remaining="${this.characters.length - CHUNK_SIZE}">Load ${this.characters.length - CHUNK_SIZE} more characters...</button></div>`;
+                // Fallback using same template (should always work)
+                try {
+                    const fallbackHtml = await templateEngine.renderTemplateFromFile('load-more-button', {
+                        remaining: this.characters.length - CHUNK_SIZE
+                    });
+                    html += fallbackHtml;
+                } catch (fallbackError) {
+                    console.error('Even fallback template failed:', fallbackError);
+                    const fallbackHtml = await templateEngine.renderTemplateFromFile('load-more-button', { remaining: 'more' });
+                    html += fallbackHtml;
+                }
             }
         }
 

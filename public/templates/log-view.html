@@ -1,0 +1,48 @@
+<div class="{{containerClass}}">
+    <div class="log-header">
+        <h1 class="{{titleClass}}">📜 Log</h1>
+        <button class="{{backButtonClass}}" id="back-to-settings-btn">Back to Settings</button>
+    </div>
+
+    <div class="log-controls">
+        <div class="log-filter-section">
+            <label for="log-filter">Filter:</label>
+            <input type="text" id="log-filter" class="log-filter-input" placeholder="Search log messages..." />
+        </div>
+        <div class="log-info">
+            <span id="log-count">{{entryCount}} entries</span>
+            <span id="log-size">{{totalChars}} characters</span>
+        </div>
+        <button class="{{buttonClass}}" id="clear-log-btn">Clear Log</button>
+    </div>
+
+    <div class="log-table-container">
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-column="serial">
+                        #
+                        <span class="sort-indicator"></span>
+                    </th>
+                    <th class="sortable" data-column="date">
+                        Date
+                        <span class="sort-indicator"></span>
+                    </th>
+                    <th class="sortable" data-column="message">
+                        Message
+                        <span class="sort-indicator"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="log-table-body">
+                {{#each entries}}
+                <tr data-serial="{{serial}}">
+                    <td class="log-serial">{{serial}}</td>
+                    <td class="log-date">{{date}}</td>
+                    <td class="log-message">{{message}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>

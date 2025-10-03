@@ -1,5 +1,8 @@
 <div class="{{containerClass}}">
-    <h1 class="{{titleClass}}">⚙️ Settings</h1>
+    <div class="settings-header">
+        <h1 class="{{titleClass}}">⚙️ Settings</h1>
+        <button class="{{buttonClass}} log-view-btn" id="show-log-btn">📜 Log</button>
+    </div>
 
     <div class="{{sectionClass}}">
         <h2>Player Information</h2>
@@ -16,8 +19,8 @@
     <div class="{{sectionClass}}">
         <h2>Private Notes</h2>
         <div class="{{fieldClass}}">
-            <label for="private-notes-textarea">Notes (not shared with other players):</label>
-            <textarea id="private-notes-textarea" placeholder="Write your private notes here...">{{privateNotes}}</textarea>
+            <label for="private-notes-editor">Notes (not shared with other players):</label>
+            <div id="private-notes-editor" class="milkdown-editor"></div>
         </div>
     </div>
 
@@ -25,22 +28,77 @@
         <h2>Friends List</h2>
         <div id="friends-list">
             {{#each friends}}
-            <div class="friend-entry" data-friend-id="{{id}}">
+            <div class="friend-card" data-friend-id="{{id}}">
                 <div class="friend-info">
-                    <div class="friend-name">{{playerName}}</div>
-                    <div class="friend-peer-id">{{peerId}}</div>
+                    <div class="friend-field">
+                        <label>Player Name:</label>
+                        <input type="text" class="friend-name-input" data-friend-id="{{id}}" value="{{playerName}}" />
+                    </div>
+                    <div class="friend-field">
+                        <label>Peer ID:</label>
+                        <span class="friend-peer-id">{{peerId}}</span>
+                    </div>
                 </div>
-                <div class="friend-notes">
-                    <textarea placeholder="Notes about {{playerName}}...">{{notes}}</textarea>
+                <div class="friend-notes-section">
+                    <label>Private Notes:</label>
+                    <div class="milkdown-editor" id="friend-notes-{{id}}"></div>
                 </div>
                 <button class="remove-friend-btn" data-friend-id="{{id}}">Remove</button>
             </div>
             {{/each}}
         </div>
-        <button class="{{buttonClass}}" id="add-friend-btn">Add Friend</button>
+        <div class="friend-actions">
+            <button class="{{buttonClass}}" id="invite-friend-btn">Invite Friend</button>
+            <button class="{{buttonClass}}" id="accept-invitation-btn">Accept Invitation</button>
+        </div>
     </div>
 
     <div class="settings-actions">
         <button class="{{backButtonClass}}">Back to Menu</button>
+    </div>
+
+    <!-- Invite Friend Modal -->
+    <div id="invite-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Invite Friend</h2>
+            <div class="modal-field">
+                <label for="invite-friend-name">Friend Name:</label>
+                <input type="text" id="invite-friend-name" placeholder="Enter friend's name" />
+            </div>
+            <div class="modal-field">
+                <label for="invite-friend-id">Friend ID (optional):</label>
+                <input type="text" id="invite-friend-id" placeholder="Optional peer ID" />
+            </div>
+            <div class="modal-field">
+                <label for="invite-friend-notes">Notes:</label>
+                <div id="invite-friend-notes" class="milkdown-editor"></div>
+            </div>
+            <div class="modal-field">
+                <label for="invitation-code">Invitation:</label>
+                <div class="invitation-display">
+                    <input type="text" id="invitation-code" readonly placeholder="Click Generate to create invitation" />
+                    <button id="copy-invitation-btn" class="icon-btn" disabled title="Copy to clipboard">📋</button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="generate-invite-btn" class="{{buttonClass}}">Generate</button>
+                <button id="close-invite-modal-btn" class="{{buttonClass}}">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accept Invitation Modal -->
+    <div id="accept-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Accept Invitation</h2>
+            <div class="modal-field">
+                <label for="accepted-invitation">Invitation Code:</label>
+                <input type="text" id="accepted-invitation" placeholder="Paste invitation code here" />
+            </div>
+            <div class="modal-actions">
+                <button id="accept-invite-btn" class="{{buttonClass}}">Accept</button>
+                <button id="close-accept-modal-btn" class="{{buttonClass}}">Cancel</button>
+            </div>
+        </div>
     </div>
 </div>

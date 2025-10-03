@@ -264,6 +264,397 @@
     box-shadow: 0 3px 6px rgba(0,0,0,0.3);
 }
 
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: rgba(255,248,220,0.95);
+    border: 4px solid #8b4513;
+    border-radius: 10px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow:
+        inset 0 0 20px rgba(139,69,19,0.2),
+        0 10px 40px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+.modal-content h2 {
+    font-family: 'Sancreek', serif;
+    color: #8b4513;
+    font-size: 1.8rem;
+    margin: 0 0 20px 0;
+    text-align: center;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
+}
+
+.modal-field {
+    margin-bottom: 20px;
+}
+
+.modal-field label {
+    font-family: 'Rye', serif;
+    color: #654321;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.modal-field input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #8b4513;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    background: rgba(255,248,220,0.8);
+    color: #2d1810;
+    box-sizing: border-box;
+}
+
+.modal-field input:focus {
+    outline: none;
+    border-color: #654321;
+    background: rgba(255,248,220,0.95);
+    box-shadow: 0 0 10px rgba(139,69,19,0.3);
+}
+
+.invitation-display {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.invitation-display input {
+    flex: 1;
+}
+
+.icon-btn {
+    padding: 10px 15px;
+    border: 2px solid #8b4513;
+    background: linear-gradient(45deg, #deb887, #f4a460);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+    background: linear-gradient(45deg, #f4a460, #ffd700);
+    transform: scale(1.1);
+}
+
+.icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.friend-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.friend-card {
+    background: rgba(244,164,96,0.7);
+    border: 2px solid #cd853f;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.friend-field {
+    margin-bottom: 10px;
+}
+
+.friend-field label {
+    font-family: 'Rye', serif;
+    color: #654321;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.friend-name-input {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #8b4513;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    background: rgba(255,248,220,0.8);
+    color: #2d1810;
+    box-sizing: border-box;
+}
+
+.friend-notes-section {
+    margin-top: 15px;
+}
+
+.friend-notes-section label {
+    font-family: 'Rye', serif;
+    color: #654321;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* Milkdown Crepe Editor Styling */
+.milkdown-editor {
+    min-height: 150px;
+    border: 2px solid #8b4513;
+    border-radius: 4px;
+    background: rgba(255,248,220,0.8);
+}
+
+/* Crepe editor container */
+#private-notes-editor {
+    min-height: 200px;
+}
+
+/* Style Crepe's built-in components to match western theme */
+.milkdown-editor .milkdown {
+    background: rgba(255,248,220,0.8) !important;
+}
+
+.milkdown-editor .editor {
+    background: rgba(255,248,220,0.8) !important;
+    color: #2d1810 !important;
+}
+
+.milkdown-editor .ProseMirror {
+    outline: none;
+    min-height: 150px;
+    padding: 0;
+    color: #2d1810;
+}
+
+.milkdown-editor .ProseMirror p {
+    margin: 0.5em 0;
+}
+
+.milkdown-editor .ProseMirror h1,
+.milkdown-editor .ProseMirror h2,
+.milkdown-editor .ProseMirror h3 {
+    font-family: 'Sancreek', serif;
+    color: #8b4513;
+    margin: 0.8em 0 0.4em 0;
+}
+
+.milkdown-editor .ProseMirror ul,
+.milkdown-editor .ProseMirror ol {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+}
+
+.milkdown-editor .ProseMirror strong {
+    font-weight: bold;
+    color: #654321;
+}
+
+.milkdown-editor .ProseMirror em {
+    font-style: italic;
+}
+
+/* Settings Header with Log Button */
+.settings-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    z-index: 10;
+    position: relative;
+    margin: 0 auto;
+    max-width: 800px;
+}
+
+.log-view-btn {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    z-index: 100;
+    flex-shrink: 0;
+    font-size: 1rem;
+    padding: 10px 20px;
+}
+
+/* Log View Styles */
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    z-index: 10;
+    position: relative;
+    margin: 0 auto 20px;
+    max-width: 1200px;
+}
+
+.log-controls {
+    background: rgba(255,248,220,0.9);
+    border: 3px solid #8b4513;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0 auto 20px;
+    max-width: 1200px;
+    z-index: 10;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.log-filter-section {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.log-filter-section label {
+    font-family: 'Rye', serif;
+    color: #654321;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.log-filter-input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #8b4513;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    background: rgba(255,248,220,0.8);
+    color: #2d1810;
+}
+
+.log-filter-input:focus {
+    outline: none;
+    border-color: #654321;
+    background: rgba(255,248,220,0.95);
+    box-shadow: 0 0 10px rgba(139,69,19,0.3);
+}
+
+.log-info {
+    display: flex;
+    gap: 15px;
+    font-family: 'Courier New', monospace;
+    color: #654321;
+    font-weight: bold;
+}
+
+.log-table-container {
+    background: rgba(255,248,220,0.9);
+    border: 3px solid #8b4513;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0 auto;
+    max-width: 1200px;
+    z-index: 10;
+    position: relative;
+    overflow-x: auto;
+}
+
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Courier New', monospace;
+}
+
+.log-table thead {
+    background: rgba(139,69,19,0.2);
+    position: sticky;
+    top: 0;
+}
+
+.log-table th {
+    padding: 12px;
+    text-align: left;
+    font-family: 'Rye', serif;
+    color: #654321;
+    font-weight: bold;
+    border-bottom: 2px solid #8b4513;
+    cursor: pointer;
+    user-select: none;
+}
+
+.log-table th.sortable:hover {
+    background: rgba(139,69,19,0.3);
+}
+
+.log-table th .sort-indicator {
+    margin-left: 5px;
+    display: inline-block;
+    width: 12px;
+}
+
+.log-table th.sorted-asc .sort-indicator::after {
+    content: '▲';
+    color: #654321;
+}
+
+.log-table th.sorted-desc .sort-indicator::after {
+    content: '▼';
+    color: #654321;
+}
+
+.log-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(139,69,19,0.2);
+    color: #2d1810;
+}
+
+.log-table tr:hover {
+    background: rgba(244,164,96,0.3);
+}
+
+.log-serial {
+    text-align: right;
+    font-weight: bold;
+    color: #8b4513;
+    width: 80px;
+}
+
+.log-date {
+    white-space: nowrap;
+    width: 180px;
+    color: #654321;
+}
+
+.log-message {
+    word-break: break-word;
+    max-width: 600px;
+}
+
 @media (max-width: 768px) {
     .settings-container {
         padding: 15px;
@@ -272,6 +663,20 @@
     .settings-title {
         font-size: clamp(1.8rem, 8vw, 3rem);
         margin: 1.5rem 0;
+    }
+
+    .settings-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .log-view-btn {
+        position: fixed;
+        right: 10px;
+        top: 10px;
+        z-index: 100;
+        font-size: 0.9rem;
+        padding: 8px 15px;
     }
 
     .settings-section {
@@ -305,5 +710,56 @@
     .settings-field:has(.peer-id-readonly) {
         padding: 10px;
         margin-bottom: 20px;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .friend-actions {
+        flex-direction: column;
+    }
+
+    /* Log view mobile styles */
+    .log-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .log-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .log-filter-section {
+        width: 100%;
+    }
+
+    .log-info {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .log-table-container {
+        padding: 10px;
+    }
+
+    .log-table {
+        font-size: 0.9rem;
+    }
+
+    .log-table th,
+    .log-table td {
+        padding: 8px 6px;
+    }
+
+    .log-serial {
+        width: 50px;
+    }
+
+    .log-date {
+        font-size: 0.8rem;
+        width: 140px;
     }
 }

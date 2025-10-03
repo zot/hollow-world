@@ -1,0 +1,47 @@
+<div class="attribute-box" data-attribute="{{type}}" style="
+    border: 1px solid #8b7355;
+    border-radius: 5px;
+    padding: 8px;
+    margin-right: 5px;
+    background: rgba(139, 115, 85, 0.1);
+    min-width: 120px;
+    text-align: center;
+">
+    <div class="attribute-line" style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+        <span class="attribute-name" style="font-weight: bold;">{{type}}</span>
+        <span class="attribute-cost">({{cost}})</span>
+        <span class="attribute-value" id="attr-{{type}}" style="
+            min-width: 25px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        ">{{value}}</span>
+        <div class="attribute-spinner" style="display: flex; flex-direction: column;">
+            <button class="attr-btn inc-btn" data-action="inc" data-attribute="{{type}}" data-cost="{{cost}}"
+                    {{#if readOnly}}disabled{{/if}} style="
+                        background: #8b7355;
+                        color: white;
+                        border: none;
+                        border-radius: 2px;
+                        width: 16px;
+                        height: 16px;
+                        cursor: pointer;
+                        font-size: 10px;
+                        line-height: 1;
+                        margin-bottom: 1px;
+                    ">▲</button>
+            <button class="attr-btn dec-btn" data-action="dec" data-attribute="{{type}}" data-cost="{{cost}}"
+                    {{#if readOnly}}disabled{{/if}} style="
+                        background: #8b7355;
+                        color: white;
+                        border: none;
+                        border-radius: 2px;
+                        width: 16px;
+                        height: 16px;
+                        cursor: pointer;
+                        font-size: 10px;
+                        line-height: 1;
+                    ">▼</button>
+        </div>
+    </div>
+</div>

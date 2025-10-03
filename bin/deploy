@@ -174,7 +174,7 @@ show_final_status() {
 # Main deployment process
 main() {
     echo "🔧 Step 1: Incrementing version..."
-    #increment_version
+    increment_version
 
     echo ""
     echo "🏗️  Step 2: Building production bundle..."

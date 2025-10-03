@@ -3,6 +3,7 @@
 
 import { ICharacter, AttributeType } from '../character/types.js';
 import { CharacterCalculations, CharacterFactory } from '../character/CharacterUtils.js';
+import { CharacterVersioning } from '../character/CharacterVersioning.js';
 
 export interface ICharacterStorageService {
     getAllCharacters(): Promise<ICharacter[]>;
@@ -88,38 +89,43 @@ export class CharacterStorageService implements ICharacterStorageService {
 
     private validateAndFixCharacter(character: any): ICharacter {
         try {
+            // First, upgrade character to latest version if needed
+            const upgradedCharacter = CharacterVersioning.upgradeCharacterToLatest(character);
+
+            // Then validate and fix any data issues
             const validatedCharacter: ICharacter = {
-                id: character.id || crypto.randomUUID(),
-                name: character.name || 'Unknown Character',
-                description: character.description || '',
-                rank: Math.max(1, Math.min(15, parseInt(character.rank) || 1)),
-                damageCapacity: Math.max(1, parseInt(character.damageCapacity) || 10),
+                id: upgradedCharacter.id || crypto.randomUUID(),
+                name: upgradedCharacter.name || 'Unknown Character',
+                description: upgradedCharacter.description || '',
+                version: upgradedCharacter.version || CharacterVersioning.getCurrentVersion(),
+                rank: Math.max(1, Math.min(15, Number(upgradedCharacter.rank) || 1)),
+                damageCapacity: Math.max(1, Number(upgradedCharacter.damageCapacity) || 10),
                 attributes: {
-                    [AttributeType.DEX]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.DEX]) || 0)),
-                    [AttributeType.STR]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.STR]) || 0)),
-                    [AttributeType.CON]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.CON]) || 0)),
-                    [AttributeType.CHA]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.CHA]) || 0)),
-                    [AttributeType.WIS]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.WIS]) || 0)),
-                    [AttributeType.GRI]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.GRI]) || 0)),
-                    [AttributeType.INT]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.INT]) || 0)),
-                    [AttributeType.PER]: Math.max(-2, Math.min(15, parseInt(character.attributes?.[AttributeType.PER]) || 0)),
+                    [AttributeType.DEX]: Math.max(-2, Math.min(15, Number(upgradedCharacter.attributes?.[AttributeType.DEX]) || 0)),
+                    [AttributeType.STR]: Math.max(-2, Math.min(15, Number(upgradedCharacter.attributes?.[AttributeType.STR]) || 0)),
+                    [AttributeType.CON]: Math.max(-2, Math.min(15, Number(upgradedCharacter.attributes?.[AttributeType.CON]) || 0)),
+                    [AttributeType.CHA]: Math.max(-2, Math.min(15, Number(upgradedCharacter.attributes?.[AttributeType.CHA]) || 0)),
+                    [AttributeType.WIS]: Math.max(-2, Math.min(15, Number(upgradedCharacter.attributes?.[AttributeType.WIS]) || 0)),
+                    [AttributeType.GRI]: Math.max(-2, Math.min(15, Number(upgradedCharacter.attributes?.[AttributeType.GRI]) || 0)),
+                    [AttributeType.INT]: Math.max(-2, Math.min(15, Number(upgradedCharacter.attributes?.[AttributeType.INT]) || 0)),
+                    [AttributeType.PER]: Math.max(-2, Math.min(15, Number(upgradedCharacter.attributes?.[AttributeType.PER]) || 0)),
                 },
-                skills: Array.isArray(character.skills) ? character.skills : [],
-                fields: Array.isArray(character.fields) ? character.fields : [],
-                benefits: Array.isArray(character.benefits) ? character.benefits : [],
-                drawbacks: Array.isArray(character.drawbacks) ? character.drawbacks : [],
+                skills: Array.isArray(upgradedCharacter.skills) ? upgradedCharacter.skills : [],
+                fields: Array.isArray(upgradedCharacter.fields) ? upgradedCharacter.fields : [],
+                benefits: Array.isArray(upgradedCharacter.benefits) ? upgradedCharacter.benefits : [],
+                drawbacks: Array.isArray(upgradedCharacter.drawbacks) ? upgradedCharacter.drawbacks : [],
                 hollow: {
-                    dust: Math.max(0, parseInt(character.hollow?.dust) || 0),
-                    burned: Math.max(0, parseInt(character.hollow?.burned) || 0),
-                    hollowInfluence: Math.max(0, parseInt(character.hollow?.hollowInfluence) || 0),
-                    glimmerDebt: Math.max(0, parseInt(character.hollow?.glimmerDebt) || 0),
-                    glimmerDebtTotal: Math.max(0, parseInt(character.hollow?.glimmerDebtTotal) || 0),
-                    newMoonMarks: Math.max(0, parseInt(character.hollow?.newMoonMarks) || 0)
+                    dust: Math.max(0, Number(upgradedCharacter.hollow?.dust) || 0),
+                    burned: Math.max(0, Number(upgradedCharacter.hollow?.burned) || 0),
+                    hollowInfluence: Math.max(0, Number(upgradedCharacter.hollow?.hollowInfluence) || 0),
+                    glimmerDebt: Math.max(0, Number(upgradedCharacter.hollow?.glimmerDebt) || 0),
+                    glimmerDebtTotal: Math.max(0, Number(upgradedCharacter.hollow?.glimmerDebtTotal) || 0),
+                    newMoonMarks: Math.max(0, Number(upgradedCharacter.hollow?.newMoonMarks) || 0)
                 },
-                items: Array.isArray(character.items) ? character.items : [],
-                companions: Array.isArray(character.companions) ? character.companions : [],
-                attributeChipsSpent: character.attributeChipsSpent || { positive: 0, negative: 0 },
-                createdAt: character.createdAt ? new Date(character.createdAt) : new Date(),
+                items: Array.isArray(upgradedCharacter.items) ? upgradedCharacter.items : [],
+                companions: Array.isArray(upgradedCharacter.companions) ? upgradedCharacter.companions : [],
+                attributeChipsSpent: upgradedCharacter.attributeChipsSpent || { positive: 0, negative: 0 },
+                createdAt: upgradedCharacter.createdAt ? new Date(upgradedCharacter.createdAt) : new Date(),
                 updatedAt: new Date()
             };
             return validatedCharacter;
@@ -135,6 +141,7 @@ export class CharacterStorageService implements ICharacterStorageService {
                 id: 'char-1',
                 name: 'Jack "Dead-Eye" Malone',
                 description: 'A weathered gunslinger with a mysterious past',
+                version: CharacterVersioning.getCurrentVersion(),
                 rank: 3,
                 damageCapacity: 12,
                 attributes: {
@@ -151,11 +158,10 @@ export class CharacterStorageService implements ICharacterStorageService {
                     {
                         id: 'firearms',
                         name: 'Firearms',
-                        level: 4,
                         isListed: true,
-                        isSpecialized: true,
                         costMultiplier: 1,
-                        prerequisite: undefined
+                        prerequisite: undefined,
+                        description: 'Skill with various firearms'
                     }
                 ],
                 fields: [
@@ -163,7 +169,9 @@ export class CharacterStorageService implements ICharacterStorageService {
                         id: 'gunfighter',
                         name: 'Gunfighter',
                         level: 2,
-                        skills: ['firearms'],
+                        skillEntries: [
+                            { skillId: 'firearms', hasExperience: false }
+                        ],
                         isFrozen: true
                     }
                 ],
@@ -211,6 +219,7 @@ export class CharacterStorageService implements ICharacterStorageService {
                 id: 'char-2',
                 name: 'Sarah "Doc" Winchester',
                 description: 'Traveling physician with a keen interest in the supernatural',
+                version: CharacterVersioning.getCurrentVersion(),
                 rank: 2,
                 damageCapacity: 8,
                 attributes: {
@@ -227,11 +236,10 @@ export class CharacterStorageService implements ICharacterStorageService {
                     {
                         id: 'medicine',
                         name: 'Medicine',
-                        level: 3,
                         isListed: true,
-                        isSpecialized: true,
                         costMultiplier: 1,
-                        prerequisite: undefined
+                        prerequisite: undefined,
+                        description: 'Medical knowledge and treatment'
                     }
                 ],
                 fields: [
@@ -239,7 +247,9 @@ export class CharacterStorageService implements ICharacterStorageService {
                         id: 'physician',
                         name: 'Physician',
                         level: 2,
-                        skills: ['medicine'],
+                        skillEntries: [
+                            { skillId: 'medicine', hasExperience: false }
+                        ],
                         isFrozen: true
                     }
                 ],

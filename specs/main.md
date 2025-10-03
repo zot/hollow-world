@@ -16,11 +16,16 @@
 ### UI Components
 - 🏜️ [`ui.splash.md`](ui.splash.md) - Main splash screen with western styling
 - 👤 [`ui.characters.md`](ui.characters.md) - Character management system
+- ⚙️ [`ui.settings.md`](ui.settings.md) - Settings view with log and peer management
 - 📊 [`character-sheet-plan.md`](character-sheet-plan.md) - Comprehensive character sheet design
 - **Play/mute button** at lower right should appear in all views and retain state across views
 
 ### System Architecture
 - 🌐 [`p2p.md`](p2p.md) - Peer-to-peer networking with LibP2P
+- 💬 [`p2p-messages.md`](p2p-messages.md) - P2P message protocols and formats
+
+### Game Rules Reference
+- 📖 [`Hollow-summary.md`](Hollow-summary.md) - Complete RPG system rules and mechanics
 
 ## 📈 Current Implementation Plan
 - 📝 [`main-plan.md`](main-plan.md) - Detailed implementation plan and progress tracking

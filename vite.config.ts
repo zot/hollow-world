@@ -17,6 +17,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
   },
+  preview: {
+    host: '0.0.0.0',
+    port: 3000,
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -28,6 +32,18 @@ export default defineConfig({
       buildEnd() {
         // Copy VERSION file to dist during build
         copyFileSync('VERSION', 'dist/VERSION');
+      }
+    },
+    {
+      name: 'spa-fallback',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          // Serve index.html for all non-file requests (SPA routing)
+          if (req.url && !req.url.includes('.') && !req.url.startsWith('/@')) {
+            req.url = '/index.html';
+          }
+          next();
+        });
       }
     }
   ]

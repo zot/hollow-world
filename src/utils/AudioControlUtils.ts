@@ -66,8 +66,13 @@ export class AudioControlUtils {
             return await templateEngine.renderTemplateFromFile('enhanced-audio-control', templateData);
         } catch (error) {
             console.warn('Failed to render enhanced audio control:', error);
-            // Fallback to simple control
-            return '<button class="audio-control-button" id="music-toggle-btn" title="Toggle Music">🎵</button>';
+            // Fallback to simple control using template
+            try {
+                return await templateEngine.renderTemplateFromFile('music-button-fallback', {});
+            } catch (fallbackError) {
+                console.error('Even fallback template failed:', fallbackError);
+                return '<button class="audio-control-button" id="music-toggle-btn" title="Toggle Music">🎵</button>';
+            }
         }
     }
 

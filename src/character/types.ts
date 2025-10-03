@@ -49,20 +49,24 @@ export interface IAttributes {
 export interface ISkill {
     id: string;
     name: string;
-    level: number;
-    isListed: boolean; // 🞐 marked skills vs created skills
+    // level is now computed dynamically from field occurrences + experience checkboxes
+    isListed: boolean; // 🞐 listed skills vs 🞸 created skills
     costMultiplier: 1 | 2; // x1 or x2 cost
     specialization?: string; // For skills like "Weapon (Type)"
     prerequisite?: string; // Required skill/attribute
-    isSpecialized: boolean; // Has checkmark (1 level above field)
     description?: string;
+}
+
+export interface IFieldSkillEntry {
+    skillId: string;
+    hasExperience: boolean; // Checkbox for experience which adds 1 to skill level
 }
 
 export interface IField {
     id: string;
     name: string;
     level: number;
-    skills: string[]; // Array of skill IDs
+    skillEntries: IFieldSkillEntry[]; // Array of skills with their experience checkboxes
     isFrozen: boolean; // True at level 2+, cannot add new skills
 }
 
@@ -116,6 +120,7 @@ export interface ICharacter {
     id: string;
     name: string;
     description: string;
+    version: string; // Current app version (from VERSION file)
 
     // Core Stats
     rank: number; // Primary stat - determines XP pools and advancement
@@ -251,6 +256,157 @@ export const ATTRIBUTE_DEFINITIONS: Record<AttributeType, IAttributeDefinition> 
         costMultiplier: AttributeCostMultiplier.X4,
         name: 'Perception',
         description: 'Memory, focus, how well you pay attention to your surroundings'
+    }
+};
+
+// Standard skills from Hollow-summary.md (marked with 🞐)
+export const STANDARD_SKILLS: Record<string, ISkill> = {
+    'brawling': {
+        id: 'brawling',
+        name: 'Brawling',
+        isListed: true,
+        costMultiplier: 2,
+        description: 'Add Level to fist and kick for Nonlethal Damage'
+    },
+    'charm': {
+        id: 'charm',
+        name: 'Charm',
+        isListed: true,
+        costMultiplier: 1,
+        description: 'Reduce negative Influences for Social Actions by your Skill Level'
+    },
+    'counsellor': {
+        id: 'counsellor',
+        name: 'Counsellor',
+        isListed: true,
+        costMultiplier: 2,
+        description: 'Help people work through psychological and mental problems'
+    },
+    'dust': {
+        id: 'dust',
+        name: 'Dust',
+        isListed: true,
+        costMultiplier: 1,
+        description: 'Manipulate Glimmer Dust and influence events'
+    },
+    'fine-weapon': {
+        id: 'fine-weapon',
+        name: 'Fine Weapon',
+        isListed: true,
+        costMultiplier: 2,
+        description: 'Purchase fine weapons that add to Influence or base Damage'
+    },
+    'finesse': {
+        id: 'finesse',
+        name: 'Finesse',
+        isListed: true,
+        costMultiplier: 2,
+        specialization: '(Skill)',
+        prerequisite: 'skill',
+        description: 'Add Level as Result Bonus when Creating Influence with chosen Skill'
+    },
+    'martial-arts': {
+        id: 'martial-arts',
+        name: 'Martial Arts',
+        isListed: true,
+        costMultiplier: 2,
+        prerequisite: 'dex-or-str-con',
+        description: 'Advanced unarmed combat techniques'
+    },
+    'mechanic': {
+        id: 'mechanic',
+        name: 'Mechanic',
+        isListed: true,
+        costMultiplier: 1,
+        description: 'Detect, identify, and create mechanical devices including traps'
+    },
+    'medic': {
+        id: 'medic',
+        name: 'Medic',
+        isListed: true,
+        costMultiplier: 2,
+        description: 'Tend wounds and manage illnesses, heal Success in Damage'
+    },
+    'mesmerism': {
+        id: 'mesmerism',
+        name: 'Mesmerism',
+        isListed: true,
+        costMultiplier: 1,
+        description: 'Advanced social manipulation, create temporary or permanent Motivations'
+    },
+    'mobile-weapon': {
+        id: 'mobile-weapon',
+        name: 'Mobile Weapon',
+        isListed: true,
+        costMultiplier: 1,
+        specialization: '(Weapon Skill)',
+        prerequisite: 'weapon-skill',
+        description: 'Mitigate Moving -6 when using weapons while moving'
+    },
+    'oratory': {
+        id: 'oratory',
+        name: 'Oratory',
+        isListed: true,
+        costMultiplier: 1,
+        description: 'Influence crowds with Significant Remarks, reduce negative Audience Influence'
+    },
+    'quickdraw': {
+        id: 'quickdraw',
+        name: 'Quickdraw',
+        isListed: true,
+        costMultiplier: 1,
+        specialization: '(Weapon Skill)',
+        prerequisite: 'weapon-skill',
+        description: 'Mitigate Quickdraw -4 when drawing and using weapon on same turn'
+    },
+    'rhetoric': {
+        id: 'rhetoric',
+        name: 'Rhetoric',
+        isListed: true,
+        costMultiplier: 2,
+        specialization: '(Style)',
+        prerequisite: 'charm-or-mesmerism-and-wis',
+        description: 'Formal debate and argumentation training'
+    },
+    'second-weapon': {
+        id: 'second-weapon',
+        name: 'Second Weapon',
+        isListed: true,
+        costMultiplier: 2,
+        specialization: '(Weapon Skill)',
+        prerequisite: 'weapon-skill',
+        description: 'Reduce Second Weapon -4, first Attack unaffected'
+    },
+    'tactics': {
+        id: 'tactics',
+        name: 'Tactics',
+        isListed: true,
+        costMultiplier: 2,
+        description: 'Judge opponents intentions, use tactical techniques, steal initiative'
+    },
+    'weapon': {
+        id: 'weapon',
+        name: 'Weapon',
+        isListed: true,
+        costMultiplier: 2,
+        specialization: '(Type)',
+        description: 'Skill with a type of weapon (guns, bows, blades, axes, etc.)'
+    },
+    'weapon-expertise': {
+        id: 'weapon-expertise',
+        name: 'Weapon Expertise',
+        isListed: true,
+        costMultiplier: 1,
+        specialization: '(Weapon Skill)',
+        prerequisite: 'weapon-skill',
+        description: 'Reduce Reckless Attack -6 when using this weapon'
+    },
+    'wrestling': {
+        id: 'wrestling',
+        name: 'Wrestling',
+        isListed: true,
+        costMultiplier: 2,
+        description: 'Add Level to Str for Fist for Nonlethal Damage while Clinch fighting'
     }
 };
 

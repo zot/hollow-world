@@ -7,7 +7,7 @@
 
 ---
 
-🌵 *Based on [`../claude.md`](../claude.md)* 🌵
+🌵 *Based on [`../CLAUDE.md`](../CLAUDE.md)* 🌵
 
 ---
 
@@ -16,6 +16,7 @@
 - Create comprehensive **unit tests** for all components *(Test everything twice, trust nothing once)*
 - Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
 - **🔒 Strict TypeScript typing** - All function parameters, return values, and object properties must use explicit TypeScript types. Never use `any` type except for truly dynamic content. Interface types like `AttributeType` must be used when indexing typed objects like `IAttributes` *(Type your code tighter than a hangman's noose)*
+- compute available XP and Attribute Chips dynamically according to "Character structure" below
 
 ### Character structure
 - total XP and total Attribute Chips are based on rank
@@ -25,7 +26,20 @@
     - make sure there's a test for Dex -2 and all other attrs at 0
       - the attribute chip total should be 8 higher than the rank's attribute chip total
   - doesn't drop below 0 because extra attribute points come from XP
-- available XP is computed dynamically from skills and total attribute costs that exceed total attribute chips
+- available XP is computed dynamically from fields and total attribute costs that exceed total attribute chips
+  - Fields cost their level * the cost of each entry + 1 if it has a check
+- a version field that stores the current app version (from the VERSION file)
+
+### Character version compatibility module to manage upgrading old stored characters to the latest format
+#### character schemas
+- keep an array of objects, each with the its version (from VERSION file) and schema (based on the storage format)
+- the array is given in sorted order by version number
+#### upgrading
+- when the character structure changes, add the new character schema to the character schemas object
+  - the version number in the VERSION file is increasing so appending to the array will maintain sort order
+- add a function that converts characters for the previous version to the new version, supplying default values for new items
+- there is an upgrade function that upgrades a character based on its version to the current version
+  - use the character schema array to upgrade to the next version until the character reaches the final (most recent) version
 
 ### 🧭 Navigation *(Trail Blazing Through the UI)*
 - **Browser back button** navigates to previous screen *(Like ridin' back to where you came from)*
@@ -88,7 +102,32 @@
   - On blur: automatically updates total XP and Attribute Chips available, also the totals in parens *(Recalculate the pot)*
 
 ### Skills and Fields
-#### Skills in
+- each field tracks its level (as a variable) and its skills
+- a skill can be listed once or twice in a field
+- the UI shows
+  - each field with its level
+    - the field level is editable like the attribute values
+      - editable as text
+      - changable by rolling the mouse
+      - stacked spin buttons after the value
+    - the field's skills in a list underneath with optional checks (a check adds one to the skills level and adds the skill's cost in XP)
+      - clicking on a skill checks / unchecks it
+      - skills list their multipliers (if > 1) and prereqs in parens after the skill name
+      - if all the skills are checked, increment the field level and clear the checks
+      - a skill with unmet prerequisites can only get a check if the character already has the prerequisite at the next level for the skill
+  - any skills that are not in fields
+    - if any of these skills has level > 1, the level shows in red because this is an error
+- standard skills from the game (listed in Hollow-summary.md) should be in a constant object
+  - key is the name
+  - value is the skill representation
+- the UI shows each field and its level
+  - skills are preceded by a skill type indicator
+    - 🞐 for standard skills
+    - 🞸 for created skills
+  - each skill lists its computed level as the sum of
+    - the level of each field it occurs in (twice if it occurs twice)
+    - each checkbox for each of its entries in the fields
+  - rolling the mouse wheel over a field should increment and decrement it
 
 ### 🌟 New Characters *(Fresh Meat for the Frontier)*
 - New characters start with points given in game rules (XP and Attribute Chips) *(Everyone gets a fair shake)*

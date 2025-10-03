@@ -11,7 +11,7 @@ export class TemplateEngine implements ITemplateEngine {
     private templateCache = new Map<string, string>();
     private base: URL;
 
-    constructor(base: URL = new URL(location.toString())) {
+    constructor(base: URL = new URL(window.location.origin + '/')) {
         this.base = base;
     }
 

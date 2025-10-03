@@ -6,20 +6,7 @@ import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioC
 import '../styles/EnhancedAudioControl.css';
 import '../styles/SplashScreen.css';
 
-// Embedded splash screen template
-const SPLASH_SCREEN_TEMPLATE = `<div class="{{containerClass}}">
-    <h1 class="{{titleClass}}">{{titleWithHollow}}</h1>
-    <div class="{{peerIdClass}}">Peer ID: {{currentPeerId}}</div>
-    <div class="{{buttonsContainerClass}}">
-        <button class="{{joinButtonClass}}">Join Game</button>
-        <button class="{{startButtonClass}}">Start Game</button>
-        <button class="{{charactersButtonClass}}">Characters</button>
-    </div>
-    <div class="splash-credits-container">
-        <button class="splash-credits-button">Credits</button>
-    </div>
-    <div class="splash-version">Version {{version}}</div>
-</div>`;
+// Splash screen template is now loaded from splash-screen.html
 
 // Interface for UI components (Interface Segregation Principle)
 export interface IUIComponent {
@@ -35,6 +22,7 @@ export interface ISplashScreen extends IUIComponent {
     onStartGame?: () => void;
     onCharacters?: () => void;
     onCredits?: () => void;
+    onSettings?: () => void;
     toggleMusic?(): Promise<void>;
 }
 
@@ -49,6 +37,7 @@ export interface ISplashScreenConfig {
     startButtonClass: string;
     charactersButtonClass: string;
     musicButtonClass: string;
+    settingsButtonClass: string;
 }
 
 // Default configuration
@@ -61,12 +50,13 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
     joinButtonClass: 'splash-join-button',
     startButtonClass: 'splash-start-button',
     charactersButtonClass: 'splash-characters-button',
-    musicButtonClass: 'splash-music-button'
+    musicButtonClass: 'splash-music-button',
+    settingsButtonClass: 'splash-settings-button'
 };
 
 // Splash screen implementation following SOLID principles
 export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport {
-    private networkProvider: INetworkProvider;
+    private networkProvider: INetworkProvider | undefined;
     public audioManager?: IAudioManager;
     private config: ISplashScreenConfig;
     public container: HTMLElement | null = null;
@@ -77,14 +67,16 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     public onStartGame?: () => void;
     public onCharacters?: () => void;
     public onCredits?: () => void;
+    public onSettings?: () => void;
     private joinButtonElement: HTMLElement | null = null;
     private startButtonElement: HTMLElement | null = null;
     private charactersButtonElement: HTMLElement | null = null;
     private creditsButtonElement: HTMLElement | null = null;
+    private settingsButtonElement: HTMLElement | null = null;
     public musicButtonElement: HTMLElement | null = null;
 
     constructor(
-        networkProvider: INetworkProvider,
+        networkProvider: INetworkProvider | undefined,
         config: ISplashScreenConfig = DEFAULT_CONFIG,
         audioManager?: IAudioManager
     ) {
@@ -95,8 +87,13 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
 
     async initialize(): Promise<void> {
         try {
-            await this.networkProvider.initialize();
-            this.currentPeerId = this.networkProvider.getPeerId();
+            if (this.networkProvider) {
+                await this.networkProvider.initialize();
+                this.currentPeerId = this.networkProvider.getPeerId();
+            } else {
+                console.warn('Network provider not available');
+                this.currentPeerId = 'Network not available';
+            }
         } catch (error) {
             console.error('Failed to initialize network provider:', error);
             this.currentPeerId = 'Failed to load peer ID';
@@ -133,6 +130,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                 charactersButtonClass: this.config.charactersButtonClass,
                 hasAudioManager: !!this.audioManager,
                 musicButtonClass: this.config.musicButtonClass,
+                settingsButtonClass: this.config.settingsButtonClass,
                 version: version
             };
 
@@ -143,8 +141,8 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
             console.log('  - audioManager:', this.audioManager);
             console.log('  - hasAudioManager template value:', templateData.hasAudioManager);
 
-            // Render template using embedded template
-            const splashHtml = templateEngine.renderTemplate(SPLASH_SCREEN_TEMPLATE, templateData);
+            // Render template from file
+            const splashHtml = await templateEngine.renderTemplateFromFile('splash-screen', templateData);
             container.innerHTML = splashHtml;
 
             // Inject enhanced audio control if audio manager is available
@@ -169,6 +167,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         this.startButtonElement = container.querySelector(`.${this.config.startButtonClass}`);
         this.charactersButtonElement = container.querySelector(`.${this.config.charactersButtonClass}`);
         this.creditsButtonElement = container.querySelector('.splash-credits-button');
+        this.settingsButtonElement = container.querySelector(`.${this.config.settingsButtonClass}`);
         this.musicButtonElement = container.querySelector('#music-toggle-btn'); // Enhanced control only
 
         if (this.peerIdElement) {
@@ -197,6 +196,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         this.joinButtonElement = null;
         this.startButtonElement = null;
         this.charactersButtonElement = null;
+        this.settingsButtonElement = null;
         this.musicButtonElement = null;
     }
 
@@ -220,6 +220,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                 charactersButtonClass: this.config.charactersButtonClass,
                 hasAudioManager: !!this.audioManager,
                 musicButtonClass: this.config.musicButtonClass,
+                settingsButtonClass: this.config.settingsButtonClass,
                 version: VERSION
             };
 
@@ -234,7 +235,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                 });
             } catch (minimalError) {
                 console.error('Even minimal template failed:', minimalError);
-                return '<div class="splash-container"><h1>Don\'t Go Hollow</h1><p>Failed to load interface</p></div>';
+                return await templateEngine.renderTemplateFromFile('splash-interface-error', {});
             }
         }
     }
@@ -310,6 +311,15 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                     this.showCreditsPopup().catch(error => {
                         console.warn('Failed to show credits popup:', error);
                     });
+                }
+            });
+        }
+
+        if (this.settingsButtonElement) {
+            this.settingsButtonElement.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                if (this.onSettings) {
+                    this.onSettings();
                 }
             });
         }

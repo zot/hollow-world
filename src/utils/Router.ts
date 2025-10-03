@@ -1,5 +1,4 @@
 // Route-based navigation system for Hollow World
-// Replaces state-based HistoryManager with URL-based routing
 
 export interface IRoute {
     path: string;

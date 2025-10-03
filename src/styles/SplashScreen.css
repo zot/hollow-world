@@ -262,7 +262,8 @@ html, body {
 .splash-join-button,
 .splash-start-button,
 .splash-characters-button,
-.splash-credits-button {
+.splash-credits-button,
+.splash-settings-button {
     font-family: 'Rye', 'Impact', 'Arial Black', sans-serif;
     font-size: 1.4rem;
     font-weight: 900;
@@ -293,7 +294,8 @@ html, body {
 .splash-join-button::before,
 .splash-start-button::before,
 .splash-characters-button::before,
-.splash-credits-button::before {
+.splash-credits-button::before,
+.splash-settings-button::before {
     content: '';
     position: absolute;
     top: 5px;
@@ -307,7 +309,8 @@ html, body {
 .splash-join-button::after,
 .splash-start-button::after,
 .splash-characters-button::after,
-.splash-credits-button::after {
+.splash-credits-button::after,
+.splash-settings-button::after {
     content: '★';
     position: absolute;
     top: 2px;
@@ -320,7 +323,8 @@ html, body {
 .splash-join-button:hover,
 .splash-start-button:hover,
 .splash-characters-button:hover,
-.splash-credits-button:hover {
+.splash-credits-button:hover,
+.splash-settings-button:hover {
     background:
         linear-gradient(45deg, #f4a460, #ffd700, #ffb347, #f4a460),
         radial-gradient(circle at center, rgba(255,248,220,0.5), transparent);
@@ -340,13 +344,30 @@ html, body {
 .splash-join-button:active,
 .splash-start-button:active,
 .splash-characters-button:active,
-.splash-credits-button:active {
+.splash-credits-button:active,
+.splash-settings-button:active {
     transform: perspective(150px) rotateX(-5deg) translateY(1px);
     box-shadow:
         inset 0 0 20px rgba(139,69,19,0.3),
         2px 2px 0px #654321,
         4px 4px 0px #4a2c1a,
         6px 6px 10px rgba(0,0,0,0.6);
+}
+
+/* Settings button - positioned at lower left per specification */
+.splash-settings-button {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    padding: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .splash-music-button {
@@ -471,6 +492,14 @@ html, body {
         font-size: 1.5rem;
         bottom: 15px;
         right: 15px;
+    }
+
+    .splash-settings-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        bottom: 15px;
+        left: 15px;
     }
 }
 

@@ -1,0 +1,23 @@
+<h2>Hollow Tracker</h2>
+<div class="hollow-stats">
+    <div class="dust-counter">
+        <label>Dust: {{dust}}</label>
+    </div>
+    <div class="burned-counter">
+        <label>Burned: {{burned}}</label>
+    </div>
+    <div class="hollow-influence">
+        <label>Hollow Influence: -{{hollowInfluence}}</label>
+    </div>
+    <div class="glimmer-debt">
+        <label>Glimmer Debt: {{glimmerDebt}}</label>
+    </div>
+    <div class="glimmer-debt-total">
+        <label>Total Debt: {{glimmerDebtTotal}}</label>
+    </div>
+    {{#if hasNewMoonMarks}}
+        <div class="new-moon-marks warning">
+            New Moon Marks: {{newMoonMarks}}/3
+        </div>
+    {{/if}}
+</div>

@@ -471,8 +471,7 @@ export class CharacterSheet implements ICharacterSheet {
                         ${this.character.skills.map(skill => `
                             <div class="skill-item">
                                 <label>${skill.isListed ? '⭐' : ''} ${skill.name}</label>
-                                <span class="level">Level ${skill.level}</span>
-                                ${skill.isSpecialized ? '<span class="specialized">✓</span>' : ''}
+                                <span class="level">Level ${CharacterCalculations.calculateSkillLevel(skill.id, this.character.fields)}</span>
                                 ${skill.costMultiplier === 2 ? '<span class="x2">x2</span>' : ''}
                             </div>
                         `).join('')}

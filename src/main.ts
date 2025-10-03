@@ -1,7 +1,7 @@
 console.log('Main.ts starting to load...');
 
-// Set Base URL as specified in specs/ui.splash.md
-const Base = new URL(location.toString());
+// Set Base URL to app root (origin) for SPA routing
+const Base = new URL(window.location.origin + '/');
 console.log('Base URL set to:', Base);
 
 import { SplashScreen } from './ui/SplashScreen.js';
@@ -17,7 +17,7 @@ import { ICharacter } from './character/types.js';
 console.log('All imports loaded successfully');
 
 // Global app state
-let networkProvider: LibP2PNetworkProvider;
+let networkProvider: LibP2PNetworkProvider | undefined;
 let audioManager: AudioManager | undefined;
 let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
@@ -181,6 +181,12 @@ function setupRoutes(): void {
         title: "Don't Go Hollow - Settings",
         handler: () => renderSettingsView()
     });
+
+    router.addRoute({
+        path: '/settings/log',
+        title: "Don't Go Hollow - Log",
+        handler: () => renderLogView()
+    });
 }
 
 function setupComponentCallbacks(): void {
@@ -311,11 +317,23 @@ async function renderSettingsView(): Promise<void> {
             settingsView.updatePeerId('Network not initialized');
         }
 
-        await settingsView.render(appContainer);
+        await settingsView.renderSettings(appContainer);
     } catch (error) {
         console.error('Failed to render settings view:', error);
         // Fallback: navigate back to splash on error
         router.navigate('/');
+    }
+}
+
+async function renderLogView(): Promise<void> {
+    currentView = 'settings'; // Still settings context
+
+    try {
+        await settingsView.renderLog(appContainer);
+    } catch (error) {
+        console.error('Failed to render log view:', error);
+        // Fallback: navigate back to settings on error
+        router.navigate('/settings');
     }
 }
 

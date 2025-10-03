@@ -1,0 +1,16 @@
+<h2>Skills & Fields</h2>
+<div class="skills-list">
+    {{#if hasFields}}
+        <h3>Fields</h3>
+        {{fieldsHtml}}
+    {{else}}
+        <p>No fields defined</p>
+    {{/if}}
+
+    {{#if hasSkills}}
+        <h3>Skills</h3>
+        {{skillsHtml}}
+    {{else}}
+        <p>No skills defined</p>
+    {{/if}}
+</div>

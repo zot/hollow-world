@@ -11,25 +11,7 @@ import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioC
 import '../styles/EnhancedAudioControl.css';
 import '../styles/CharacterEditor.css';
 
-// Embedded character editor template
-const CHARACTER_EDITOR_TEMPLATE = `<div class="character-manager-container" role="main" aria-label="Character editor for {{characterName}}">
-    <div class="character-manager-header">
-        <h1 id="editor-heading">Editing: {{characterName}}</h1>
-        <div class="editor-actions" role="group" aria-labelledby="editor-actions-heading">
-            <h2 id="editor-actions-heading" class="sr-only">Save or Cancel Changes</h2>
-            <button class="nope-btn" id="nope-character-btn"
-                    aria-label="Cancel changes and return to character list">Nope</button>
-            <button class="yep-btn" id="yep-character-btn"
-                    aria-label="Save changes to {{characterName}}">Yep</button>
-        </div>
-    </div>
-
-    <!-- Enhanced audio control will be inserted here -->
-
-    <div id="character-sheet-container" role="region" aria-labelledby="editor-heading">
-        <!-- Character sheet will be rendered here -->
-    </div>
-</div>`;
+// Character editor template is now loaded from character-editor.html
 
 export interface ICharacterEditor extends IUIComponent {
     setCharacter(character: ICharacter): void;
@@ -72,12 +54,12 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         this.audioManager = audioManager;
     }
 
-    setCharacter(character: ICharacter): void {
+    async setCharacter(character: ICharacter): Promise<void> {
         this.character = { ...character };
         this.originalCharacter = { ...character }; // Store original for change tracking
         this.hasUnsavedChanges = false;
         if (this.container) {
-            this.render(this.container);
+            await this.render(this.container);
         }
     }
 
@@ -101,7 +83,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         }
 
         try {
-            const editorHtml = templateEngine.renderTemplate(CHARACTER_EDITOR_TEMPLATE, {
+            const editorHtml = await templateEngine.renderTemplateFromFile('character-editor', {
                 characterName: this.character.name,
                 hasAudioManager: !!this.audioManager
             });
@@ -124,7 +106,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
                     showCreationMode: this.config.showCreationMode
                 });
 
-                this.characterSheet.render(sheetContainer);
+                await this.characterSheet.render(sheetContainer);
             }
 
             // Set up music button reference (for legacy compatibility)
@@ -153,7 +135,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         } catch (error) {
             console.error('Failed to render no-character error template:', error);
             // Fallback to minimal HTML
-            this.container.innerHTML = '<div><h1>No Character Selected</h1><p>No character available for editing.</p><button id="back-to-characters-btn">Back to Characters</button></div>';
+            this.container.innerHTML = await templateEngine.renderTemplateFromFile('no-character-fallback', {});
         }
 
         this.setupErrorEventListeners();
@@ -170,7 +152,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
             this.setupEventListeners();
         } catch (error) {
             console.error('Even fallback template failed:', error);
-            this.container.innerHTML = '<div><h1>Character Editor</h1><p>Failed to load editor</p></div>';
+            this.container.innerHTML = await templateEngine.renderTemplateFromFile('editor-load-error', {});
         }
     }
 
@@ -181,7 +163,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         if (nopeBtn) {
             nopeBtn.addEventListener('click', async () => {
                 await AudioControlUtils.playButtonSound(this.audioManager);
-                this.revertChanges();
+                await this.revertChanges();
             });
         }
 
@@ -254,7 +236,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         }
     }
 
-    private revertChanges(): void {
+    private async revertChanges(): Promise<void> {
         if (!this.originalCharacter) return;
 
         // Reload character from original data
@@ -263,7 +245,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
 
         // Re-render to show reverted data
         if (this.container) {
-            this.render(this.container);
+            await this.render(this.container);
         }
     }
 
@@ -320,8 +302,14 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
             errorDiv.innerHTML = errorHtml;
         } catch (error) {
             console.error('Failed to render error notification template:', error);
-            // Fallback to minimal HTML
-            errorDiv.innerHTML = `<div class="error-content"><span class="error-icon">⚠️</span><span class="error-text">${message}</span><button class="error-close" onclick="this.parentElement.parentElement.remove()">×</button></div>`;
+            // Fallback to minimal HTML using template
+            try {
+                const fallbackHtml = await templateEngine.renderTemplateFromFile('error-content', { message });
+                errorDiv.innerHTML = fallbackHtml;
+            } catch (fallbackError) {
+                console.error('Even fallback template failed:', fallbackError);
+                errorDiv.innerHTML = await templateEngine.renderTemplateFromFile('error-content', { message: 'Error occurred' });
+            }
         }
 
         document.body.appendChild(errorDiv);

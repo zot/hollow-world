@@ -1,0 +1,20 @@
+<div class="{{containerClass}}">
+    <h1 class="{{titleClass}}">⚙️ Settings</h1>
+
+    <div class="settings-section">
+        <h2>Player Information</h2>
+        <label for="player-name-input">Player Name:</label>
+        <input type="text" id="player-name-input" value="{{playerName}}" />
+
+        <label>Peer ID:</label>
+        <span id="peer-id-display">{{peerId}}</span>
+    </div>
+
+    <div class="settings-section">
+        <h2>Private Notes</h2>
+        <label for="private-notes-textarea">Notes:</label>
+        <textarea id="private-notes-textarea">{{privateNotes}}</textarea>
+    </div>
+
+    <button class="{{backButtonClass}}">Back to Menu</button>
+</div>

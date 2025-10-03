@@ -32,30 +32,24 @@ export function createGunslingerDemo(): void {
         {
             id: 'weapon-pistol',
             name: 'Weapon (Pistol)',
-            level: 4,
             isListed: true,
             costMultiplier: 2,
             specialization: 'Pistol',
-            isSpecialized: false,
             description: 'Expertise with pistols and revolvers'
         },
         {
             id: 'quickdraw',
             name: 'Quickdraw',
-            level: 3,
             prerequisite: 'Weapon (Pistol)',
             isListed: true,
             costMultiplier: 2,
-            isSpecialized: false,
             description: 'Lightning-fast weapon drawing'
         },
         {
             id: 'intimidation',
             name: 'Intimidation',
-            level: 3,
             isListed: false,
             costMultiplier: 1,
-            isSpecialized: false,
             description: 'Striking fear into opponents'
         }
     ];
@@ -67,7 +61,11 @@ export function createGunslingerDemo(): void {
         id: 'gunfighter',
         name: 'Gunfighter',
         level: 3,
-        skills: ['weapon-pistol', 'quickdraw', 'intimidation'],
+        skillEntries: [
+            { skillId: 'weapon-pistol', hasExperience: false },
+            { skillId: 'quickdraw', hasExperience: false },
+            { skillId: 'intimidation', hasExperience: false }
+        ],
         isFrozen: true
     }];
 
