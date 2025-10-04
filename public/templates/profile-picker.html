@@ -1,0 +1,41 @@
+<div class="profile-picker-overlay">
+    <div class="profile-picker-modal">
+        <div class="profile-picker-header">
+            <h2>🎭 Profiles</h2>
+            <button class="profile-picker-close" aria-label="Close">✕</button>
+        </div>
+        <div class="profile-picker-content">
+            <div class="profile-list">
+                {{#each profiles}}
+                    <div class="profile-item {{#if selected}}profile-selected{{/if}}" data-profile-name="{{name}}">
+                        <span class="profile-name">{{name}}</span>
+                        {{#if selected}}
+                            <span class="profile-current-badge">Current</span>
+                        {{/if}}
+                    </div>
+                {{/each}}
+            </div>
+            <div class="profile-actions">
+                <button class="profile-create-btn" aria-label="Create new profile">
+                    <span class="profile-create-icon">+</span>
+                    <span>New Profile</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Profile Modal -->
+    <div class="profile-create-modal" style="display: none;">
+        <div class="profile-create-dialog">
+            <h3>Create New Profile</h3>
+            <div class="profile-create-field">
+                <label for="new-profile-name">Profile Name:</label>
+                <input type="text" id="new-profile-name" placeholder="Enter profile name" />
+            </div>
+            <div class="profile-create-actions">
+                <button class="profile-accept-btn">Accept</button>
+                <button class="profile-cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,12 +4,18 @@ import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioC
 import { IAudioManager } from '../audio/AudioManager.js';
 import { MilkdownUtils, IMilkdownEditor } from '../utils/MilkdownUtils.js';
 import { LogService, ILogEntry } from '../services/LogService.js';
+import { HollowPeer } from '../p2p.js';
 import { router } from '../utils/Router.js';
+import { getProfileService } from '../services/ProfileService.js';
 import '../styles/SettingsView.css';
 
-export interface ISettingsView extends IUIComponent {
+export interface ISettingsView {
     onBackToMenu?: () => void;
     audioManager?: IAudioManager;
+    container: HTMLElement | null;
+    renderSettings(container: HTMLElement): Promise<void>;
+    renderLog(container: HTMLElement): Promise<void>;
+    destroy(): void;
 }
 
 export interface ISettingsViewConfig {
@@ -52,10 +58,12 @@ const DEFAULT_CONFIG: ISettingsViewConfig = {
 };
 
 export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport {
+    private readonly STORAGE_KEY = 'hollowWorldSettings';
     private config: ISettingsViewConfig;
     public container: HTMLElement | null = null;
     public onBackToMenu?: () => void;
     public audioManager?: IAudioManager;
+    private hollowPeer?: HollowPeer;
     private settingsData: ISettingsData;
     private backButtonElement: HTMLElement | null = null;
     private playerNameInput: HTMLInputElement | null = null;
@@ -68,12 +76,17 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
 
     constructor(
         config: ISettingsViewConfig = DEFAULT_CONFIG,
-        audioManager?: IAudioManager
+        audioManager?: IAudioManager,
+        hollowPeer?: HollowPeer
     ) {
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.audioManager = audioManager;
+        this.hollowPeer = hollowPeer;
         this.settingsData = this.loadSettings();
         this.logService = new LogService();
+
+        // Set up event card handlers for friend requests/approvals
+        this.setupEventCardHandlers();
     }
 
     async renderSettings(container: HTMLElement): Promise<void> {
@@ -84,6 +97,9 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         this.container = container;
 
         try {
+            const profileService = getProfileService();
+            const currentProfile = profileService.getCurrentProfile();
+
             const templateData = {
                 containerClass: this.config.containerClass,
                 titleClass: this.config.titleClass,
@@ -93,9 +109,12 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 backButtonClass: this.config.backButtonClass,
                 playerName: this.settingsData.playerName,
                 peerId: this.settingsData.peerId,
+                peerCount: this.hollowPeer.getConnectedPeerCount(),
                 privateNotes: this.settingsData.privateNotes,
                 friends: this.settingsData.friends,
-                hasAudioManager: !!this.audioManager
+                hasAudioManager: !!this.audioManager,
+                profileName: `{${currentProfile.name}}`,
+                showProfileName: currentProfile.name !== 'Default'
             };
 
             const settingsHtml = await templateEngine.renderTemplateFromFile('settings-view', templateData);
@@ -120,6 +139,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         this.setupElementReferences();
         await this.initializeMilkdownEditors();
         this.setupEventHandlers();
+        this.startPeerCountUpdates();
 
         if (this.audioManager) {
             AudioControlUtils.setupEnhancedAudioControls(this);
@@ -146,6 +166,10 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     }
 
     destroy(): void {
+        if (this.peerCountInterval) {
+            clearInterval(this.peerCountInterval);
+            this.peerCountInterval = undefined;
+        }
         if (this.privateNotesEditor) {
             this.privateNotesEditor.destroy();
             this.privateNotesEditor = null;
@@ -174,7 +198,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         };
 
         try {
-            const stored = localStorage.getItem('hollowWorldSettings');
+            const stored = getProfileService().getItem(this.STORAGE_KEY);
             if (stored) {
                 return { ...defaultSettings, ...JSON.parse(stored) };
             }
@@ -197,7 +221,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 this.settingsData.privateNotes = this.privateNotesEditor.getMarkdown();
             }
 
-            localStorage.setItem('hollowWorldSettings', JSON.stringify(this.settingsData));
+            getProfileService().setItem(this.STORAGE_KEY, JSON.stringify(this.settingsData));
             this.logService.log('Settings saved successfully');
             console.log('Settings saved successfully');
         } catch (error) {
@@ -220,6 +244,13 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         showLogBtn?.addEventListener('click', async () => {
             await AudioControlUtils.playButtonSound(this.audioManager);
             router.navigate('/settings/log');
+        });
+
+        // Profiles button handler
+        const showProfilesBtn = this.container?.querySelector('#show-profiles-btn');
+        showProfilesBtn?.addEventListener('click', async () => {
+            await AudioControlUtils.playButtonSound(this.audioManager);
+            await this.showProfilePicker();
         });
 
         if (this.backButtonElement) {
@@ -288,7 +319,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 return;
             }
 
-            const invitation = this.createInvitation(friendName, friendId, notes);
+            const invitation = await this.createInvitation(friendName, friendId, notes);
             if (invitationCodeInput) {
                 invitationCodeInput.value = invitation;
             }
@@ -349,13 +380,130 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 return;
             }
 
-            // TODO: Send requestFriend message via P2P
-            this.logService.log(`Accepting invitation from peer: ${parsed.peerId} (code: ${parsed.inviteCode})`);
-            console.log('Accepting invitation:', parsed);
-            alert('Friend request sent! (P2P integration pending)');
+            // Send requestFriend message via P2P
+            if (!this.hollowPeer) {
+                this.logService.log('Failed to send friend request: P2P not initialized');
+                alert('P2P system not initialized. Please try again later.');
+                return;
+            }
+
+            try {
+                await this.hollowPeer.sendRequestFriend(invitation);
+                this.logService.log(`Friend request sent to peer: ${parsed.peerId} (code: ${parsed.inviteCode})`);
+                console.log('✅ Friend request sent successfully:', parsed);
+                alert('Friend request sent successfully!');
+            } catch (error: any) {
+                this.logService.log(`Failed to send friend request: ${error.message}`);
+                console.error('❌ Failed to send friend request:', error);
+                alert(`Failed to send friend request: ${error.message}`);
+                return;
+            }
 
             if (acceptModal) acceptModal.style.display = 'none';
             if (acceptedInvitationInput) acceptedInvitationInput.value = '';
+        });
+    }
+
+    private setupEventCardHandlers(): void {
+        // Use event delegation for dynamically rendered event cards
+        document.addEventListener('click', async (e: Event) => {
+            const target = e.target as HTMLElement;
+
+            // Handle Accept button in friend request events
+            if (target.classList.contains('event-action-accept')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                
+                const peerId = target.getAttribute('data-peer-id');
+                const friendName = target.getAttribute('data-friend-name');
+                const inviteCode = target.getAttribute('data-invite-code');
+                const eventId = target.getAttribute('data-event-id');
+
+                if (!peerId || !friendName || !inviteCode) {
+                    this.logService.log('Invalid friend request event data');
+                    console.error('Missing data attributes on Accept button');
+                    return;
+                }
+
+                if (!this.hollowPeer) {
+                    this.logService.log('Failed to accept friend request: P2P not initialized');
+                    alert('P2P system not initialized');
+                    return;
+                }
+
+                try {
+                    // Call HollowPeer's approveFriendRequest method
+                    await this.hollowPeer.approveFriendRequest(peerId, friendName, inviteCode, true);
+                    this.logService.log(`Accepted friend request from ${friendName} (${peerId})`);
+                    console.log(`✅ Accepted friend request from ${friendName}`);
+
+                    // Remove the event
+                    if (eventId) {
+                        const eventService = this.hollowPeer.getEventService();
+                        eventService.removeEvent(eventId);
+                    }
+                } catch (error: any) {
+                    this.logService.log(`Failed to accept friend request: ${error.message}`);
+                    console.error('❌ Failed to accept friend request:', error);
+                    alert(`Failed to accept friend request: ${error.message}`);
+                }
+            }
+
+            // Handle Ignore button in friend request events
+            if (target.classList.contains('event-action-ignore')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                
+                const eventId = target.getAttribute('data-event-id');
+                if (!eventId) {
+                    console.error('Missing event ID on Ignore button');
+                    return;
+                }
+
+                if (!this.hollowPeer) {
+                    return;
+                }
+
+                // Just remove the event without sending approval
+                const eventService = this.hollowPeer.getEventService();
+                eventService.removeEvent(eventId);
+                this.logService.log('Ignored friend request');
+            }
+
+            // Handle View Friend button in friend approved events
+            if (target.classList.contains('event-action-view-friend')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                
+                const peerId = target.getAttribute('data-peer-id');
+                const eventId = target.getAttribute('data-event-id');
+
+                if (peerId) {
+                    // Navigate to settings with friend selected
+                    router.navigate(`/settings#friend=${peerId}`);
+                }
+
+                // Remove the event
+                if (eventId && this.hollowPeer) {
+                    const eventService = this.hollowPeer.getEventService();
+                    eventService.removeEvent(eventId);
+                }
+            }
+
+            // Handle Remove button (💀) on any event
+            if (target.classList.contains('event-remove')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                
+                const eventId = target.getAttribute('data-event-id');
+                if (!eventId) {
+                    console.error('Missing event ID on Remove button');
+                    return;
+                }
+
+                if (!this.hollowPeer) {
+                    return;
+                }
+
+                const eventService = this.hollowPeer.getEventService();
+                eventService.removeEvent(eventId);
+            }
         });
     }
 
@@ -403,6 +551,22 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
+    private peerCountInterval?: number;
+
+    startPeerCountUpdates(): void {
+        this.updatePeerCount();
+        this.peerCountInterval = window.setInterval(() => {
+            this.updatePeerCount();
+        }, 5000); // Update every 5 seconds
+    }
+
+    updatePeerCount(): void {
+        const peerCountElement = this.container?.querySelector('#peer-count');
+        if (peerCountElement) {
+            peerCountElement.textContent = this.hollowPeer.getConnectedPeerCount().toString();
+        }
+    }
+
     addFriend(friend: IFriend): void {
         this.settingsData.friends.push(friend);
         this.logService.log(`Friend added: ${friend.playerName} (${friend.peerId})`);
@@ -436,20 +600,17 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         return code;
     }
 
-    private createInvitation(friendName: string, friendId: string | null, notes: string): string {
-        const inviteCode = this.generateInviteCode();
+    private async createInvitation(friendName: string, friendId: string | null, notes: string): Promise<string> {
+        if (!this.hollowPeer) {
+            this.logService.log('Failed to create invitation: P2P not initialized');
+            throw new Error('P2P system not initialized');
+        }
 
-        // Store the invitation
-        this.settingsData.activeInvitations[inviteCode] = {
-            friendName,
-            friendId,
-            notes
-        };
-        this.logService.log(`Invitation generated for: ${friendName} (code: ${inviteCode})`);
-        this.saveSettings();
+        // Use HollowPeer's createInvitation method (notes are UI-only, not stored in invitation)
+        const invitation = await this.hollowPeer.createInvitation(friendName, friendId);
+        this.logService.log(`Invitation generated for: ${friendName}`);
 
-        // Create invitation string: inviteCode-peerID
-        return `${inviteCode}-${this.settingsData.peerId}`;
+        return invitation;
     }
 
     private async copyToClipboard(text: string): Promise<boolean> {
@@ -492,13 +653,137 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     }
 
     private parseInvitation(invitation: string): { inviteCode: string; peerId: string } | null {
-        const parts = invitation.split('-');
-        if (parts.length >= 2) {
-            const inviteCode = parts[0];
-            const peerId = parts.slice(1).join('-'); // Rejoin in case peer ID contains dashes
-            return { inviteCode, peerId };
+        try {
+            // Decode base64-encoded invitation JSON
+            const decodedJson = atob(invitation);
+            const parsed = JSON.parse(decodedJson);
+
+            // Validate invitation structure
+            if (parsed.inviteCode && parsed.peerId) {
+                return { inviteCode: parsed.inviteCode, peerId: parsed.peerId };
+            }
+            return null;
+        } catch (error) {
+            // If base64 decode or JSON parse fails, return null
+            return null;
         }
-        return null;
+    }
+
+    private async showProfilePicker(): Promise<void> {
+        const { getProfileService } = await import('../services/ProfileService.js');
+        const profileService = getProfileService();
+        const currentProfile = profileService.getCurrentProfile();
+        const allProfiles = profileService.getAllProfiles();
+
+        // Prepare template data
+        const profiles = allProfiles.map(profile => ({
+            name: profile.name,
+            selected: profile.name === currentProfile.name
+        }));
+
+        try {
+            const pickerHtml = await templateEngine.renderTemplateFromFile('profile-picker', {
+                profiles
+            });
+
+            // Create overlay element
+            const overlay = document.createElement('div');
+            overlay.innerHTML = pickerHtml;
+            document.body.appendChild(overlay.firstElementChild as HTMLElement);
+
+            const pickerOverlay = document.querySelector('.profile-picker-overlay') as HTMLElement;
+            if (!pickerOverlay) return;
+
+            const createModal = pickerOverlay.querySelector('.profile-create-modal') as HTMLElement;
+            const profileNameInput = pickerOverlay.querySelector('#new-profile-name') as HTMLInputElement;
+
+            // Close button handler
+            const closeBtn = pickerOverlay.querySelector('.profile-picker-close');
+            closeBtn?.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                pickerOverlay.remove();
+            });
+
+            // Profile selection handler
+            const profileItems = pickerOverlay.querySelectorAll('.profile-item');
+            profileItems.forEach(item => {
+                item.addEventListener('click', async () => {
+                    await AudioControlUtils.playButtonSound(this.audioManager);
+                    const profileName = item.getAttribute('data-profile-name');
+                    if (profileName && profileName !== currentProfile.name) {
+                        try {
+                            profileService.setCurrentProfile(profileName);
+                            this.logService.log(`Switched to profile: ${profileName}`);
+                            
+                            // Reload the current view by navigating to current route
+                            window.location.reload();
+                        } catch (error: any) {
+                            this.logService.log(`Failed to switch profile: ${error.message}`);
+                            alert(`Failed to switch profile: ${error.message}`);
+                        }
+                    }
+                    pickerOverlay.remove();
+                });
+            });
+
+            // Create new profile button - show modal
+            const createBtn = pickerOverlay.querySelector('.profile-create-btn');
+            createBtn?.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                if (createModal) {
+                    createModal.style.display = 'flex';
+                    profileNameInput?.focus();
+                }
+            });
+
+            // Accept button in create modal
+            const acceptBtn = pickerOverlay.querySelector('.profile-accept-btn');
+            acceptBtn?.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const profileName = profileNameInput?.value.trim();
+                if (profileName) {
+                    try {
+                        profileService.createProfile(profileName);
+                        profileService.setCurrentProfile(profileName);
+                        this.logService.log(`Created and switched to new profile: ${profileName}`);
+                        
+                        // Reload to show new profile
+                        window.location.reload();
+                    } catch (error: any) {
+                        this.logService.log(`Failed to create profile: ${error.message}`);
+                        alert(`Failed to create profile: ${error.message}`);
+                    }
+                }
+            });
+
+            // Cancel button in create modal
+            const cancelBtn = pickerOverlay.querySelector('.profile-cancel-btn');
+            cancelBtn?.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                if (createModal) {
+                    createModal.style.display = 'none';
+                    if (profileNameInput) profileNameInput.value = '';
+                }
+            });
+
+            // Enter key in name input
+            profileNameInput?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    acceptBtn?.dispatchEvent(new Event('click'));
+                }
+            });
+
+            // Click outside to close
+            pickerOverlay.addEventListener('click', async (e) => {
+                if (e.target === pickerOverlay) {
+                    await AudioControlUtils.playButtonSound(this.audioManager);
+                    pickerOverlay.remove();
+                }
+            });
+        } catch (error) {
+            console.error('Failed to show profile picker:', error);
+            this.logService.log(`Failed to show profile picker: ${error}`);
+        }
     }
 
     async renderLog(container: HTMLElement): Promise<void> {

@@ -1,3 +1,5 @@
+import { getProfileService } from './ProfileService.js';
+
 export interface ILogEntry {
     serial: number;
     date: Date;
@@ -30,7 +32,7 @@ export class LogService implements ILogService {
 
     private loadFromStorage(): ILogData {
         try {
-            const stored = localStorage.getItem(STORAGE_KEY);
+            const stored = getProfileService().getItem(STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored);
                 // Convert date strings back to Date objects
@@ -53,7 +55,7 @@ export class LogService implements ILogService {
 
     private saveToStorage(): void {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.logData));
+            getProfileService().setItem(STORAGE_KEY, JSON.stringify(this.logData));
         } catch (error) {
             console.error('Failed to save log to localStorage:', error);
         }

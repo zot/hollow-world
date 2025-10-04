@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { LogService } from '../../src/services/LogService';
+import { LogService } from '../src/services/LogService.js';
+import { getProfileService } from '../src/services/ProfileService.js';
 
 describe('LogService', () => {
     let logService: LogService;
@@ -41,7 +42,7 @@ describe('LogService', () => {
         it('should persist to localStorage', () => {
             logService.log('Test message');
 
-            const stored = localStorage.getItem(STORAGE_KEY);
+            const stored = getProfileService().getItem(STORAGE_KEY);
             expect(stored).toBeTruthy();
 
             const parsed = JSON.parse(stored!);
@@ -117,11 +118,11 @@ describe('LogService', () => {
 
         it('should clear localStorage', () => {
             logService.log('Test');
-            expect(localStorage.getItem(STORAGE_KEY)).toBeTruthy();
+            expect(getProfileService().getItem(STORAGE_KEY)).toBeTruthy();
 
             logService.clear();
 
-            const stored = localStorage.getItem(STORAGE_KEY);
+            const stored = getProfileService().getItem(STORAGE_KEY);
             const parsed = JSON.parse(stored!);
             expect(parsed.entries).toHaveLength(0);
         });
@@ -194,7 +195,7 @@ describe('LogService', () => {
         });
 
         it('should handle corrupted localStorage data', () => {
-            localStorage.setItem(STORAGE_KEY, 'invalid json');
+            getProfileService().setItem(STORAGE_KEY, 'invalid json');
 
             const newLogService = new LogService();
             const entries = newLogService.getEntries();

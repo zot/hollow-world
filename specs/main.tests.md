@@ -4,9 +4,9 @@
 
 See also:
 - [`CLAUDE.md`](../CLAUDE.md#testing) for testing principles
-- [`ui.splash.testing.md`](ui.splash.testing.md) for splash screen tests
-- [`ui.characters.testing.md`](ui.characters.testing.md) for character management tests
-- [`ui.settings.testing.md`](ui.settings.testing.md) for settings view tests
+- [`ui.splash.tests.md`](ui.splash.tests.md) for splash screen tests
+- [`ui.characters.tests.md`](ui.characters.tests.md) for character management tests
+- [`ui.settings.tests.md`](ui.settings.tests.md) for settings view tests
 
 ## SPA Routing Integration Tests
 
@@ -234,6 +234,351 @@ Critical: Assets must load from origin on ALL routes
   - Navigate to view
   - Navigate away and back
   - Verify assets served from cache (304 Not Modified)
+
+## P2P Integration Tests
+
+**IMPORTANT: Testing with Multiple Peers**
+- Regular browser tabs share localStorage, resulting in the same peer ID
+- To test with different peer IDs, use **Different Profiles in Different Tabs**
+  - Each profile has completely isolated storage (different peer ID, friends, settings, etc.)
+  - **CRITICAL**: Both tabs MUST remain open simultaneously for P2P communication to work
+  - **DO NOT** switch profiles in the same tab - P2P requires both peers to be running at the same time
+  - Setup:
+    1. Open Tab A, select "Profile A" (or create it)
+    2. Open Tab B (new tab in same browser), select "Profile B" (or create it)
+    3. Keep BOTH tabs open for all P2P testing
+  - Both tabs now have different peer IDs and can communicate
+  - Easiest method for testing P2P features
+- Tests marked "Tab A" and "Tab B" require separate tabs with different profiles, kept open simultaneously
+- **Profile-based testing in separate tabs** is the recommended approach (doesn't require multiple browsers/windows)
+
+### Profile Isolation Tests
+**Note**: These tests verify profile isolation in a single tab (no P2P communication needed)
+
+- [ ] **Different profiles have different peer IDs**
+  - In single tab: Navigate to `/settings`
+  - Note current peer ID (Profile "Default")
+  - Click Profiles button, create "Test Profile"
+  - Select "Test Profile"
+  - Verify peer ID is different from "Default" profile
+  - Switch back to "Default" profile
+  - Verify original peer ID restored
+
+- [ ] **Profile data is completely isolated**
+  - In single tab, Profile A: Add friend "Alice", set player name to "Bob"
+  - Profile A: Create character "Cowboy Joe"
+  - Switch to Profile B (same tab)
+  - Verify friends list is empty
+  - Verify player name is empty
+  - Verify character list shows only default characters
+  - Switch back to Profile A (same tab)
+  - Verify "Alice" still in friends, player name is "Bob", character "Cowboy Joe" exists
+
+- [ ] **Profile selection is session-based (not persisted)**
+  - Select "Test Profile"
+  - Close tab, reopen application
+  - Navigate to `/settings`
+  - Verify profile is "Default" (or first profile)
+  - Profile selection does NOT persist across browser sessions
+
+### Peer Identity Tests
+- [ ] **Two instances have different peer IDs**
+  - Use Profiles feature
+    - Tab A: Navigate to `/settings`, click Profiles button, create/select "Profile A"
+    - Tab B: Navigate to `/settings`, click Profiles button, create/select "Profile B"
+    - Extract peer IDs from both tabs
+  - Verify peer IDs are different and non-empty
+  - Verify peer ID format is valid libp2p peer ID (starts with `12D3Koo`)
+
+- [ ] **Peer ID persists across sessions within same profile**
+  - Navigate to `/settings`, note peer ID
+  - Close tab and reopen application
+  - Navigate to `/settings`
+  - Verify peer ID is identical to previous session
+  - Verify private key data exists in localStorage
+
+### Friend Invitation Flow Tests
+- [ ] **Create and parse invitation string**
+  - Navigate to `/settings`
+  - Create new invitation with friend name "Alice"
+  - Verify invitation format: `{inviteCode}-{peerID}`
+  - Verify invite code is 8 characters (A-Z, 0-9)
+  - Verify invitation stored in activeInvitations
+
+- [ ] **Multiple invitations work independently**
+  - Create invitation for "Alice"
+  - Create invitation for "Bob"
+  - Verify both stored in activeInvitations
+  - Verify different invite codes
+  - Verify both contain correct peer ID
+
+### Peer Connectivity Tests
+**Note**: These tests verify basic P2P connectivity infrastructure using ping/pong messages
+
+**IMPORTANT**: These tests require either:
+- A working public WSS circuit relay server (default `relay.libp2p.io` is currently unreachable)
+- Self-hosted relay server with public WSS endpoint
+- OR deployment on public internet with routable IPs
+
+See [`specs/coms.md`](coms.md#-testing-findings--limitations) for detailed explanation of browser P2P limitations on localhost.
+
+- [ ] **Peer address resolution via DHT and relay**
+  - **Setup**: Open Tab A with Profile A, open Tab B with Profile B (keep both open!)
+  - Tab A: Navigate to `/settings`, note peer ID (Peer A)
+  - Tab B: Navigate to `/settings`, note peer ID (Peer B)
+  - Tab A: Use test API to send ping message to Peer B: `window.__HOLLOW_WORLD_TEST__.hollowPeer.sendMessage(peerBId, {method: 'ping', timestamp: Date.now()})`
+  - Tab B: Wait for ping to arrive (check console logs)
+  - Tab B: Verify pong automatically sent in response
+  - Tab A: Wait for pong to arrive (check console logs)
+  - Tab A: Verify round-trip time calculated and logged
+  - **Success criteria**:
+    - DHT successfully propagates peer addresses (via background discovery)
+    - Circuit relay or WebTransport connection established
+    - Ping message delivered to Tab B
+    - Pong response delivered back to Tab A
+    - Round-trip time < 5 seconds (DHT + relay latency)
+  - **Note**: May take up to 2 minutes for background peer discovery to resolve addresses
+
+- [ ] **Bidirectional connectivity verification**
+  - **Setup**: Keep Tab A and Tab B open with different profiles
+  - Tab B: Send ping to Peer A
+  - Tab A: Verify ping received, pong sent
+  - Tab B: Verify pong received
+  - Verify connectivity works in both directions
+  - Verify similar round-trip times in both directions
+
+### Local TURN and Relay servers
+- there are local TURN and Relay servers in the test directory
+
+### Friend Request Send/Receive Tests
+**Note**: These tests require TWO tabs open simultaneously with different profiles
+
+**⚠️ INFRASTRUCTURE GAP - TESTS BLOCKED**
+Current Status: P2P communication tests are **blocked** due to WebRTC signaling requirements:
+
+**Implementation Status:**
+1. ✅ **Helia/IPFS Integration** - Successfully initialized (per p2p.md line 36-37)
+2. ✅ **LibP2P with WebRTC** - Node starts successfully
+3. ✅ **Bootstrap Nodes** - Connected to public IPFS bootstrap nodes (4 nodes configured)
+4. ❌ **WebRTC Signaling** - No mechanism for SDP exchange between browser peers
+5. ❌ **Circuit Relay Servers** - Circuit relay transport included but no relay servers configured
+
+**Current Error:** `The dial request has no valid addresses`
+- Occurs when Tab B tries to send friend request to Tab A
+- Both peers connect to bootstrap nodes successfully
+- Bootstrap provides DHT peer discovery (peer IDs) but not WebRTC addresses
+- WebRTC requires SDP offer/answer exchange to establish connection
+
+**Root Cause - WebRTC Signaling Gap:**
+- IPFS bootstrap nodes enable DHT peer discovery (finding peer IDs)
+- However, WebRTC in browsers requires **signaling** to exchange connection info:
+  - SDP (Session Description Protocol) offers and answers
+  - ICE (Interactive Connectivity Establishment) candidates
+- Without signaling, peers know each other exist but can't connect
+
+**The Chicken-and-Egg Problem:**
+1. To connect via WebRTC → Need to exchange SDPs
+2. To exchange SDPs → Need a communication channel
+3. But can't communicate → Until WebRTC is connected
+
+**Possible Solutions:**
+1. ✅ **Bootstrap Nodes** - IMPLEMENTED but only solves DHT discovery, not WebRTC signaling
+2. **Circuit Relay Servers** - Configure public libp2p relay servers for message forwarding
+3. **Manual Address Exchange** - Exchange WebRTC multiaddrs via invitation system (copy/paste)
+4. **Dedicated Signaling Server** - Custom WebSocket/HTTP server for SDP exchange
+5. **WebRTC-Star** - Specialized WebRTC signaling via star topology servers
+
+Until WebRTC signaling is implemented, the following tests **cannot pass**:
+
+- [ ] **Send friend request with valid invitation**
+  - **Setup**: Open Tab A with Profile A, open Tab B with Profile B (keep both open!)
+  - Tab A: Create invitation, copy invitation string
+  - Tab B: Send friend request using invitation string
+  - Tab B: Verify request added to pendingFriendRequests
+  - Tab A: Verify friend request event appears in event list
+  - Tab A: Verify event shows correct friend name
+  - Tab A: Verify Accept and Ignore buttons present
+
+- [ ] **Friend request with invalid invite code rejected**
+  - **Setup**: Keep Tab A and Tab B open with different profiles
+  - Tab A: Create invitation
+  - Tab B: Send request with modified/invalid invite code
+  - Tab A: Verify no event created
+  - Tab A: Check console for "Invalid friend request" warning
+
+- [ ] **Friend request with mismatched peer ID rejected**
+  - **Setup**: Keep Tab A, Tab B, and Tab C open with different profiles
+  - Tab A: Create invitation with specific peer ID (Tab C)
+  - Tab B: Try to use that invitation (different peer ID)
+  - Tab A: Verify request rejected
+  - Tab A: Check console for peer ID mismatch warning
+
+### Friend Approval Tests
+**Note**: These tests require TWO tabs open simultaneously with different profiles
+
+- [ ] **Accept friend request - both peers become friends**
+  - **Setup**: Open Tab A with Profile A, open Tab B with Profile B (keep both open!)
+  - Tab A: Set player name to "Alice", create invitation
+  - Tab B: Set player name to "Bob", send friend request using invitation
+  - Tab A: Accept request from event
+  - Tab A: Verify "Bob" added to friends list
+  - Tab A: Verify event removed from event list
+  - Tab B: Wait for approval message (tab must be open to receive it!)
+  - Tab B: Verify friend approved event appears
+  - Tab B: Verify "Alice" added to friends list
+  - Tab B: Verify peer removed from pendingFriendRequests
+  - Tab B: Verify "View Friend" button in event
+
+- [ ] **Ignore friend request - no friendship created**
+  - **Setup**: Keep Tab A and Tab B open with different profiles
+  - Tab A: Create invitation
+  - Tab B: Send friend request
+  - Tab A: Click "Ignore" button on event
+  - Tab A: Verify event removed
+  - Tab A: Verify no friend added
+  - Tab B: Verify no response received
+  - Tab B: Verify peer still in pendingFriendRequests
+
+- [ ] **Decline friend request**
+  - **Setup**: Keep Tab A and Tab B open with different profiles
+  - Tab A: Create invitation
+  - Tab B: Send friend request
+  - Tab A: Decline request (if decline implemented)
+  - Tab A: Verify event removed
+  - Tab B: Verify peer removed from pendingFriendRequests
+  - Tab B: Verify no friend added
+
+### Quarantine Tests
+**Note**: These tests require TWO tabs open simultaneously with different profiles
+
+- [ ] **Unknown peer added to quarantine on connect**
+  - **Setup**: Open Tab A and Tab B with different profiles (keep both open!)
+  - Simulate peer connection without friend request
+  - Verify unknown peer added to quarantine set
+  - Check console for quarantine message
+
+- [ ] **Friend removed from quarantine on approval**
+  - **Setup**: Keep Tab A and Tab B open with different profiles
+  - Tab A & B: Follow friend request flow (both tabs open)
+  - Tab A: Verify peer in quarantine before approval
+  - Tab A: Accept friend request
+  - Tab A: Verify peer removed from quarantine
+  - Tab B: Verify peer removed from quarantine
+
+### Persistence Tests
+- [ ] **Friends persist across sessions**
+  - **Setup**: Complete friend request flow with Tab A and Tab B both open
+  - Tab A: Close and reopen (Tab B can close too)
+  - Tab A: Navigate to `/settings`
+  - Tab A: Verify friend still in friends list
+  - Verify friend data intact (name, peer ID, notes)
+
+- [ ] **Active invitations persist**
+  - Single tab: Create invitations
+  - Close and reopen application
+  - Navigate to `/settings`
+  - Verify invitations still in activeInvitations
+
+- [ ] **Pending requests persist and resend on startup**
+  - **Setup**: Open Tab A and Tab B with different profiles (keep both open initially)
+  - Tab B: Send friend request to Tab A
+  - Tab B: Close and reopen Tab B (keep Tab A open, before Tab A accepts)
+  - Tab B: Check console for "resending pending friend request"
+  - Tab A: Verify receives request again (or doesn't duplicate)
+
+### Event Service Integration Tests
+**Note**: These tests require TWO tabs open simultaneously with different profiles
+
+- [ ] **Friend request event displays correctly**
+  - **Setup**: Open Tab A and Tab B with different profiles (keep both open!)
+  - Complete friend request flow
+  - Tab A: Verify event notification button appears with red count
+  - Tab A: Click event button, verify modal opens
+  - Tab A: Verify event card shows:
+    - Event type (friend request)
+    - Friend name from invitation
+    - Peer ID
+    - Accept/Ignore buttons
+    - Skull button to remove
+
+- [ ] **Friend approved event displays correctly**
+  - **Setup**: Keep Tab A and Tab B open with different profiles
+  - Complete friend approval flow (both tabs open)
+  - Tab B: Verify event notification appears (tab must be open!)
+  - Tab B: Click event button
+  - Tab B: Verify event card shows:
+    - Event type (friend approved)
+    - Friend's nickname
+    - "View Friend" button
+    - Skull button to remove
+
+- [ ] **View Friend button navigates to settings**
+  - **Setup**: Keep Tab A and Tab B open with different profiles
+  - Tab B: Get friend approved event (requires both tabs open for approval)
+  - Tab B: Click "View Friend" button
+  - Verify event removed from list
+  - Verify navigates to `/settings#friend={peerId}`
+  - Verify friend selected in UI
+
+- [ ] **Event count badge updates correctly**
+  - Start with 0 events, verify no badge
+  - Add 1 event, verify badge shows "1"
+  - Add 2 more events, verify badge shows "3"
+  - Remove 1 event, verify badge shows "2"
+  - Remove all events, verify badge disappears
+
+### Settings View P2P Integration
+- [ ] **Peer ID displays in settings**
+  - Navigate to `/settings`
+  - Verify peer ID field shows valid peer ID
+  - Verify peer ID is selectable/copyable
+
+- [ ] **Friends list displays in settings**
+  - Add friends via P2P flow
+  - Navigate to `/settings`
+  - Verify friends list shows all friends
+  - Verify each friend shows: name, peer ID, notes field
+
+- [ ] **Create invitation UI works**
+  - Navigate to `/settings`
+  - Enter friend name "Alice"
+  - Click "Create Invitation"
+  - Verify invitation string appears
+  - Verify copyable/selectable
+  - Verify format is correct
+
+- [ ] **Send friend request UI works**
+  - Navigate to `/settings`
+  - Paste invitation string
+  - Click "Send Request"
+  - Verify confirmation message
+  - Verify request added to pending list
+
+### Error Handling Tests
+- [ ] **Invalid invitation format handled gracefully**
+  - Try to send request with malformed invitation
+  - Verify error message displayed
+  - Verify no crash
+  - Verify error logged
+
+- [ ] **Network errors handled gracefully**
+  - Simulate network disconnection
+  - Try to send friend request
+  - Verify error message
+  - Verify request queued for retry
+
+- [ ] **Duplicate friend requests prevented**
+  - Send friend request to peer
+  - Try to send another request to same peer
+  - Verify second request rejected or merged
+  - Verify only one entry in pendingFriendRequests
+
+- [ ] **Already-friend approval ignored**
+  - Tab A & B: Already friends
+  - Tab A: Send another approveFriendRequest
+  - Tab B: Verify ignored (console message)
+  - Verify no duplicate friend entry
+  - Verify no event created
 
 ## Playwright Test Patterns
 

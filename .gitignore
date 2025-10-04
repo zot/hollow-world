@@ -31,6 +31,7 @@ Thumbs.db
 # Temporary files
 .tmp/
 tmp/
-hollowworld*.zip
+[hH]ollow[wW]orld*.zip
 butler.zip
 /.playwright-mcp/
+test-stun-servers.html

@@ -200,12 +200,7 @@ export class AudioControlUtils {
     }
 
     static async playButtonSound(audioManager?: IAudioManager): Promise<void> {
-        if (audioManager) {
-            try {
-                await audioManager.playRandomGunshot();
-            } catch (error) {
-                console.warn('Failed to play button sound:', error);
-            }
-        }
+        // Gunshot sound disabled - no longer plays on button clicks
+        return;
     }
 }

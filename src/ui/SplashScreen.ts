@@ -1,4 +1,3 @@
-import { INetworkProvider } from '../p2p.js';
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { VERSION } from '../version.js';
@@ -56,7 +55,6 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
 
 // Splash screen implementation following SOLID principles
 export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport {
-    private networkProvider: INetworkProvider | undefined;
     public audioManager?: IAudioManager;
     private config: ISplashScreenConfig;
     public container: HTMLElement | null = null;
@@ -76,28 +74,17 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     public musicButtonElement: HTMLElement | null = null;
 
     constructor(
-        networkProvider: INetworkProvider | undefined,
         config: ISplashScreenConfig = DEFAULT_CONFIG,
         audioManager?: IAudioManager
     ) {
-        this.networkProvider = networkProvider;
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.audioManager = audioManager;
+        this.currentPeerId = 'Initializing...';
     }
 
     async initialize(): Promise<void> {
-        try {
-            if (this.networkProvider) {
-                await this.networkProvider.initialize();
-                this.currentPeerId = this.networkProvider.getPeerId();
-            } else {
-                console.warn('Network provider not available');
-                this.currentPeerId = 'Network not available';
-            }
-        } catch (error) {
-            console.error('Failed to initialize network provider:', error);
-            this.currentPeerId = 'Failed to load peer ID';
-        }
+        // SplashScreen is a dumb UI component - no initialization needed
+        // Peer ID will be set by main.ts after HollowPeer initializes
     }
 
     async render(container: HTMLElement): Promise<void> {

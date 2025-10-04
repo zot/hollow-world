@@ -17,6 +17,19 @@
   - don't put padding around the editor content
   - support all available crepe features
 
+### Events
+- there is a persisted list of events
+- whenever the event list is not empty
+  - there is an event notification button with a bugle on it and a red count of pending events
+  - it appears at the screen's upper right
+  - clicking it opens a modal dialog with the event view
+    - a list shows cards for the events with skull buttons at the right to remove them
+      - each event is presented according to its type
+- **Testing**: EventService is accessible via `window.__HOLLOW_WORLD_TEST__.eventService` in dev/test environments
+  - Get events: `eventService.getEvents()`
+  - Add/remove events for testing
+  - See [Testing section](#test-api-for-singleton-access) for usage examples
+
 ### URL-Based Navigation
 - **Single-page app location** represented by browser URL
 - **Each view** gets its own URL path
@@ -48,8 +61,10 @@
 ### General Principles
 - tests should be in a top-level `test` directory
 - use playwright for integration tests
-- each UI spec should have a corresponding `.testing.md` file with specific test requirements
+- each spec should have a corresponding `.tests.md` file with specific test requirements
 - see [`specs/main.tests.md`](specs/main.tests.md) for integration test requirements
+  - main.tests.md is also for global or cross-cut tests
+- unit tests must be accounted for in the SPEC.tests.md file that makes the most sense
 
 ### SPA Routing Requirements
 **Critical**: All routes must work on both direct navigation AND page refresh
@@ -120,6 +135,45 @@
   // Should be empty or not contain asset 404s
   ```
 
+### Test API for Singleton Access
+**Available in dev/test environments only** - Exposes `window.__HOLLOW_WORLD_TEST__`
+
+Provides type-safe access to application singletons for testing:
+- See `src/types/window.d.ts` for TypeScript definitions
+- Exposed in `src/main.ts` only when `import.meta.env.DEV` or `MODE === 'test'`
+
+Example Playwright usage:
+```typescript
+// Access the test API
+const api = await page.evaluate(() => window.__HOLLOW_WORLD_TEST__);
+
+// Access ProfileService
+const profile = await page.evaluate(() => {
+  return window.__HOLLOW_WORLD_TEST__?.profileService.getCurrentProfile();
+});
+
+// Access profile-aware localStorage
+const invitations = await page.evaluate(() => {
+  const json = window.__HOLLOW_WORLD_TEST__?.profileService.getItem('activeInvitations');
+  return json ? JSON.parse(json) : {};
+});
+
+// Access HollowPeer
+const peerId = await page.evaluate(() => {
+  return window.__HOLLOW_WORLD_TEST__?.hollowPeer.getPeerId();
+});
+
+// Access EventService
+const events = await page.evaluate(() => {
+  return window.__HOLLOW_WORLD_TEST__?.eventService.getEvents();
+});
+
+// Access AudioManager (optional, may be undefined)
+const isPlaying = await page.evaluate(() => {
+  return window.__HOLLOW_WORLD_TEST__?.audioManager?.isMusicPlaying();
+});
+```
+
 ### 🚀 App Initialization
 - [x] `let Base = new URL(location.toString())` ✅ **IMPLEMENTED**
 
@@ -128,7 +182,7 @@
 - [x] Use `new URL(asset, Base).toString()` for the asset URL ✅ **IMPLEMENTED**
 
 ### 🔫 Button Audio Effects
-- [x] **Random gunshot sound** on each button click ✅ **IMPLEMENTED**
+- [ ] **No Random gunshot sound** on each button click
 - [x] Use [`single-gunshot-54-40780.mp3`](../public/assets/audio/single-gunshot-54-40780.mp3) ✅ **IMPLEMENTED**
 - [x] **Randomly vary** pitch and duration on each click ✅ **IMPLEMENTED**
 - [x] **Interrupt functionality**: New gunshot stops any currently playing ✅ **IMPLEMENTED**
@@ -182,3 +236,9 @@
 - **Smooth Transitions**: Automatic fade-out when switching tracks
 - **Enhanced Console Logging**: Detailed track information and cycling status
 - the audio control UI component should give the user access to the new audio features
+
+**Testing**: AudioManager is accessible via `window.__HOLLOW_WORLD_TEST__.audioManager` in dev/test environments (optional, may be undefined)
+- Check playback state: `audioManager?.isMusicPlaying()`
+- Get track info: `audioManager?.getCurrentTrackInfo()`
+- Control playback: `audioManager?.playBackgroundMusic()`, `audioManager?.pauseBackgroundMusic()`
+- See [Testing section](#test-api-for-singleton-access) for usage examples

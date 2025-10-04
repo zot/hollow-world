@@ -8,16 +8,21 @@ import { SplashScreen } from './ui/SplashScreen.js';
 import { CharacterManagerView } from './ui/CharacterManagerView.js';
 import { CharacterEditorView } from './ui/CharacterEditorView.js';
 import { SettingsView } from './ui/SettingsView.js';
-import { LibP2PNetworkProvider } from './p2p.js';
+import { HollowPeer, LocalStorageProvider } from './p2p.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
 import { characterStorageService } from './services/CharacterStorageService.js';
 import { ICharacter } from './character/types.js';
+import { getProfileService } from './services/ProfileService.js';
 
 console.log('All imports loaded successfully');
 
+// Initialize ProfileService early (handles migration if needed)
+const profileService = getProfileService();
+console.log('📁 Profile service initialized. Current profile:', profileService.getCurrentProfile().name);
+
 // Global app state
-let networkProvider: LibP2PNetworkProvider | undefined;
+let hollowPeer: HollowPeer | undefined;
 let audioManager: AudioManager | undefined;
 let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
@@ -79,20 +84,25 @@ async function createApp(): Promise<void> {
         audioManager = undefined;
     }
 
-    // Initialize network provider with proper error handling
+    // Initialize HollowPeer with profile-aware storage
     try {
-        console.log('🔗 Initializing P2P network provider...');
-        networkProvider = new LibP2PNetworkProvider();
-        await networkProvider.initialize();
-        console.log('🔗 P2P network provider initialized successfully');
+        console.log('🤝 Initializing HollowPeer...');
+
+        // Create profile-aware storage provider
+        const profileAwareStorage = new LocalStorageProvider(profileService);
+
+        // HollowPeer will create and manage its own network provider
+        hollowPeer = new HollowPeer(undefined, profileAwareStorage);
+        await hollowPeer.initialize();
+        console.log('🤝 HollowPeer initialized successfully');
     } catch (error) {
-        console.error('🚨 Failed to initialize network provider:', error);
+        console.error('🚨 Failed to initialize HollowPeer:', error);
         console.error('🚨 Network error details:', {
             name: error instanceof Error ? error.name : 'Unknown',
             message: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : 'No stack trace'
         });
-        networkProvider = undefined;
+        hollowPeer = undefined;
     }
 
     try {
@@ -102,12 +112,17 @@ async function createApp(): Promise<void> {
         console.log('  - audioManager type:', typeof audioManager);
         console.log('  - audioManager:', audioManager);
 
-        splashScreen = new SplashScreen(networkProvider, undefined, audioManager);
+        splashScreen = new SplashScreen(undefined, audioManager);
         await splashScreen.initialize();
+
+        // Update splash screen with peer ID from HollowPeer
+        if (hollowPeer) {
+            splashScreen.updatePeerId(hollowPeer.getPeerId());
+        }
 
         characterManager = new CharacterManagerView(undefined, audioManager);
         characterEditor = new CharacterEditorView(undefined, audioManager);
-        settingsView = new SettingsView(undefined, audioManager);
+        settingsView = new SettingsView(undefined, audioManager, hollowPeer);
 
         // Set up route-based navigation
         setupRoutes();
@@ -135,6 +150,17 @@ async function createApp(): Promise<void> {
             } catch (musicError) {
                 console.warn('Failed to start background music (user interaction may be required):', musicError);
             }
+        }
+
+        // Expose test API in dev/test environments
+        if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
+            window.__HOLLOW_WORLD_TEST__ = {
+                profileService: getProfileService(),
+                hollowPeer: hollowPeer!,
+                audioManager,
+                eventService: hollowPeer!.getEventService(),
+            };
+            console.log('🧪 Test API exposed on window.__HOLLOW_WORLD_TEST__');
         }
 
         console.log('HollowWorld application initialized successfully');
@@ -304,16 +330,16 @@ async function renderSettingsView(): Promise<void> {
     currentView = 'settings';
 
     try {
-        // Update settings view with current peer ID if network provider is available
-        if (networkProvider) {
+        // Update settings view with current peer ID if HollowPeer is available
+        if (hollowPeer) {
             try {
-                settingsView.updatePeerId(networkProvider.getPeerId());
+                settingsView.updatePeerId(hollowPeer.getPeerId());
             } catch (peerIdError) {
-                console.warn('Failed to get peer ID from network provider:', peerIdError);
+                console.warn('Failed to get peer ID from HollowPeer:', peerIdError);
                 settingsView.updatePeerId('Failed to load peer ID');
             }
         } else {
-            console.warn('Network provider not available, using fallback peer ID');
+            console.warn('HollowPeer not available, using fallback peer ID');
             settingsView.updatePeerId('Network not initialized');
         }
 

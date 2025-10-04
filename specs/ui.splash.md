@@ -4,6 +4,10 @@
 
 *Based on [`../claude.md`](../claude.md)*
 
+🧪 **Testing**: See [`ui.splash.tests.md`](ui.splash.tests.md) for test requirements
+
+---
+
 ## 🎯 Core Requirements
 - [x] Use **SOLID principles** in all implementations ✅ **IMPLEMENTED**
 - **🔒 Strict TypeScript typing** - All function parameters, return values, and object properties must use explicit TypeScript types. Never use `any` type except for truly dynamic content. Interface types like `AttributeType` must be used when indexing typed objects like `IAttributes` *(Type your code tighter than a hangman's noose)*

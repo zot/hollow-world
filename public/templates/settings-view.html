@@ -1,7 +1,9 @@
 <div class="{{containerClass}}">
+    <div class="peer-count-display">🔗 Peers: <span id="peer-count">{{peerCount}}</span></div>
+    <button class="{{buttonClass}} profiles-btn" id="show-profiles-btn">🎭 Profiles</button>
+    <button class="{{buttonClass}} log-view-btn" id="show-log-btn">📜 Log</button>
     <div class="settings-header">
-        <h1 class="{{titleClass}}">⚙️ Settings</h1>
-        <button class="{{buttonClass}} log-view-btn" id="show-log-btn">📜 Log</button>
+        <h1 class="{{titleClass}}">⚙️ Settings{{#if showProfileName}} {{profileName}}{{/if}}</h1>
     </div>
 
     <div class="{{sectionClass}}">

@@ -9,6 +9,8 @@
 
 🌵 *Based on [`../CLAUDE.md`](../CLAUDE.md)* 🌵
 
+🧪 **Testing**: See [`ui.characters.tests.md`](ui.characters.tests.md) for test requirements
+
 ---
 
 ## 🎯 Core Requirements *(Code Harder Than a Two-Dollar Steak)*

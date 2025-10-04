@@ -4,6 +4,7 @@
 import { ICharacter, AttributeType } from '../character/types.js';
 import { CharacterCalculations, CharacterFactory } from '../character/CharacterUtils.js';
 import { CharacterVersioning } from '../character/CharacterVersioning.js';
+import { getProfileService } from './ProfileService.js';
 
 export interface ICharacterStorageService {
     getAllCharacters(): Promise<ICharacter[]>;
@@ -18,7 +19,7 @@ export class CharacterStorageService implements ICharacterStorageService {
 
     async getAllCharacters(): Promise<ICharacter[]> {
         try {
-            const stored = localStorage.getItem(this.STORAGE_KEY);
+            const stored = getProfileService().getItem(this.STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (Array.isArray(parsed)) {
@@ -55,7 +56,7 @@ export class CharacterStorageService implements ICharacterStorageService {
                 characters.push(updatedCharacter);
             }
 
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(characters));
+            getProfileService().setItem(this.STORAGE_KEY, JSON.stringify(characters));
         } catch (error) {
             console.error('Failed to save character:', error);
             if (error instanceof Error && error.name === 'QuotaExceededError') {
@@ -75,7 +76,7 @@ export class CharacterStorageService implements ICharacterStorageService {
                 return false; // Character not found
             }
 
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredCharacters));
+            getProfileService().setItem(this.STORAGE_KEY, JSON.stringify(filteredCharacters));
             return true;
         } catch (error) {
             console.error('Failed to delete character:', error);

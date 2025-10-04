@@ -67,7 +67,9 @@ export class MilkdownUtils {
         // Set up onChange listener if provided using Crepe's event system
         if (onChange) {
             crepe.on((listener) => {
-                listener.markdownUpdated((markdown) => {
+                listener.markdownUpdated(() => {
+                    // Get markdown from crepe instance when updated
+                    const markdown = crepe.getMarkdown();
                     onChange(markdown);
                 });
             });
@@ -81,8 +83,10 @@ export class MilkdownUtils {
             getMarkdown(): string {
                 return crepe.getMarkdown();
             },
-            setMarkdown(markdown: string): void {
-                crepe.setMarkdown(markdown);
+            setMarkdown(_markdown: string): void {
+                // Crepe doesn't support setMarkdown - this is a no-op
+                // To update content, recreate the editor with new defaultValue
+                console.warn('setMarkdown is not supported by Crepe');
             }
         };
     }

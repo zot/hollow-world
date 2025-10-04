@@ -1,0 +1,14 @@
+<div class="event-card-content friend-approved-event">
+    <div class="event-info">
+        <div class="event-icon">✅</div>
+        <div class="event-details">
+            <h3>Friend Request Accepted</h3>
+            <p class="event-friend-name">{{data.friendName}} accepted your request!</p>
+            <p class="event-timestamp">{{formattedTimestamp}}</p>
+        </div>
+    </div>
+    <div class="event-actions">
+        <button class="event-action-view-friend" data-peer-id="{{data.remotePeerId}}">View Friend</button>
+        <button class="event-remove" data-event-id="{{id}}" aria-label="Remove event">💀</button>
+    </div>
+</div>

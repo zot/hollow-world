@@ -1,0 +1,23 @@
+<div class="event-modal-overlay">
+    <div class="event-modal">
+        <div class="event-modal-header">
+            <h2>📯 Events</h2>
+            <button class="event-modal-close" aria-label="Close">✕</button>
+        </div>
+        <div class="event-modal-content">
+            <div class="event-list">
+                {{#if hasEvents}}
+                    {{#each events}}
+                        <div class="event-card" data-event-id="{{id}}">
+                            {{> event-card}}
+                        </div>
+                    {{/each}}
+                {{else}}
+                    <div class="no-events">
+                        <p>No pending events</p>
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>

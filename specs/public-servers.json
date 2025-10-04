@@ -1,0 +1,564 @@
+{
+  "description": "Public STUN/TURN/ICE servers for P2P networking",
+  "stun": [
+    {
+      "url": "stun:stun.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Primary Google STUN server"
+    },
+    {
+      "url": "stun:stun1.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Google STUN server 1"
+    },
+    {
+      "url": "stun:stun2.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Google STUN server 2"
+    },
+    {
+      "url": "stun:stun3.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Google STUN server 3"
+    },
+    {
+      "url": "stun:stun4.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Google STUN server 4"
+    },
+    {
+      "url": "stun:stun.voip.blackberry.com:3478",
+      "provider": "Blackberry",
+      "notes": "Blackberry VoIP STUN"
+    },
+    {
+      "url": "stun:stun.voipbuster.com",
+      "provider": "VoipBuster",
+      "notes": "VoipBuster STUN"
+    },
+    {
+      "url": "stun:stun.voipstunt.com",
+      "provider": "VoipStunt",
+      "notes": "VoipStunt STUN"
+    },
+    {
+      "url": "stun:stun.ekiga.net",
+      "provider": "Ekiga",
+      "notes": "Ekiga open source STUN"
+    },
+    {
+      "url": "stun:stun.ideasip.com",
+      "provider": "IdeaSIP",
+      "notes": "IdeaSIP STUN"
+    },
+    {
+      "url": "stun:stun.stunprotocol.org:3478",
+      "provider": "STUN Protocol",
+      "notes": "Official STUN protocol test server"
+    },
+    {
+      "url": "stun:stun.services.mozilla.com",
+      "provider": "Mozilla",
+      "notes": "Mozilla STUN server"
+    },
+    {
+      "url": "stun:iphone-stun.strato-iphone.de:3478",
+      "provider": "Strato",
+      "notes": "Strato iPhone STUN"
+    },
+    {
+      "url": "stun:stun.12connect.com:3478",
+      "provider": "12Connect",
+      "notes": "12Connect STUN"
+    },
+    {
+      "url": "stun:stun.12voip.com:3478",
+      "provider": "12VoIP",
+      "notes": "12VoIP STUN"
+    },
+    {
+      "url": "stun:stun.1und1.de:3478",
+      "provider": "1&1",
+      "notes": "1&1 Germany STUN"
+    },
+    {
+      "url": "stun:stun.2talk.co.nz:3478",
+      "provider": "2Talk",
+      "notes": "2Talk New Zealand STUN"
+    },
+    {
+      "url": "stun:stun.3cx.com:3478",
+      "provider": "3CX",
+      "notes": "3CX PBX STUN"
+    },
+    {
+      "url": "stun:stun.acrobits.cz:3478",
+      "provider": "Acrobits",
+      "notes": "Acrobits STUN"
+    },
+    {
+      "url": "stun:stun.actionvoip.com:3478",
+      "provider": "ActionVoIP",
+      "notes": "ActionVoIP STUN"
+    },
+    {
+      "url": "stun:stun.antisip.com:3478",
+      "provider": "Antisip",
+      "notes": "Antisip STUN"
+    },
+    {
+      "url": "stun:stun.bluesip.net:3478",
+      "provider": "BlueSIP",
+      "notes": "BlueSIP STUN"
+    },
+    {
+      "url": "stun:stun.callromania.ro:3478",
+      "provider": "CallRomania",
+      "notes": "CallRomania STUN"
+    },
+    {
+      "url": "stun:stun.callwithus.com:3478",
+      "provider": "CallWithUs",
+      "notes": "CallWithUs STUN"
+    },
+    {
+      "url": "stun:stun.cheapvoip.com:3478",
+      "provider": "CheapVoIP",
+      "notes": "CheapVoIP STUN"
+    },
+    {
+      "url": "stun:stun.cloopen.com:3478",
+      "provider": "Cloopen",
+      "notes": "Cloopen STUN"
+    },
+    {
+      "url": "stun:stun.counterpath.com:3478",
+      "provider": "CounterPath",
+      "notes": "CounterPath STUN"
+    },
+    {
+      "url": "stun:stun.counterpath.net:3478",
+      "provider": "CounterPath",
+      "notes": "CounterPath Network STUN"
+    },
+    {
+      "url": "stun:stun.dus.net:3478",
+      "provider": "DUS",
+      "notes": "DUS STUN"
+    },
+    {
+      "url": "stun:stun.easybell.de:3478",
+      "provider": "Easybell",
+      "notes": "Easybell Germany STUN"
+    },
+    {
+      "url": "stun:stun.easyvoip.com:3478",
+      "provider": "EasyVoIP",
+      "notes": "EasyVoIP STUN"
+    },
+    {
+      "url": "stun:stun.faktortel.com.au:3478",
+      "provider": "FaktorTel",
+      "notes": "FaktorTel Australia STUN"
+    },
+    {
+      "url": "stun:stun.freecall.com:3478",
+      "provider": "FreeCall",
+      "notes": "FreeCall STUN"
+    },
+    {
+      "url": "stun:stun.freeswitch.org:3478",
+      "provider": "FreeSWITCH",
+      "notes": "FreeSWITCH open source STUN"
+    },
+    {
+      "url": "stun:stun.freevoipdeal.com:3478",
+      "provider": "FreeVoIPDeal",
+      "notes": "FreeVoIPDeal STUN"
+    },
+    {
+      "url": "stun:stun.gmx.de:3478",
+      "provider": "GMX",
+      "notes": "GMX Germany STUN"
+    },
+    {
+      "url": "stun:stun.gmx.net:3478",
+      "provider": "GMX",
+      "notes": "GMX Network STUN"
+    },
+    {
+      "url": "stun:stun.gradwell.com:3478",
+      "provider": "Gradwell",
+      "notes": "Gradwell STUN"
+    },
+    {
+      "url": "stun:stun.internetcalls.com:3478",
+      "provider": "InternetCalls",
+      "notes": "InternetCalls STUN"
+    },
+    {
+      "url": "stun:stun.ipfire.org:3478",
+      "provider": "IPFire",
+      "notes": "IPFire open source STUN"
+    },
+    {
+      "url": "stun:stun.iptel.org:3478",
+      "provider": "IPTel",
+      "notes": "IPTel open source STUN"
+    },
+    {
+      "url": "stun:stun.it1.hr:3478",
+      "provider": "IT1",
+      "notes": "IT1 Croatia STUN"
+    },
+    {
+      "url": "stun:stun.ivao.aero:3478",
+      "provider": "IVAO",
+      "notes": "IVAO Aviation Network STUN"
+    },
+    {
+      "url": "stun:stun.jumblo.com:3478",
+      "provider": "Jumblo",
+      "notes": "Jumblo STUN"
+    },
+    {
+      "url": "stun:stun.justvoip.com:3478",
+      "provider": "JustVoIP",
+      "notes": "JustVoIP STUN"
+    },
+    {
+      "url": "stun:stun.linphone.org:3478",
+      "provider": "Linphone",
+      "notes": "Linphone open source STUN"
+    },
+    {
+      "url": "stun:stun.liveo.fr:3478",
+      "provider": "Liveo",
+      "notes": "Liveo France STUN"
+    },
+    {
+      "url": "stun:stun.lowratevoip.com:3478",
+      "provider": "LowRateVoIP",
+      "notes": "LowRateVoIP STUN"
+    },
+    {
+      "url": "stun:stun.miwifi.com:3478",
+      "provider": "Xiaomi",
+      "notes": "Xiaomi Mi WiFi STUN"
+    },
+    {
+      "url": "stun:stun.modulus.gr:3478",
+      "provider": "Modulus",
+      "notes": "Modulus Greece STUN"
+    },
+    {
+      "url": "stun:stun.myvoiptraffic.com:3478",
+      "provider": "MyVoIPTraffic",
+      "notes": "MyVoIPTraffic STUN"
+    },
+    {
+      "url": "stun:stun.netappel.com:3478",
+      "provider": "NetAppel",
+      "notes": "NetAppel STUN"
+    },
+    {
+      "url": "stun:stun.nfon.net:3478",
+      "provider": "NFON",
+      "notes": "NFON STUN"
+    },
+    {
+      "url": "stun:stun.nottingham.ac.uk:3478",
+      "provider": "University of Nottingham",
+      "notes": "University of Nottingham STUN"
+    },
+    {
+      "url": "stun:stun.ooma.com:3478",
+      "provider": "Ooma",
+      "notes": "Ooma STUN"
+    },
+    {
+      "url": "stun:stun.ozekiphone.com:3478",
+      "provider": "Ozeki",
+      "notes": "Ozeki Phone STUN"
+    },
+    {
+      "url": "stun:stun.pjsip.org:3478",
+      "provider": "PJSIP",
+      "notes": "PJSIP open source STUN"
+    },
+    {
+      "url": "stun:stun.poivy.com:3478",
+      "provider": "Poivy",
+      "notes": "Poivy STUN"
+    },
+    {
+      "url": "stun:stun.powervoip.com:3478",
+      "provider": "PowerVoIP",
+      "notes": "PowerVoIP STUN"
+    },
+    {
+      "url": "stun:stun.ppdi.com:3478",
+      "provider": "PPDI",
+      "notes": "PPDI STUN"
+    },
+    {
+      "url": "stun:stun.qq.com:3478",
+      "provider": "Tencent",
+      "notes": "Tencent QQ STUN"
+    },
+    {
+      "url": "stun:stun.radiojar.com:3478",
+      "provider": "RadioJar",
+      "notes": "RadioJar STUN"
+    },
+    {
+      "url": "stun:stun.schlund.de:3478",
+      "provider": "Schlund",
+      "notes": "Schlund Germany STUN"
+    },
+    {
+      "url": "stun:stun.sipgate.net:3478",
+      "provider": "Sipgate",
+      "notes": "Sipgate STUN"
+    },
+    {
+      "url": "stun:stun.sipgate.net:10000",
+      "provider": "Sipgate",
+      "notes": "Sipgate alternate port STUN"
+    },
+    {
+      "url": "stun:stun.siplogin.de:3478",
+      "provider": "SIPLogin",
+      "notes": "SIPLogin Germany STUN"
+    },
+    {
+      "url": "stun:stun.sipnet.net:3478",
+      "provider": "SIPNet",
+      "notes": "SIPNet STUN"
+    },
+    {
+      "url": "stun:stun.sipnet.ru:3478",
+      "provider": "SIPNet",
+      "notes": "SIPNet Russia STUN"
+    },
+    {
+      "url": "stun:stun.siportal.it:3478",
+      "provider": "SIPortal",
+      "notes": "SIPortal Italy STUN"
+    },
+    {
+      "url": "stun:stun.sippeer.dk:3478",
+      "provider": "SIPPeer",
+      "notes": "SIPPeer Denmark STUN"
+    },
+    {
+      "url": "stun:stun.siptraffic.com:3478",
+      "provider": "SIPTraffic",
+      "notes": "SIPTraffic STUN"
+    },
+    {
+      "url": "stun:stun.sma.de:3478",
+      "provider": "SMA",
+      "notes": "SMA Germany STUN"
+    },
+    {
+      "url": "stun:stun.smartvoip.com:3478",
+      "provider": "SmartVoIP",
+      "notes": "SmartVoIP STUN"
+    },
+    {
+      "url": "stun:stun.smsdiscount.com:3478",
+      "provider": "SMSDiscount",
+      "notes": "SMSDiscount STUN"
+    },
+    {
+      "url": "stun:stun.solcon.nl:3478",
+      "provider": "Solcon",
+      "notes": "Solcon Netherlands STUN"
+    },
+    {
+      "url": "stun:stun.solnet.ch:3478",
+      "provider": "Solnet",
+      "notes": "Solnet Switzerland STUN"
+    },
+    {
+      "url": "stun:stun.sonetel.com:3478",
+      "provider": "Sonetel",
+      "notes": "Sonetel STUN"
+    },
+    {
+      "url": "stun:stun.sonetel.net:3478",
+      "provider": "Sonetel",
+      "notes": "Sonetel Network STUN"
+    },
+    {
+      "url": "stun:stun.stunprotocol.org:3478",
+      "provider": "STUN Protocol",
+      "notes": "STUN Protocol alternate entry"
+    },
+    {
+      "url": "stun:stun.tel.lu:3478",
+      "provider": "Tel.lu",
+      "notes": "Tel.lu Luxembourg STUN"
+    },
+    {
+      "url": "stun:stun.telbo.com:3478",
+      "provider": "Telbo",
+      "notes": "Telbo STUN"
+    },
+    {
+      "url": "stun:stun.threema.ch:3478",
+      "provider": "Threema",
+      "notes": "Threema secure messaging STUN"
+    },
+    {
+      "url": "stun:stun.ucsb.edu:3478",
+      "provider": "UC Santa Barbara",
+      "notes": "UC Santa Barbara STUN"
+    },
+    {
+      "url": "stun:stun.ucw.cz:3478",
+      "provider": "UCW",
+      "notes": "UCW Czech Republic STUN"
+    },
+    {
+      "url": "stun:stun.uls.co.za:3478",
+      "provider": "ULS",
+      "notes": "ULS South Africa STUN"
+    },
+    {
+      "url": "stun:stun.unseen.is:3478",
+      "provider": "Unseen",
+      "notes": "Unseen privacy service STUN"
+    },
+    {
+      "url": "stun:stun.voip.aebc.com:3478",
+      "provider": "AEBC",
+      "notes": "AEBC VoIP STUN"
+    },
+    {
+      "url": "stun:stun.voip.blackberry.com:3478",
+      "provider": "Blackberry",
+      "notes": "Blackberry VoIP alternate entry"
+    },
+    {
+      "url": "stun:stun.voipblast.com:3478",
+      "provider": "VoIPBlast",
+      "notes": "VoIPBlast STUN"
+    },
+    {
+      "url": "stun:stun.voipbuster.com:3478",
+      "provider": "VoIPBuster",
+      "notes": "VoIPBuster with port STUN"
+    },
+    {
+      "url": "stun:stun.voipbusterpro.com:3478",
+      "provider": "VoIPBuster",
+      "notes": "VoIPBuster Pro STUN"
+    },
+    {
+      "url": "stun:stun.voipcheap.co.uk:3478",
+      "provider": "VoIPCheap",
+      "notes": "VoIPCheap UK STUN"
+    },
+    {
+      "url": "stun:stun.voipcheap.com:3478",
+      "provider": "VoIPCheap",
+      "notes": "VoIPCheap STUN"
+    },
+    {
+      "url": "stun:stun.voipgain.com:3478",
+      "provider": "VoIPGain",
+      "notes": "VoIPGain STUN"
+    },
+    {
+      "url": "stun:stun.voipgate.com:3478",
+      "provider": "VoIPGate",
+      "notes": "VoIPGate STUN"
+    },
+    {
+      "url": "stun:stun.voipinfocenter.com:3478",
+      "provider": "VoIPInfoCenter",
+      "notes": "VoIPInfoCenter STUN"
+    },
+    {
+      "url": "stun:stun.voipplanet.nl:3478",
+      "provider": "VoIPPlanet",
+      "notes": "VoIPPlanet Netherlands STUN"
+    },
+    {
+      "url": "stun:stun.voippro.com:3478",
+      "provider": "VoIPPro",
+      "notes": "VoIPPro STUN"
+    },
+    {
+      "url": "stun:stun.voipraider.com:3478",
+      "provider": "VoIPRaider",
+      "notes": "VoIPRaider STUN"
+    },
+    {
+      "url": "stun:stun.voipstunt.com:3478",
+      "provider": "VoIPStunt",
+      "notes": "VoIPStunt with port STUN"
+    },
+    {
+      "url": "stun:stun.voipwise.com:3478",
+      "provider": "VoIPWise",
+      "notes": "VoIPWise STUN"
+    },
+    {
+      "url": "stun:stun.voipzoom.com:3478",
+      "provider": "VoIPZoom",
+      "notes": "VoIPZoom STUN"
+    },
+    {
+      "url": "stun:stun.voys.nl:3478",
+      "provider": "Voys",
+      "notes": "Voys Netherlands STUN"
+    },
+    {
+      "url": "stun:stun.voztele.com:3478",
+      "provider": "VozTele",
+      "notes": "VozTele STUN"
+    },
+    {
+      "url": "stun:stun.webcalldirect.com:3478",
+      "provider": "WebCallDirect",
+      "notes": "WebCallDirect STUN"
+    },
+    {
+      "url": "stun:stun.wifirst.net:3478",
+      "provider": "WiFirst",
+      "notes": "WiFirst STUN"
+    },
+    {
+      "url": "stun:stun.xtratelecom.es:3478",
+      "provider": "XtraTelecom",
+      "notes": "XtraTelecom Spain STUN"
+    },
+    {
+      "url": "stun:stun.zadarma.com:3478",
+      "provider": "Zadarma",
+      "notes": "Zadarma STUN"
+    },
+    {
+      "url": "stun:stun.zog.com:3478",
+      "provider": "Zog",
+      "notes": "Zog STUN"
+    }
+  ],
+  "circuitRelay": [
+    {
+      "url": "/dns4/relay.libp2p.io/tcp/443/wss/p2p/QmWDn2LY8nannvSWJzruUYoLZ4vV83vfCBwd8DipvdgQc3",
+      "provider": "LibP2P",
+      "notes": "Official LibP2P relay (WSS for browsers)",
+      "status": "unreliable in testing"
+    }
+  ],
+  "turn": [
+    {
+      "note": "TURN servers typically require authentication and are not freely available",
+      "suggestion": "Consider Metered.ca or other TURN-as-a-service providers for production"
+    }
+  ]
+}

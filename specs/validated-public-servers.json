@@ -1,0 +1,537 @@
+{
+  "description": "Validated STUN servers for P2P networking",
+  "validated": "2025-10-04T13:38:39.015Z",
+  "testResults": {
+    "totalTested": 109,
+    "working": 75,
+    "failed": 34,
+    "successRate": "68.8%"
+  },
+  "stun": [
+    {
+      "url": "stun:stun.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Primary Google STUN server",
+      "validated": "2025-10-04T13:36:36.753Z",
+      "responseTime": 14
+    },
+    {
+      "url": "stun:stun4.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Google STUN server 4",
+      "validated": "2025-10-04T13:36:37.049Z",
+      "responseTime": 68
+    },
+    {
+      "url": "stun:stun.voipbuster.com:3478",
+      "provider": "VoIPBuster",
+      "notes": "VoIPBuster with port STUN",
+      "validated": "2025-10-04T13:38:22.043Z",
+      "responseTime": 69
+    },
+    {
+      "url": "stun:stun.voipcheap.com:3478",
+      "provider": "VoIPCheap",
+      "notes": "VoIPCheap STUN",
+      "validated": "2025-10-04T13:38:22.378Z",
+      "responseTime": 69
+    },
+    {
+      "url": "stun:stun1.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Google STUN server 1",
+      "validated": "2025-10-04T13:36:36.828Z",
+      "responseTime": 74
+    },
+    {
+      "url": "stun:stun2.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Google STUN server 2",
+      "validated": "2025-10-04T13:36:36.902Z",
+      "responseTime": 74
+    },
+    {
+      "url": "stun:stun.voipstunt.com:3478",
+      "provider": "VoIPStunt",
+      "notes": "VoIPStunt with port STUN",
+      "validated": "2025-10-04T13:38:28.082Z",
+      "responseTime": 75
+    },
+    {
+      "url": "stun:stun3.l.google.com:19302",
+      "provider": "Google",
+      "notes": "Google STUN server 3",
+      "validated": "2025-10-04T13:36:36.980Z",
+      "responseTime": 77
+    },
+    {
+      "url": "stun:stun.voipgate.com:3478",
+      "provider": "VoIPGate",
+      "notes": "VoIPGate STUN",
+      "validated": "2025-10-04T13:38:22.599Z",
+      "responseTime": 88
+    },
+    {
+      "url": "stun:stun.siplogin.de:3478",
+      "provider": "SIPLogin",
+      "notes": "SIPLogin Germany STUN",
+      "validated": "2025-10-04T13:37:44.282Z",
+      "responseTime": 112
+    },
+    {
+      "url": "stun:stun.zadarma.com:3478",
+      "provider": "Zadarma",
+      "notes": "Zadarma STUN",
+      "validated": "2025-10-04T13:38:38.883Z",
+      "responseTime": 116
+    },
+    {
+      "url": "stun:stun.12voip.com:3478",
+      "provider": "12VoIP",
+      "notes": "12VoIP STUN",
+      "validated": "2025-10-04T13:36:48.120Z",
+      "responseTime": 119
+    },
+    {
+      "url": "stun:stun.voipinfocenter.com:3478",
+      "provider": "VoIPInfoCenter",
+      "notes": "VoIPInfoCenter STUN",
+      "validated": "2025-10-04T13:38:22.718Z",
+      "responseTime": 119
+    },
+    {
+      "url": "stun:stun.webcalldirect.com:3478",
+      "provider": "WebCallDirect",
+      "notes": "WebCallDirect STUN",
+      "validated": "2025-10-04T13:38:28.758Z",
+      "responseTime": 119
+    },
+    {
+      "url": "stun:stun.gmx.de:3478",
+      "provider": "GMX",
+      "notes": "GMX Germany STUN",
+      "validated": "2025-10-04T13:37:20.361Z",
+      "responseTime": 120
+    },
+    {
+      "url": "stun:stun.gmx.net:3478",
+      "provider": "GMX",
+      "notes": "GMX Network STUN",
+      "validated": "2025-10-04T13:37:20.483Z",
+      "responseTime": 121
+    },
+    {
+      "url": "stun:stun.internetcalls.com:3478",
+      "provider": "InternetCalls",
+      "notes": "InternetCalls STUN",
+      "validated": "2025-10-04T13:37:20.727Z",
+      "responseTime": 121
+    },
+    {
+      "url": "stun:stun.schlund.de:3478",
+      "provider": "Schlund",
+      "notes": "Schlund Germany STUN",
+      "validated": "2025-10-04T13:37:34.161Z",
+      "responseTime": 121
+    },
+    {
+      "url": "stun:stun.actionvoip.com:3478",
+      "provider": "ActionVoIP",
+      "notes": "ActionVoIP STUN",
+      "validated": "2025-10-04T13:36:58.511Z",
+      "responseTime": 122
+    },
+    {
+      "url": "stun:stun.1und1.de:3478",
+      "provider": "1&1",
+      "notes": "1&1 Germany STUN",
+      "validated": "2025-10-04T13:36:48.243Z",
+      "responseTime": 123
+    },
+    {
+      "url": "stun:stun.voipblast.com:3478",
+      "provider": "VoIPBlast",
+      "notes": "VoIPBlast STUN",
+      "validated": "2025-10-04T13:38:21.973Z",
+      "responseTime": 123
+    },
+    {
+      "url": "stun:stun.myvoiptraffic.com:3478",
+      "provider": "MyVoIPTraffic",
+      "notes": "MyVoIPTraffic STUN",
+      "validated": "2025-10-04T13:37:22.511Z",
+      "responseTime": 124
+    },
+    {
+      "url": "stun:stun.voippro.com:3478",
+      "provider": "VoIPPro",
+      "notes": "VoIPPro STUN",
+      "validated": "2025-10-04T13:38:27.846Z",
+      "responseTime": 124
+    },
+    {
+      "url": "stun:stun.voipwise.com:3478",
+      "provider": "VoIPWise",
+      "notes": "VoIPWise STUN",
+      "validated": "2025-10-04T13:38:28.207Z",
+      "responseTime": 124
+    },
+    {
+      "url": "stun:stun.voipstunt.com",
+      "provider": "VoipStunt",
+      "notes": "VoipStunt STUN",
+      "validated": "2025-10-04T13:36:37.443Z",
+      "responseTime": 125
+    },
+    {
+      "url": "stun:stun.ipfire.org:3478",
+      "provider": "IPFire",
+      "notes": "IPFire open source STUN",
+      "validated": "2025-10-04T13:37:20.852Z",
+      "responseTime": 125
+    },
+    {
+      "url": "stun:stun.justvoip.com:3478",
+      "provider": "JustVoIP",
+      "notes": "JustVoIP STUN",
+      "validated": "2025-10-04T13:37:21.531Z",
+      "responseTime": 125
+    },
+    {
+      "url": "stun:stun.linphone.org:3478",
+      "provider": "Linphone",
+      "notes": "Linphone open source STUN",
+      "validated": "2025-10-04T13:37:21.656Z",
+      "responseTime": 125
+    },
+    {
+      "url": "stun:stun.powervoip.com:3478",
+      "provider": "PowerVoIP",
+      "notes": "PowerVoIP STUN",
+      "validated": "2025-10-04T13:37:28.634Z",
+      "responseTime": 125
+    },
+    {
+      "url": "stun:stun.smartvoip.com:3478",
+      "provider": "SmartVoIP",
+      "notes": "SmartVoIP STUN",
+      "validated": "2025-10-04T13:38:04.710Z",
+      "responseTime": 125
+    },
+    {
+      "url": "stun:stun.easyvoip.com:3478",
+      "provider": "EasyVoIP",
+      "notes": "EasyVoIP STUN",
+      "validated": "2025-10-04T13:37:14.666Z",
+      "responseTime": 126
+    },
+    {
+      "url": "stun:stun.netappel.com:3478",
+      "provider": "NetAppel",
+      "notes": "NetAppel STUN",
+      "validated": "2025-10-04T13:37:22.638Z",
+      "responseTime": 126
+    },
+    {
+      "url": "stun:stun.cheapvoip.com:3478",
+      "provider": "CheapVoIP",
+      "notes": "CheapVoIP STUN",
+      "validated": "2025-10-04T13:37:08.902Z",
+      "responseTime": 127
+    },
+    {
+      "url": "stun:stun.voipbusterpro.com:3478",
+      "provider": "VoIPBuster",
+      "notes": "VoIPBuster Pro STUN",
+      "validated": "2025-10-04T13:38:22.172Z",
+      "responseTime": 127
+    },
+    {
+      "url": "stun:stun.antisip.com:3478",
+      "provider": "Antisip",
+      "notes": "Antisip STUN",
+      "validated": "2025-10-04T13:36:58.639Z",
+      "responseTime": 128
+    },
+    {
+      "url": "stun:stun.callromania.ro:3478",
+      "provider": "CallRomania",
+      "notes": "CallRomania STUN",
+      "validated": "2025-10-04T13:37:03.770Z",
+      "responseTime": 128
+    },
+    {
+      "url": "stun:stun.jumblo.com:3478",
+      "provider": "Jumblo",
+      "notes": "Jumblo STUN",
+      "validated": "2025-10-04T13:37:21.406Z",
+      "responseTime": 128
+    },
+    {
+      "url": "stun:stun.voip.blackberry.com:3478",
+      "provider": "Blackberry",
+      "notes": "Blackberry VoIP alternate entry",
+      "validated": "2025-10-04T13:38:21.849Z",
+      "responseTime": 130
+    },
+    {
+      "url": "stun:stun.radiojar.com:3478",
+      "provider": "RadioJar",
+      "notes": "RadioJar STUN",
+      "validated": "2025-10-04T13:37:34.039Z",
+      "responseTime": 131
+    },
+    {
+      "url": "stun:stun.voipgain.com:3478",
+      "provider": "VoIPGain",
+      "notes": "VoIPGain STUN",
+      "validated": "2025-10-04T13:38:22.510Z",
+      "responseTime": 131
+    },
+    {
+      "url": "stun:stun.dus.net:3478",
+      "provider": "DUS",
+      "notes": "DUS STUN",
+      "validated": "2025-10-04T13:37:14.396Z",
+      "responseTime": 132
+    },
+    {
+      "url": "stun:stun.tel.lu:3478",
+      "provider": "Tel.lu",
+      "notes": "Tel.lu Luxembourg STUN",
+      "validated": "2025-10-04T13:38:10.753Z",
+      "responseTime": 132
+    },
+    {
+      "url": "stun:stun.voip.blackberry.com:3478",
+      "provider": "Blackberry",
+      "notes": "Blackberry VoIP STUN",
+      "validated": "2025-10-04T13:36:37.183Z",
+      "responseTime": 134
+    },
+    {
+      "url": "stun:stun.voipbuster.com",
+      "provider": "VoipBuster",
+      "notes": "VoipBuster STUN",
+      "validated": "2025-10-04T13:36:37.318Z",
+      "responseTime": 135
+    },
+    {
+      "url": "stun:stun.acrobits.cz:3478",
+      "provider": "Acrobits",
+      "notes": "Acrobits STUN",
+      "validated": "2025-10-04T13:36:58.388Z",
+      "responseTime": 136
+    },
+    {
+      "url": "stun:stun.telbo.com:3478",
+      "provider": "Telbo",
+      "notes": "Telbo STUN",
+      "validated": "2025-10-04T13:38:10.890Z",
+      "responseTime": 136
+    },
+    {
+      "url": "stun:stun.voipzoom.com:3478",
+      "provider": "VoIPZoom",
+      "notes": "VoIPZoom STUN",
+      "validated": "2025-10-04T13:38:28.345Z",
+      "responseTime": 137
+    },
+    {
+      "url": "stun:stun.nfon.net:3478",
+      "provider": "NFON",
+      "notes": "NFON STUN",
+      "validated": "2025-10-04T13:37:22.776Z",
+      "responseTime": 138
+    },
+    {
+      "url": "stun:stun.smsdiscount.com:3478",
+      "provider": "SMSDiscount",
+      "notes": "SMSDiscount STUN",
+      "validated": "2025-10-04T13:38:04.848Z",
+      "responseTime": 138
+    },
+    {
+      "url": "stun:stun.freevoipdeal.com:3478",
+      "provider": "FreeVoIPDeal",
+      "notes": "FreeVoIPDeal STUN",
+      "validated": "2025-10-04T13:37:20.241Z",
+      "responseTime": 142
+    },
+    {
+      "url": "stun:stun.easybell.de:3478",
+      "provider": "Easybell",
+      "notes": "Easybell Germany STUN",
+      "validated": "2025-10-04T13:37:14.540Z",
+      "responseTime": 143
+    },
+    {
+      "url": "stun:stun.freecall.com:3478",
+      "provider": "FreeCall",
+      "notes": "FreeCall STUN",
+      "validated": "2025-10-04T13:37:19.814Z",
+      "responseTime": 144
+    },
+    {
+      "url": "stun:stun.voys.nl:3478",
+      "provider": "Voys",
+      "notes": "Voys Netherlands STUN",
+      "validated": "2025-10-04T13:38:28.490Z",
+      "responseTime": 144
+    },
+    {
+      "url": "stun:stun.solnet.ch:3478",
+      "provider": "Solnet",
+      "notes": "Solnet Switzerland STUN",
+      "validated": "2025-10-04T13:38:05.147Z",
+      "responseTime": 145
+    },
+    {
+      "url": "stun:stun.voztele.com:3478",
+      "provider": "VozTele",
+      "notes": "VozTele STUN",
+      "validated": "2025-10-04T13:38:28.637Z",
+      "responseTime": 146
+    },
+    {
+      "url": "stun:stun.threema.ch:3478",
+      "provider": "Threema",
+      "notes": "Threema secure messaging STUN",
+      "validated": "2025-10-04T13:38:11.037Z",
+      "responseTime": 147
+    },
+    {
+      "url": "stun:stun.lowratevoip.com:3478",
+      "provider": "LowRateVoIP",
+      "notes": "LowRateVoIP STUN",
+      "validated": "2025-10-04T13:37:21.980Z",
+      "responseTime": 151
+    },
+    {
+      "url": "stun:stun.solcon.nl:3478",
+      "provider": "Solcon",
+      "notes": "Solcon Netherlands STUN",
+      "validated": "2025-10-04T13:38:05.002Z",
+      "responseTime": 153
+    },
+    {
+      "url": "stun:stun.counterpath.com:3478",
+      "provider": "CounterPath",
+      "notes": "CounterPath STUN",
+      "validated": "2025-10-04T13:37:14.060Z",
+      "responseTime": 155
+    },
+    {
+      "url": "stun:stun.it1.hr:3478",
+      "provider": "IT1",
+      "notes": "IT1 Croatia STUN",
+      "validated": "2025-10-04T13:37:21.140Z",
+      "responseTime": 159
+    },
+    {
+      "url": "stun:stun.poivy.com:3478",
+      "provider": "Poivy",
+      "notes": "Poivy STUN",
+      "validated": "2025-10-04T13:37:28.509Z",
+      "responseTime": 160
+    },
+    {
+      "url": "stun:stun.voipraider.com:3478",
+      "provider": "VoIPRaider",
+      "notes": "VoIPRaider STUN",
+      "validated": "2025-10-04T13:38:28.006Z",
+      "responseTime": 160
+    },
+    {
+      "url": "stun:stun.siptraffic.com:3478",
+      "provider": "SIPTraffic",
+      "notes": "SIPTraffic STUN",
+      "validated": "2025-10-04T13:37:59.581Z",
+      "responseTime": 162
+    },
+    {
+      "url": "stun:stun.ekiga.net",
+      "provider": "Ekiga",
+      "notes": "Ekiga open source STUN",
+      "validated": "2025-10-04T13:36:37.610Z",
+      "responseTime": 167
+    },
+    {
+      "url": "stun:stun.liveo.fr:3478",
+      "provider": "Liveo",
+      "notes": "Liveo France STUN",
+      "validated": "2025-10-04T13:37:21.829Z",
+      "responseTime": 172
+    },
+    {
+      "url": "stun:stun.counterpath.net:3478",
+      "provider": "CounterPath",
+      "notes": "CounterPath Network STUN",
+      "validated": "2025-10-04T13:37:14.264Z",
+      "responseTime": 203
+    },
+    {
+      "url": "stun:stun.ozekiphone.com:3478",
+      "provider": "Ozeki",
+      "notes": "Ozeki Phone STUN",
+      "validated": "2025-10-04T13:37:28.124Z",
+      "responseTime": 209
+    },
+    {
+      "url": "stun:stun.pjsip.org:3478",
+      "provider": "PJSIP",
+      "notes": "PJSIP open source STUN",
+      "validated": "2025-10-04T13:37:28.349Z",
+      "responseTime": 225
+    },
+    {
+      "url": "stun:stun.sonetel.net:3478",
+      "provider": "Sonetel",
+      "notes": "Sonetel Network STUN",
+      "validated": "2025-10-04T13:38:05.616Z",
+      "responseTime": 233
+    },
+    {
+      "url": "stun:stun.sonetel.com:3478",
+      "provider": "Sonetel",
+      "notes": "Sonetel STUN",
+      "validated": "2025-10-04T13:38:05.382Z",
+      "responseTime": 234
+    },
+    {
+      "url": "stun:stun.voip.aebc.com:3478",
+      "provider": "AEBC",
+      "notes": "AEBC VoIP STUN",
+      "validated": "2025-10-04T13:38:21.719Z",
+      "responseTime": 237
+    },
+    {
+      "url": "stun:stun.ppdi.com:3478",
+      "provider": "PPDI",
+      "notes": "PPDI STUN",
+      "validated": "2025-10-04T13:37:28.904Z",
+      "responseTime": 269
+    },
+    {
+      "url": "stun:stun.miwifi.com:3478",
+      "provider": "Xiaomi",
+      "notes": "Xiaomi Mi WiFi STUN",
+      "validated": "2025-10-04T13:37:22.257Z",
+      "responseTime": 277
+    },
+    {
+      "url": "stun:stun.freeswitch.org:3478",
+      "provider": "FreeSWITCH",
+      "notes": "FreeSWITCH open source STUN",
+      "validated": "2025-10-04T13:37:20.099Z",
+      "responseTime": 284
+    },
+    {
+      "url": "stun:stun.uls.co.za:3478",
+      "provider": "ULS",
+      "notes": "ULS South Africa STUN",
+      "validated": "2025-10-04T13:38:16.478Z",
+      "responseTime": 305
+    }
+  ]
+}

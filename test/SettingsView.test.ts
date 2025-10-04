@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { LogService } from '../../src/services/LogService';
+import { LogService } from '../src/services/LogService.js';
 
 describe('SettingsView - Log Sorting', () => {
     let logService: LogService;
