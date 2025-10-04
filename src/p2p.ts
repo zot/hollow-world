@@ -1,13 +1,9 @@
-import { createLibp2p, Libp2p } from 'libp2p';
-import { createHelia } from 'helia';
+import { Libp2p } from 'libp2p';
+import { createHelia, libp2pDefaults } from 'helia';
 import type { PeerId, Stream } from '@libp2p/interface';
 import { createEd25519PeerId } from '@libp2p/peer-id-factory';
 import { webRTC } from '@libp2p/webrtc';
-import { webTransport } from '@libp2p/webtransport';
 import { webSockets } from '@libp2p/websockets';
-import { noise } from '@chainsafe/libp2p-noise';
-import { yamux } from '@chainsafe/libp2p-yamux';
-import { identify } from '@libp2p/identify';
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2';
 import { bootstrap } from '@libp2p/bootstrap';
 import { multiaddr } from '@multiformats/multiaddr';
@@ -268,28 +264,7 @@ export class LibP2PNetworkProvider implements INetworkProvider {
             // Using LAN IP instead of localhost to avoid browser security restrictions
             const localRelayAddr = '/ip4/192.168.1.103/tcp/9090/ws/p2p/12D3KooWDe4PMnvGqvk8vmCAC99NuybEUcPzHpv8WRcHM4txBBqm';
 
-            // Public IPFS bootstrap nodes for peer discovery + local relay for testing
-            const bootstrapNodes = [
-                // CRITICAL: Add local relay to bootstrap so peers connect to it immediately
-                localRelayAddr,
-                '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-                '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-                '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-                '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
-            ];
-
-            // Browser-accessible circuit relay servers (WSS only - browsers can't use TCP)
-            const relayServers = [
-                // Local test relay server
-                localRelayAddr,
-                '/dns4/relay.libp2p.io/tcp/443/wss/p2p/QmWDn2LY8nannvSWJzruUYoLZ4vV83vfCBwd8DipvdgQc3'
-            ];
-
-            // Combine bootstrap and relay nodes for discovery
-            const discoveryNodes = [...bootstrapNodes, ...relayServers];
-
             // Prepare WebRTC configuration with STUN servers
-            const webRTCConfig: any = {};
             const iceServers: any[] = [];
 
             // Add local TURN/STUN server for testing (when running test/local-servers.js)
@@ -309,70 +284,82 @@ export class LibP2PNetworkProvider implements INetworkProvider {
                 console.log('📡 Configured WebRTC with local TURN server only');
             }
 
-            webRTCConfig.rtcConfiguration = { iceServers };
+            // Get Helia's default libp2p configuration with our private key
+            console.log('🔗 Creating libp2p configuration using Helia defaults...');
+            const defaults = libp2pDefaults({ privateKey });
 
-            // Create libp2p node with WebTransport (primary), WebSockets, WebRTC, and circuit relay (fallback)
-            console.log('🔗 Creating libp2p node with WebTransport, WebSockets, WebRTC, and circuit relay...');
-            console.log('🔗 WebTransport primary, CircuitRelay fallback via', relayServers.length, 'WSS relay server(s)');
-            this.libp2p = await createLibp2p({
-                privateKey: privateKey,
-                addresses: {
-                    listen: [
-                        '/webrtc',
-                        '/webtransport',
-                        '/p2p-circuit'  // Enable listening via circuit relay
-                    ]
-                },
-                transports: [
-                    webTransport() as any,     // Primary: direct P2P via WebTransport
-                    webSockets() as any,        // For connecting to relay servers (supports ws:// and wss://)
-                    webRTC(webRTCConfig) as any, // Direct P2P via WebRTC with STUN servers
-                    circuitRelayTransport() as any
-                ],
-                connectionEncryption: [
-                    noise() as any
-                ],
-                streamMuxers: [
-                    yamux() as any
-                ],
-                connectionGater: {
-                    // Allow all connections for local development/testing
-                    // This permits connections to private IPs like 192.168.x.x
-                    denyDialPeer: async () => false,
-                    denyDialMultiaddr: async () => false,
-                    denyInboundConnection: async () => false,
-                    denyOutboundConnection: async () => false,
-                    denyInboundEncryptedConnection: async () => false,
-                    denyOutboundEncryptedConnection: async () => false,
-                    denyInboundUpgradedConnection: async () => false,
-                    denyOutboundUpgradedConnection: async () => false,
-                    filterMultiaddrForPeer: async () => true
-                },
-                peerDiscovery: [
-                    bootstrap({
-                        list: discoveryNodes
-                    })
-                ],
-                services: {
-                    identify: identify() as any
+            // Customize for browser: filter out TCP transport (not supported in browsers)
+            // Keep: webRTC, webSockets, circuitRelay (all browser-compatible)
+            const browserTransports = defaults.transports?.filter((t: any) => {
+                const transportName = t.constructor?.name || t.toString();
+                // Filter out TCP transport (TCP requires Node.js, not available in browsers)
+                return !transportName.toLowerCase().includes('tcp') || transportName.toLowerCase().includes('webtransport');
+            }) || [];
+
+            // Add our STUN/TURN servers to WebRTC transport
+            const webRTCWithStun = webRTC({ rtcConfiguration: { iceServers } });
+            const transportsWithCustomWebRTC = browserTransports.map((t: any) => {
+                const transportName = t.constructor?.name || t.toString();
+                if (transportName.toLowerCase().includes('webrtc') && !transportName.toLowerCase().includes('direct')) {
+                    return webRTCWithStun;
+                }
+                return t;
+            });
+
+            // Add local relay to bootstrap nodes
+            const defaultBootstrap = defaults.peerDiscovery?.find((pd: any) =>
+                pd.constructor?.name?.toLowerCase().includes('bootstrap')
+            );
+
+            let bootstrapList = [localRelayAddr];
+            if (defaultBootstrap && typeof defaultBootstrap === 'object' && 'list' in defaultBootstrap) {
+                bootstrapList = [...bootstrapList, ...(defaultBootstrap as any).list];
+            }
+
+            const customPeerDiscovery = [
+                bootstrap({ list: bootstrapList }),
+                ...(defaults.peerDiscovery?.filter((pd: any) =>
+                    !pd.constructor?.name?.toLowerCase().includes('bootstrap')
+                ) || [])
+            ];
+
+            console.log('🔗 Initializing Helia/IPFS with browser-compatible libp2p configuration...');
+            console.log('🔗 Transports:', transportsWithCustomWebRTC.map((t: any) => t.constructor?.name || t.toString()).join(', '));
+            console.log('🔗 Bootstrap nodes:', bootstrapList.length);
+
+            // Create Helia with customized libp2p options
+            this.helia = await createHelia({
+                libp2p: {
+                    ...defaults,
+                    transports: transportsWithCustomWebRTC,
+                    peerDiscovery: customPeerDiscovery,
+                    connectionGater: {
+                        // Allow all connections for local development/testing
+                        // This permits connections to private IPs like 192.168.x.x
+                        denyDialPeer: async () => false,
+                        denyDialMultiaddr: async () => false,
+                        denyInboundConnection: async () => false,
+                        denyOutboundConnection: async () => false,
+                        denyInboundEncryptedConnection: async () => false,
+                        denyOutboundEncryptedConnection: async () => false,
+                        denyInboundUpgradedConnection: async () => false,
+                        denyOutboundUpgradedConnection: async () => false,
+                        filterMultiaddrForPeer: async () => true
+                    }
                 }
             });
+
+            console.log('🌐 Helia/IPFS initialized successfully');
+
+            // Get the libp2p instance that Helia created
+            this.libp2p = this.helia.libp2p as Libp2p;
+            console.log('🔗 LibP2P node created by Helia');
 
             // Set up stream handler for incoming messages
             await this.libp2p.handle(this.protocol, this.handleIncomingStream.bind(this));
 
-            // Start the libp2p node
-            await this.libp2p.start();
-            console.log('🔗 LibP2P node started successfully');
-
             // Listen for peer connections
             this.libp2p.addEventListener('peer:connect', this.handlePeerConnect.bind(this));
-
-            // Initialize Helia/IPFS for peer discovery with public bootstrap nodes
-            console.log('🌐 Initializing Helia/IPFS with peer ID:', this.peerId);
-            console.log('🌐 Connecting to public IPFS bootstrap nodes and relay servers...');
-            this.helia = await createHelia({ libp2p: this.libp2p });
-            console.log('🌐 Helia/IPFS initialized successfully');
 
             // Clean up old persistence data
             await this.loadSerializedPeerId();
@@ -627,9 +614,8 @@ export class LibP2PNetworkProvider implements INetworkProvider {
 
     private async handlePeerConnect(event: any): Promise<void> {
         const remotePeerId = event.detail.toString();
-        console.log(`🤝 Peer connected: ${remotePeerId}`);
 
-        // Notify all handlers
+        // Notify all handlers (don't log peer connections - peer count display handles that)
         for (const handler of this.peerConnectHandlers) {
             try {
                 handler(remotePeerId);
@@ -854,17 +840,6 @@ export class HollowPeer {
 
         // Session restoration: resend pending friend requests
         await this.resendPendingRequests();
-
-        // Log connected peers after startup and every 10s for first minute
-        this.logConnectedPeers();
-        let logCount = 0;
-        const logInterval = setInterval(() => {
-            logCount++;
-            this.logConnectedPeers();
-            if (logCount >= 6) { // 6 times * 10s = 60s (1 minute)
-                clearInterval(logInterval);
-            }
-        }, 10000);
     }
 
     private async resendPendingRequests(): Promise<void> {
@@ -928,12 +903,10 @@ export class HollowPeer {
 
     private handlePeerConnection(remotePeerId: string): void {
         // If peer is not in friends map, add to quarantined set
+        // (Don't log peer connections - peer count display handles that)
         const isFriend = this.friendsManager.getFriend(remotePeerId);
         if (!isFriend) {
             this.quarantined.add(remotePeerId);
-            console.log(`⚠️ Unknown peer ${remotePeerId} added to quarantine`);
-        } else {
-            console.log(`✅ Friend ${isFriend.playerName} connected: ${remotePeerId}`);
         }
     }
 
@@ -958,11 +931,6 @@ export class HollowPeer {
 
     getConnectedPeerCount(): number {
         return this.networkProvider.getConnectedPeers().length;
-    }
-
-    private logConnectedPeers(): void {
-        const peers = this.getConnectedPeers();
-        console.log(`🔗 Connected peers (${peers.length}):`, peers.length > 0 ? peers : 'None');
     }
 
     addFriend(playerName: string, peerId: string, notes: string = ''): void {

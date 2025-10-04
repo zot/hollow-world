@@ -134,6 +134,12 @@
   const messages = await browser_console_messages({ onlyErrors: true });
   // Should be empty or not contain asset 404s
   ```
+- **Multi-tab P2P testing**:
+  - Playwright **can handle multiple browser tabs/contexts** for P2P connectivity testing
+  - Use `browser_tabs` action to create, select, and manage tabs
+  - Each tab can have a different profile for testing P2P interactions
+  - Perfect for testing peer-to-peer messaging, friend requests, and connectivity
+  - See `specs/main.tests.md` "Peer Connectivity Tests" for examples
 
 ### Test API for Singleton Access
 **Available in dev/test environments only** - Exposes `window.__HOLLOW_WORLD_TEST__`

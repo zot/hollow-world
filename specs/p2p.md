@@ -75,6 +75,7 @@ see coms.md for details
 - there is a `pendingFriendRequests` Object of peerID -> invitation
 
 ### Peer connections
+don't log peer connections since the peer count display handles that.
 #### if a peer connects and its peerId is not in the friends map, add its peerId to the quarantined set
 #### when connecting to another peer that has the same external IP as this one, use the internal IP instead
 #### STUN servers
@@ -89,13 +90,6 @@ see coms.md for details
 - **`addFriend(name, friendPeerId)`**: Adds friend's name and peer ID to persistent storage
 - **`getConnectedPeers()`**: Returns array of connected peer ID strings
 - **`getConnectedPeerCount()`**: Returns number of currently connected peers
-
-### Peer Connection Monitoring
-- **Startup Logging**: After initialization, HollowPeer logs connected peers
-  - Logs immediately after initialization
-  - Logs every 10 seconds for the first minute
-  - Console format: `🔗 Connected peers (N): [peer IDs...]` or `🔗 Connected peers (0): None`
-- **Purpose**: Helps debugging peer connectivity issues and monitoring network health
 
 ### Implementation Details
 - **Network provider interface**: [`src/p2p.ts`](../src/p2p.ts)
