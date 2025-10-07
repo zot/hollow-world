@@ -455,6 +455,11 @@ export class LibP2PNetworkProvider implements INetworkProvider {
             // Listen for peer connections
             this.libp2p.addEventListener('peer:connect', this.handlePeerConnect.bind(this));
 
+            // Connect to local relay for testing (non-blocking)
+            this.connectToLocalRelay().catch(err => {
+                console.warn('⚠️ Local relay connection failed (continuing without it):', err.message);
+            });
+
             // Clean up old persistence data
             await this.loadSerializedPeerId();
 

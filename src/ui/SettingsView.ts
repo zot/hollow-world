@@ -551,6 +551,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
+    updateHollowPeer(hollowPeer: HollowPeer): void {
+        this.hollowPeer = hollowPeer;
+        this.updatePeerCount();
+    }
+
     private peerCountInterval?: number;
 
     startPeerCountUpdates(): void {

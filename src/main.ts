@@ -115,16 +115,8 @@ async function initializeHollowPeer(): Promise<void> {
         // HollowPeer will create and manage its own network provider
         hollowPeer = new HollowPeer(undefined, profileAwareStorage);
 
-        // Add AGGRESSIVE timeout to prevent blocking app initialization (5s)
-        const initPromise = hollowPeer.initialize();
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => {
-                console.warn('⏱️ HollowPeer initialization timeout (5s) - continuing without P2P');
-                reject(new Error('HollowPeer initialization timeout'));
-            }, 5000)
-        );
-
-        await Promise.race([initPromise, timeoutPromise]);
+        // Initialize P2P in background - don't block on it
+        await hollowPeer.initialize();
         console.log('🤝 HollowPeer initialized successfully');
 
         // Update splash screen with peer ID now that initialization is complete
@@ -136,6 +128,19 @@ async function initializeHollowPeer(): Promise<void> {
                 console.log('🤝 Splash screen peer ID update completed');
             } catch (e) {
                 console.warn('Failed to update splash screen with peer ID:', e);
+            }
+        }
+
+        // Update settings view with peer ID and hollowPeer reference if it's currently displayed
+        if (currentView === 'settings' && settingsView && hollowPeer) {
+            try {
+                const peerId = hollowPeer.getPeerId();
+                console.log('🤝 Updating settings view with peer ID:', peerId);
+                settingsView.updatePeerId(peerId);
+                settingsView.updateHollowPeer(hollowPeer);
+                console.log('🤝 Settings view updated with peer ID and hollowPeer reference');
+            } catch (e) {
+                console.warn('Failed to update settings view:', e);
             }
         }
     } catch (error) {
