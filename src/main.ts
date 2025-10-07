@@ -33,21 +33,10 @@ let appContainer: HTMLElement;
 // Current view components
 let currentView: 'splash' | 'characters' | 'editor' | 'game' | 'settings' = 'splash';
 
-async function createApp(): Promise<void> {
-    console.log('createApp called');
-
-    const app = document.getElementById('app');
-    if (!app) {
-        console.error('App container not found');
-        return;
-    }
-
-    console.log('App container found');
-    appContainer = app;
-
-    // Initialize enhanced audio manager FIRST - as early as possible per CLAUDE.md
+// Initialize audio manager in background (non-blocking)
+async function initializeAudio(): Promise<void> {
     try {
-        console.log('🎶 Initializing audio system as early as possible...');
+        console.log('🎶 Initializing audio system (in background)...');
         console.log('🎶 AudioManager class available:', typeof AudioManager);
 
         // List of all available background music tracks for cycling
@@ -70,8 +59,38 @@ async function createApp(): Promise<void> {
         console.log('🎶 AudioManager created:', !!audioManager);
 
         console.log('🎶 Starting AudioManager initialization...');
-        await audioManager.initialize();
+
+        // Add overall timeout for entire audio init (15 seconds max)
+        const initPromise = audioManager.initialize();
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Audio initialization timeout')), 15000)
+        );
+
+        await Promise.race([initPromise, timeoutPromise]);
         console.log('🎶 AudioManager initialization completed successfully');
+
+        // Start background music after initialization
+        if (audioManager) {
+            try {
+                await audioManager.playBackgroundMusic();
+                const trackInfo = audioManager.getCurrentTrackInfo();
+                console.log('🎵 Background music started with cycling enabled');
+                if (trackInfo) {
+                    console.log(`🎵 Now playing track ${trackInfo.index + 1}/${trackInfo.total}: ${trackInfo.name}`);
+                    console.log(`🔄 Music cycling: ${audioManager.isCyclingEnabled() ? 'ON' : 'OFF'}`);
+                }
+
+                // Update button state if splash screen exists
+                if (splashScreen) {
+                    setTimeout(() => {
+                        splashScreen.refreshMusicButtonState();
+                        console.log('🎵 Button state refreshed, isPlaying:', audioManager!.isMusicPlaying());
+                    }, 100);
+                }
+            } catch (musicError) {
+                console.log('🎵 Background music will start on first user interaction (browser autoplay policy)');
+            }
+        }
 
         console.log('🎶 Enhanced audio system initialized successfully');
     } catch (error) {
@@ -83,18 +102,42 @@ async function createApp(): Promise<void> {
         });
         audioManager = undefined;
     }
+}
 
-    // Initialize HollowPeer with profile-aware storage
+// Initialize HollowPeer in background (non-blocking)
+async function initializeHollowPeer(): Promise<void> {
     try {
-        console.log('🤝 Initializing HollowPeer...');
+        console.log('🤝 Initializing HollowPeer (in background)...');
 
         // Create profile-aware storage provider
         const profileAwareStorage = new LocalStorageProvider(profileService);
 
         // HollowPeer will create and manage its own network provider
         hollowPeer = new HollowPeer(undefined, profileAwareStorage);
-        await hollowPeer.initialize();
+
+        // Add AGGRESSIVE timeout to prevent blocking app initialization (5s)
+        const initPromise = hollowPeer.initialize();
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => {
+                console.warn('⏱️ HollowPeer initialization timeout (5s) - continuing without P2P');
+                reject(new Error('HollowPeer initialization timeout'));
+            }, 5000)
+        );
+
+        await Promise.race([initPromise, timeoutPromise]);
         console.log('🤝 HollowPeer initialized successfully');
+
+        // Update splash screen with peer ID now that initialization is complete
+        if (splashScreen && hollowPeer) {
+            try {
+                const peerId = hollowPeer.getPeerId();
+                console.log('🤝 Updating splash screen with peer ID:', peerId);
+                splashScreen.updatePeerId(peerId);
+                console.log('🤝 Splash screen peer ID update completed');
+            } catch (e) {
+                console.warn('Failed to update splash screen with peer ID:', e);
+            }
+        }
     } catch (error) {
         console.error('🚨 Failed to initialize HollowPeer:', error);
         console.error('🚨 Network error details:', {
@@ -104,6 +147,30 @@ async function createApp(): Promise<void> {
         });
         hollowPeer = undefined;
     }
+}
+
+async function createApp(): Promise<void> {
+    console.log('createApp called');
+
+    const app = document.getElementById('app');
+    if (!app) {
+        console.error('App container not found');
+        return;
+    }
+
+    console.log('App container found');
+    appContainer = app;
+
+    // Truly defer with setTimeout (async functions start executing synchronously until first await)
+    console.log('🚀 Deferring background initialization with setTimeout...');
+    setTimeout(() => {
+        console.log('⏰ setTimeout fired, starting audio...');
+        initializeAudio();
+    }, 0);
+    setTimeout(() => {
+        console.log('⏰ setTimeout fired, starting P2P...');
+        initializeHollowPeer();
+    }, 0);
 
     try {
         // Initialize views
@@ -115,9 +182,14 @@ async function createApp(): Promise<void> {
         splashScreen = new SplashScreen(undefined, audioManager);
         await splashScreen.initialize();
 
-        // Update splash screen with peer ID from HollowPeer
+        // Update splash screen with peer ID from HollowPeer (might still be initializing)
+        // We'll update it later when P2P initialization completes
         if (hollowPeer) {
-            splashScreen.updatePeerId(hollowPeer.getPeerId());
+            try {
+                splashScreen.updatePeerId(hollowPeer.getPeerId());
+            } catch (e) {
+                console.log('Peer ID not yet available, will update when ready');
+            }
         }
 
         characterManager = new CharacterManagerView(undefined, audioManager);
@@ -131,34 +203,33 @@ async function createApp(): Promise<void> {
         // Initialize router
         router.initialize();
 
-        // Start background music after splash screen is initialized
-        if (audioManager) {
-            try {
-                await audioManager.playBackgroundMusic();
-                const trackInfo = audioManager.getCurrentTrackInfo();
-                console.log('🎵 Background music started with cycling enabled');
-                if (trackInfo) {
-                    console.log(`🎵 Now playing track ${trackInfo.index + 1}/${trackInfo.total}: ${trackInfo.name}`);
-                    console.log(`🔄 Music cycling: ${audioManager.isCyclingEnabled() ? 'ON' : 'OFF'}`);
-                }
-                
-                // Wait a brief moment for audio state to settle, then update button
-                setTimeout(() => {
+        // Note: Audio and P2P initialization happens in background
+        // Music will start automatically when audio initialization completes
+        // However, browsers block autoplay until user interaction, so we add a one-time click handler
+        let musicStartAttempted = false;
+        const tryStartMusic = async () => {
+            if (!musicStartAttempted && audioManager && !audioManager.isMusicPlaying()) {
+                musicStartAttempted = true;
+                try {
+                    await audioManager.playBackgroundMusic();
+                    console.log('🎵 Music started after user interaction');
                     splashScreen.refreshMusicButtonState();
-                    console.log('🎵 Button state refreshed, isPlaying:', audioManager!.isMusicPlaying());
-                }, 100);
-            } catch (musicError) {
-                console.warn('Failed to start background music (user interaction may be required):', musicError);
+                    // Remove the listener after successful start
+                    document.removeEventListener('click', tryStartMusic);
+                } catch (e) {
+                    console.warn('Still unable to start music:', e);
+                }
             }
-        }
+        };
+        document.addEventListener('click', tryStartMusic, { once: true });
 
         // Expose test API in dev/test environments
         if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
             window.__HOLLOW_WORLD_TEST__ = {
                 profileService: getProfileService(),
-                hollowPeer: hollowPeer!,
-                audioManager,
-                eventService: hollowPeer!.getEventService(),
+                get hollowPeer() { return hollowPeer; },
+                get audioManager() { return audioManager; },
+                get eventService() { return hollowPeer?.getEventService(); },
             };
             console.log('🧪 Test API exposed on window.__HOLLOW_WORLD_TEST__');
         }

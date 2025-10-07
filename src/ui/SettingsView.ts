@@ -109,7 +109,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 backButtonClass: this.config.backButtonClass,
                 playerName: this.settingsData.playerName,
                 peerId: this.settingsData.peerId,
-                peerCount: this.hollowPeer.getConnectedPeerCount(),
+                peerCount: this.hollowPeer ? this.hollowPeer.getConnectedPeerCount() : 0,
                 privateNotes: this.settingsData.privateNotes,
                 friends: this.settingsData.friends,
                 hasAudioManager: !!this.audioManager,
@@ -562,7 +562,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
 
     updatePeerCount(): void {
         const peerCountElement = this.container?.querySelector('#peer-count');
-        if (peerCountElement) {
+        if (peerCountElement && this.hollowPeer) {
             peerCountElement.textContent = this.hollowPeer.getConnectedPeerCount().toString();
         }
     }

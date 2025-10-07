@@ -349,6 +349,7 @@ See [`specs/coms.md`](coms.md#-testing-findings--limitations) for detailed expla
 
 ### Local TURN and Relay servers
 - there are local TURN and Relay servers in the test directory
+- do not use them unless requested by user
 
 ### Friend Request Send/Receive Tests
 **Note**: These tests require TWO tabs open simultaneously with different profiles

@@ -42,14 +42,22 @@ export class HTMLAudioProvider implements IAudioProvider {
     async load(src: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.audio.src = src;
+
+            // Add timeout to prevent hanging
+            const timeout = setTimeout(() => {
+                reject(new Error(`Audio load timeout for ${src}`));
+            }, 3000); // 3 second timeout per track (aggressive to prevent hanging)
+
             this.audio.addEventListener('canplaythrough', () => {
+                clearTimeout(timeout);
                 this.isLoaded = true;
                 resolve();
             }, { once: true });
             this.audio.addEventListener('error', (e) => {
+                clearTimeout(timeout);
                 const error = this.audio.error;
-                const errorMessage = error ? 
-                    `Audio error code ${error.code}: ${this.getMediaErrorMessage(error.code)}` : 
+                const errorMessage = error ?
+                    `Audio error code ${error.code}: ${this.getMediaErrorMessage(error.code)}` :
                     `Failed to load audio from ${src}`;
                 reject(new Error(errorMessage));
             }, { once: true });
@@ -64,6 +72,12 @@ export class HTMLAudioProvider implements IAudioProvider {
         try {
             await this.audio.play();
         } catch (error) {
+            // Preserve the original error for proper error type checking (e.g., NotAllowedError)
+            if (error instanceof Error) {
+                const playError = new Error(`Failed to play audio: ${error.name}: ${error.message}`);
+                playError.name = error.name; // Preserve error name for type checking
+                throw playError;
+            }
             throw new Error(`Failed to play audio: ${error}`);
         }
     }
@@ -203,7 +217,12 @@ export class AudioManager implements IAudioManager {
                 }
             }
         } catch (error) {
-            console.warn('Failed to play background music:', error);
+            // Don't log scary errors for expected autoplay blocking
+            if (error instanceof Error && error.message.includes('NotAllowedError')) {
+                console.log('🎵 Music playback blocked by browser (awaiting user interaction)');
+            } else {
+                console.warn('Failed to play background music:', error);
+            }
             throw error;
         }
     }

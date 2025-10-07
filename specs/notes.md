@@ -1,10 +1,4 @@
-- integrating gossipsub
-  - connecting
-    - send a connect code to your friend over a social network
-    - uses a temporary gossipsub topic or maybe an IPFS document with encryped peer id
-  - friend list
-    - ids are not published
-  - chat
+- simplify invitations to only inviteCode-PEERID again
 
 - reproducibility agent
   - uses an improvement agent

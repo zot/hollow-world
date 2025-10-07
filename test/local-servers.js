@@ -30,7 +30,8 @@ async function main() {
     turnServer = startTurnServer();
 
     // Start LibP2P relay server
-    relayNode = await startRelayServer();
+    const relayResult = await startRelayServer();
+    relayNode = relayResult.node;
 
     console.log('═'.repeat(50));
     console.log('✅ All servers running');

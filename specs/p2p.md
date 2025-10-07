@@ -8,6 +8,7 @@
 - Use **SOLID principles** in all implementations
 - Create comprehensive **unit tests** for all components
 - Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
+- p2p transports are functions; to print them, use the raw objects as separate args
 
 ## 🔧 Technology Stack
 - **LibP2P** - Decentralized networking protocol
@@ -82,6 +83,47 @@ don't log peer connections since the peer count display handles that.
 - copy validated-public-servers.json to public/assets
   - just the STUN list
     - URL and responseTime only
+
+### 🧪 Local Development Servers
+**Integrated into Vite dev server** - All P2P test infrastructure starts automatically with `npm run dev`
+
+#### Servers Started
+1. **TURN/STUN Server**
+   - Port: `3478` (binds to all interfaces)
+   - Credentials: `testuser` / `testpass`
+   - Provides NAT traversal for WebRTC connections
+   - **Access**: Server provides network address to browser at runtime
+     - Browser may be using `localhost` but needs actual network IP for P2P
+     - Example: Server at `192.168.1.103` → browser receives `stun:192.168.1.103:3478`
+
+2. **LibP2P Circuit Relay**
+   - Port: `9090/ws` (binds to all interfaces)
+   - Peer ID: Generated fresh on each server startup (new private key each run)
+   - Fallback for direct connection failures
+   - **Access**: Server provides network address and peer ID to browser at runtime
+     - Relay peer ID and network address exposed via HTTP endpoint (available in dev/test environments)
+     - **Multiaddr format**: `/ip4/${networkAddress}/tcp/9090/ws/p2p/${relayPeerId}`
+
+3. **WebRTC Signaling Server**
+   - Port: `9091` (localhost only - for future WebRTC direct connections)
+   - Exchanges SDP offers/answers between browser peers
+   - **Access**: `ws://localhost:9091`
+
+#### Dynamic Configuration
+- **DO NOT hard-code IP addresses** for local servers
+- **DO NOT hard-code relay peer ID** - it's generated automatically and provided at runtime
+- **DO NOT use `window.location.hostname`** - browser may be using `localhost` but P2P needs network IP
+- Server determines its own network address and provides it to browser at runtime
+- Relay peer ID and network addresses exposed to app in dev/test environments via HTTP endpoint
+- Servers bind to all network interfaces (0.0.0.0)
+- Allows testing across LAN devices without code changes
+
+#### Implementation
+- **Location**: `vite.config.ts` plugin `p2p-test-servers`
+- **Dependencies**:
+  - `test/local-relay-server.js` - LibP2P circuit relay
+  - `test/local-turn-server.js` - TURN/STUN server
+- **Cleanup**: Servers shut down automatically when Vite server stops
 
 ## 🔧 API Methods
 

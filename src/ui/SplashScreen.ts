@@ -168,9 +168,20 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     }
 
     updatePeerId(peerId: string): void {
+        console.log('📍 updatePeerId called with:', peerId);
+        console.log('📍 peerIdElement exists:', !!this.peerIdElement);
         this.currentPeerId = peerId;
         if (this.peerIdElement) {
-            this.peerIdElement.textContent = `Peer ID: ${peerId}`;
+            const newText = `Peer ID: ${peerId}`;
+            console.log('📍 Setting peer ID text to:', newText);
+            this.peerIdElement.textContent = newText;
+            // Force repaint
+            this.peerIdElement.style.display = 'none';
+            this.peerIdElement.offsetHeight; // Trigger reflow
+            this.peerIdElement.style.display = '';
+            console.log('📍 Peer ID element textContent is now:', this.peerIdElement.textContent);
+        } else {
+            console.warn('📍 Cannot update peer ID: peerIdElement is null');
         }
     }
 

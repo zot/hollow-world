@@ -16,9 +16,6 @@ import { noise } from '@chainsafe/libp2p-noise';
 import { yamux } from '@chainsafe/libp2p-yamux';
 import { circuitRelayServer } from '@libp2p/circuit-relay-v2';
 import { identify } from '@libp2p/identify';
-import { peerIdFromPrivateKey } from '@libp2p/peer-id';
-import { privateKeyFromProtobuf } from '@libp2p/crypto/keys';
-import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string';
 import os from 'os';
 
 const PORT = 9090;
@@ -38,21 +35,13 @@ function getLocalIPs() {
   return addresses.length > 0 ? addresses : ['127.0.0.1']; // Fallback to localhost
 }
 
-// Fixed private key for consistent peer ID: 12D3KooWDe4PMnvGqvk8vmCAC99NuybEUcPzHpv8WRcHM4txBBqm
-const FIXED_PRIVATE_KEY = 'CAESQLw4qhR+cKKmZ3xKqKqh0nY8K8kKYpFQWQhMcA6Wx2Q7OMrVN0gPxaLlqKCRxqzJJQ9PKMmGiThCNxIHMxN+7BQ=';
-
 export async function startRelayServer() {
   console.log('🔄 Starting Local LibP2P Circuit Relay Server...\n');
 
   const localIPs = getLocalIPs();
 
-  // Create peer ID from fixed private key for consistency (same approach as p2p.ts)
-  const privateKeyBytes = uint8ArrayFromString(FIXED_PRIVATE_KEY, 'base64');
-  const privateKey = await privateKeyFromProtobuf(privateKeyBytes);
-  const peerId = await peerIdFromPrivateKey(privateKey);
-
+  // Let libp2p generate a fresh peer ID on each startup
   const node = await createLibp2p({
-    peerId,
     addresses: {
       listen: [
         `/ip4/0.0.0.0/tcp/${PORT}/ws`  // Listen on all interfaces for LAN access
@@ -76,7 +65,7 @@ export async function startRelayServer() {
 
   await node.start();
 
-  const peerIdStr = peerId.toString();
+  const peerIdStr = node.peerId.toString();
 
   console.log('✅ Relay Server Started\n');
   console.log('Peer ID:', peerIdStr);
@@ -95,5 +84,5 @@ export async function startRelayServer() {
     console.log(`📤 Relay: Peer disconnected: ${evt.detail.toString()}`);
   });
 
-  return node;
+  return { node, peerIdStr };
 }
