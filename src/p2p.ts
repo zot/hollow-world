@@ -392,6 +392,7 @@ export class LibP2PNetworkProvider implements INetworkProvider {
             }
 
             // Create libp2p configuration object (not instance) - let Helia create the instance
+            /* COMMENTED OUT - Using Helia defaults instead
             const libp2pConfig = {
                 privateKey: privateKey,
                 addresses: {
@@ -435,13 +436,12 @@ export class LibP2PNetworkProvider implements INetworkProvider {
                     identify: identify() as any
                 }
             };
+            */
 
-            // Create Helia with libp2p configuration - Helia will create and manage libp2p
-            console.log('🌐 Initializing Helia/IPFS with libp2p configuration...');
-            console.log('🔗 Using WebTransport, WebSockets, WebRTC, and circuit relay');
-            console.log('🔗 Circuit relay fallback via', relayServers.length, 'WSS relay server(s)');
-            
-            this.helia = await createHelia({ libp2p: libp2pConfig });
+            // Create Helia with default configuration (no args)
+            console.log('🌐 Initializing Helia/IPFS with default configuration...');
+
+            this.helia = await createHelia();
             
             // Get the libp2p instance that Helia created
             this.libp2p = this.helia.libp2p as Libp2p;

@@ -1,3 +1,5 @@
+- p2p isn't quite working as well as it was
+
 - simplify invitations to only inviteCode-PEERID again
 
 - reproducibility agent
