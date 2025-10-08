@@ -96,6 +96,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
 
         this.container = container;
 
+        // Update hollowPeer reference from global if available and not already set
+        if (!this.hollowPeer && (window as any).__HOLLOW_WORLD_TEST__?.hollowPeer) {
+            this.hollowPeer = (window as any).__HOLLOW_WORLD_TEST__.hollowPeer;
+        }
+
         try {
             const profileService = getProfileService();
             const currentProfile = profileService.getCurrentProfile();

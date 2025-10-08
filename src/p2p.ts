@@ -267,7 +267,7 @@ export class LibP2PNetworkProvider implements INetworkProvider {
     private async connectToLocalRelay(): Promise<void> {
         if (import.meta.env.DEV && this.localRelayPeerId && this.localNetworkAddress && this.libp2p) {
             try {
-                const relayAddr = multiaddr(`/ip4/${this.localNetworkAddress}/tcp/9090/ws/p2p/${this.localRelayPeerId}`);
+                const relayAddr = multiaddr(`/ip4/${this.localNetworkAddress}/tcp/9090/wss/p2p/${this.localRelayPeerId}`);
                 console.log(`🔗 Connecting to local relay: ${relayAddr.toString()}`);
 
                 // Add timeout to prevent hanging
@@ -349,7 +349,7 @@ export class LibP2PNetworkProvider implements INetworkProvider {
 
             // Local test relay server address (dynamic based on fetched config)
             const localRelayAddr = this.localRelayPeerId && this.localNetworkAddress
-                ? `/ip4/${this.localNetworkAddress}/tcp/9090/ws/p2p/${this.localRelayPeerId}`
+                ? `/ip4/${this.localNetworkAddress}/tcp/9090/wss/p2p/${this.localRelayPeerId}`
                 : null;
 
             // Public IPFS bootstrap nodes for peer discovery + local relay for testing
@@ -438,11 +438,27 @@ export class LibP2PNetworkProvider implements INetworkProvider {
             };
             */
 
-            // Create Helia with default configuration (no args)
-            console.log('🌐 Initializing Helia/IPFS with default configuration...');
+            // Create Helia with custom libp2p configuration to allow local relay connections
+            console.log('🌐 Initializing Helia/IPFS with connection gater configuration...');
 
-            this.helia = await createHelia();
-            
+            this.helia = await createHelia({
+                libp2p: {
+                    connectionGater: {
+                        // Allow all connections for local development/testing
+                        // This permits connections to private IPs like 192.168.x.x
+                        denyDialPeer: async () => false,
+                        denyDialMultiaddr: async () => false,
+                        denyInboundConnection: async () => false,
+                        denyOutboundConnection: async () => false,
+                        denyInboundEncryptedConnection: async () => false,
+                        denyOutboundEncryptedConnection: async () => false,
+                        denyInboundUpgradedConnection: async () => false,
+                        denyOutboundUpgradedConnection: async () => false,
+                        filterMultiaddrForPeer: async () => true
+                    }
+                }
+            });
+
             // Get the libp2p instance that Helia created
             this.libp2p = this.helia.libp2p as Libp2p;
             
@@ -554,7 +570,7 @@ export class LibP2PNetworkProvider implements INetworkProvider {
 
                 // Add local relay in dev mode with network address and peer ID
                 if (import.meta.env.DEV && this.localRelayPeerId && this.localNetworkAddress) {
-                    relayAddresses.push(`/ip4/${this.localNetworkAddress}/tcp/9090/ws/p2p/${this.localRelayPeerId}`);
+                    relayAddresses.push(`/ip4/${this.localNetworkAddress}/tcp/9090/wss/p2p/${this.localRelayPeerId}`);
                 }
 
                 // Add public relay as fallback

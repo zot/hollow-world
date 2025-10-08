@@ -12,11 +12,14 @@
 
 import { createLibp2p } from 'libp2p';
 import { webSockets } from '@libp2p/websockets';
+import { webTransport } from '@libp2p/webtransport';
 import { noise } from '@chainsafe/libp2p-noise';
 import { yamux } from '@chainsafe/libp2p-yamux';
 import { circuitRelayServer } from '@libp2p/circuit-relay-v2';
 import { identify } from '@libp2p/identify';
 import os from 'os';
+import https from 'https';
+import { readFileSync } from 'fs';
 
 const PORT = 9090;
 
@@ -40,15 +43,27 @@ export async function startRelayServer() {
 
   const localIPs = getLocalIPs();
 
+  // Create HTTPS server for secure WebSocket (WSS)
+  const httpsServer = https.createServer({
+    key: readFileSync('key.pem'),
+    cert: readFileSync('cert.pem'),
+  });
+  // Don't call listen() here - let libp2p handle it
+
   // Let libp2p generate a fresh peer ID on each startup
   const node = await createLibp2p({
     addresses: {
       listen: [
-        `/ip4/0.0.0.0/tcp/${PORT}/ws`  // Listen on all interfaces for LAN access
+        `/ip4/0.0.0.0/tcp/${PORT}/wss`  // WebSocket Secure only (WebTransport not supported in Node.js server)
       ]
     },
     transports: [
-      webSockets()
+      webSockets({
+        server: httpsServer,
+        websocket: {
+          rejectUnauthorized: false  // Accept self-signed certificates
+        }
+      })
     ],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
@@ -70,9 +85,9 @@ export async function startRelayServer() {
   console.log('✅ Relay Server Started\n');
   console.log('Peer ID:', peerIdStr);
   console.log('\nAvailable interfaces:');
-  localIPs.forEach(ip => console.log(`  /ip4/${ip}/tcp/${PORT}/ws`));
+  localIPs.forEach(ip => console.log(`  /ip4/${ip}/tcp/${PORT}/wss`));
   console.log('\nRelay Addresses (use any in client):');
-  localIPs.forEach(ip => console.log(`  /ip4/${ip}/tcp/${PORT}/ws/p2p/${peerIdStr}`));
+  localIPs.forEach(ip => console.log(`  /ip4/${ip}/tcp/${PORT}/wss/p2p/${peerIdStr}`));
   console.log('');
 
   // Log connections

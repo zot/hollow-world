@@ -1,0 +1,18 @@
+{
+  "name": "simple-p2p-poc",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "helia": "^5.1.0",
+    "@helia/unixfs": "^4.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  }
+}

@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite';
-import { copyFileSync } from 'fs';
+import { copyFileSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { WebSocketServer } from 'ws';
 import os from 'os';
+import https from 'https';
 
 export default defineConfig({
   base: './',
@@ -18,6 +19,10 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
+    https: {
+      key: readFileSync('key.pem'),
+      cert: readFileSync('cert.pem'),
+    },
   },
   preview: {
     host: '0.0.0.0',
@@ -90,8 +95,14 @@ export default defineConfig({
         // Get network address
         networkAddress = getLocalIP();
 
-        // Create WebRTC signaling server on port 9091
-        wss = new WebSocketServer({ port: 9091 });
+        // Create HTTPS server for secure WebSocket (WSS) signaling on port 9091
+        const httpsSignalingServer = https.createServer({
+          key: readFileSync('key.pem'),
+          cert: readFileSync('cert.pem'),
+        });
+        httpsSignalingServer.listen(9091);
+
+        wss = new WebSocketServer({ server: httpsSignalingServer });
         const clients = new Map(); // peerId -> WebSocket
 
         wss.on('connection', (ws) => {
@@ -132,7 +143,7 @@ export default defineConfig({
           });
         });
 
-        console.log('✅ WebRTC Signaling Server: ws://localhost:9091');
+        console.log('✅ WebRTC Signaling Server: wss://localhost:9091');
         console.log('═'.repeat(50) + '\n');
 
         // Expose P2P configuration to browser via HTTP endpoint
