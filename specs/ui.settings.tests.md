@@ -94,6 +94,100 @@
   - Verify no template 404 errors
   - Verify views render with correct HTML structure
 
+## Expandable Friend Cards Tests
+
+### Friend Card Display
+- [ ] **Collapsed state displays correctly**
+  - Friend card shows friend name (unlabeled)
+  - Friend card shows peer ID (unlabeled)
+  - Friend card shows first line of notes if notes exist (unlabeled)
+  - Kill button (💀) appears on right side
+  - Card has western theme styling (bordered, colored background)
+- [ ] **Multiple friend cards display**
+  - Multiple friends each get their own card
+  - Cards are stacked vertically
+  - Each card is independent
+
+### Friend Card Expansion
+- [ ] **Click collapsed card to expand**
+  - Click anywhere on collapsed card (except kill button)
+  - Verify collapsed section hides
+  - Verify expanded section displays
+  - Verify data-expanded attribute changes to "true"
+- [ ] **Expanded state displays correctly**
+  - "Friend Details" heading appears
+  - Collapse button (⬆️) appears in header
+  - Player Name field shows with label and editable input
+  - Peer ID shows with label and read-only text
+  - Private Notes section shows with label and Milkdown editor
+  - Remove button appears
+
+### Friend Card Collapse
+- [ ] **Click collapse button to collapse**
+  - Click collapse button (⬆️) in expanded header
+  - Verify expanded section hides
+  - Verify collapsed section displays
+  - Verify data-expanded attribute changes to "false"
+- [ ] **Click header to collapse**
+  - Click anywhere on friend card header (not collapse button)
+  - Verify expanded section hides
+  - Verify collapsed section displays
+  - Verify data-expanded attribute changes to "false"
+  - Verify button sound plays
+- [ ] **Header click area works correctly**
+  - Click on "Friend Details" heading - should collapse
+  - Click on empty space in header - should collapse
+  - Click on collapse button - should collapse (already tested above)
+  - All three should have identical behavior
+
+### Friend Data Editing
+- [ ] **Edit friend name**
+  - Expand friend card
+  - Edit name in Player Name input
+  - Blur input field
+  - Verify friend name updates in FriendsManager
+  - Verify change persists in localStorage
+  - Collapse and re-expand card
+  - Verify new name displays
+- [ ] **Edit friend notes**
+  - Expand friend card
+  - Edit notes in Milkdown editor
+  - Verify notes auto-save on change
+  - Verify change persists in FriendsManager
+  - Collapse and re-expand card
+  - Verify new notes display
+
+### Friend Removal
+- [ ] **Quick remove with kill button**
+  - Click kill button (💀) on collapsed card
+  - Verify confirmation dialog appears
+  - Accept confirmation
+  - Verify friend removed from list
+  - Verify friend removed from FriendsManager
+  - Verify change persists in localStorage
+- [ ] **Remove from expanded state**
+  - Expand friend card
+  - Click Remove button
+  - Verify confirmation dialog appears
+  - Accept confirmation
+  - Verify friend removed from list
+  - Verify friend removed from FriendsManager
+- [ ] **Cancel friend removal**
+  - Click kill button or Remove button
+  - Cancel confirmation dialog
+  - Verify friend remains in list
+
+### Friend Card Persistence
+- [ ] **Friend card state persists across navigation**
+  - Add/edit friends in settings
+  - Navigate away from settings
+  - Return to settings
+  - Verify friends still present with correct data
+- [ ] **Friend cards load on page refresh**
+  - Add/edit friends
+  - Refresh browser on `/settings`
+  - Verify friends load with correct data
+
 ## Unit Tests
 See `test/SettingsView.test.ts` for:
 - Log sorting behavior (does not create new entries)

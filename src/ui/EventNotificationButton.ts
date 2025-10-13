@@ -32,7 +32,7 @@ export class EventNotificationButton implements IEventNotificationButton {
         container.className = 'event-notification-container';
         container.style.cssText = `
             position: fixed;
-            top: 20px;
+            top: 140px;
             right: 20px;
             z-index: 1000;
         `;

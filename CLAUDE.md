@@ -64,6 +64,8 @@
   - **Go**: Follow normal Go conventions (`*_test.go` files alongside code)
 - use playwright for integration tests
 - each spec should have a corresponding `.tests.md` file with specific test requirements
+- specs are in the `specs` directory
+  - testing specs are named SPEC.tests.md
 - see [`specs/main.tests.md`](specs/main.tests.md) for integration test requirements
   - main.tests.md is also for global or cross-cut tests
 - unit tests must be accounted for in the SPEC.tests.md file that makes the most sense

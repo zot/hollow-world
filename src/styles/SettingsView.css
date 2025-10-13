@@ -61,11 +61,25 @@
         2px 2px 0px #654321,
         3px 3px 0px #4a2c1a,
         4px 4px 15px rgba(0,0,0,0.8);
-    margin: 2rem 0;
+    margin: 2rem 0 0.5rem 0;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #8B7355;
     text-align: center;
+    z-index: 10;
+    position: relative;
+}
+
+.profile-subtitle {
+    font-family: 'Rye', serif;
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    font-weight: bold;
+    color: #cd853f;
+    text-align: center;
+    text-shadow:
+        1px 1px 0px #000,
+        2px 2px 5px rgba(0,0,0,0.5);
+    margin: 0 0 1.5rem 0;
     z-index: 10;
     position: relative;
 }
@@ -377,12 +391,137 @@
     margin-top: 15px;
 }
 
+/* Expandable Friend Cards */
 .friend-card {
     background: rgba(244,164,96,0.7);
     border: 2px solid #cd853f;
     border-radius: 6px;
-    padding: 15px;
     margin-bottom: 15px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.friend-card:hover {
+    border-color: #8b4513;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Collapsed State */
+.friend-card-collapsed {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.friend-card-collapsed:hover {
+    background: rgba(244,164,96,0.85);
+}
+
+.friend-collapsed-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.friend-collapsed-name {
+    font-family: 'Rye', serif;
+    font-weight: bold;
+    color: #654321;
+    font-size: 1.1rem;
+}
+
+.friend-collapsed-peerid {
+    font-family: 'Courier New', monospace;
+    color: #8b4513;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.friend-collapsed-notes {
+    font-family: 'Courier New', monospace;
+    color: #654321;
+    font-size: 0.9rem;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.8;
+}
+
+.friend-kill-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.friend-kill-btn:hover {
+    transform: scale(1.2) rotate(10deg);
+}
+
+.friend-kill-btn:active {
+    transform: scale(1.1) rotate(-10deg);
+}
+
+/* Expanded State */
+.friend-card-expanded {
+    display: none;
+    padding: 15px;
+}
+
+.friend-card[data-expanded="true"] .friend-card-collapsed {
+    display: none;
+}
+
+.friend-card[data-expanded="true"] .friend-card-expanded {
+    display: block;
+}
+
+.friend-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(139,69,19,0.3);
+}
+
+.friend-card-header h3 {
+    font-family: 'Sancreek', serif;
+    color: #8b4513;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.friend-collapse-btn {
+    background: rgba(139,69,19,0.2);
+    border: 2px solid #8b4513;
+    color: #654321;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.friend-collapse-btn:hover {
+    background: rgba(139,69,19,0.4);
+    transform: translateY(-2px);
+}
+
+.friend-expanded-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .friend-field {
@@ -482,10 +621,10 @@
 /* Settings Header with Log Button */
 .settings-header {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
+    gap: 0;
     z-index: 10;
     position: relative;
     margin: 0 auto;
@@ -514,20 +653,22 @@
     font-weight: bold;
 }
 
+/* Profiles button - positioned at top of stack */
 .profiles-btn {
     position: fixed;
-    right: 140px;
-    top: 20px;
+    right: 20px;
+    top: 20px;  /* Top of button stack */
     z-index: 100;
     flex-shrink: 0;
     font-size: 1rem;
     padding: 10px 20px;
 }
 
+/* Log button - positioned under profiles button */
 .log-view-btn {
     position: fixed;
     right: 20px;
-    top: 20px;
+    top: 80px;  /* Below profiles button (20px + 50px height + 10px gap) */
     z-index: 100;
     flex-shrink: 0;
     font-size: 1rem;
@@ -694,7 +835,12 @@
 
     .settings-title {
         font-size: clamp(1.8rem, 8vw, 3rem);
-        margin: 1.5rem 0;
+        margin: 1.5rem 0 0.5rem 0;
+    }
+
+    .profile-subtitle {
+        font-size: clamp(0.9rem, 4vw, 1.2rem);
+        margin: 0 0 1rem 0;
     }
 
     .settings-header {
@@ -710,18 +856,20 @@
         padding: 6px 10px;
     }
 
+    /* Profiles button - at top of stack (mobile) */
     .profiles-btn {
         position: fixed;
         right: 10px;
-        top: 60px;
+        top: 20px;  /* Top of button stack */
         font-size: 0.9rem;
         padding: 8px 15px;
     }
 
+    /* Log button - under profiles button (mobile) */
     .log-view-btn {
         position: fixed;
         right: 10px;
-        top: 10px;
+        top: 80px;  /* Below profiles button (20px + 50px + 10px gap) */
         z-index: 100;
         font-size: 0.9rem;
         padding: 8px 15px;

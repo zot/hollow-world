@@ -25,6 +25,13 @@ export class FriendsManager implements IFriendsManager {
         this.persistFriends();
     }
 
+    updateFriend(peerId: string, friend: IFriend): void {
+        if (this.friends.has(peerId)) {
+            this.friends.set(peerId, friend);
+            this.persistFriends();
+        }
+    }
+
     removeFriend(peerId: string): boolean {
         const removed = this.friends.delete(peerId);
         if (removed) {

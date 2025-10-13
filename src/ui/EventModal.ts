@@ -200,6 +200,24 @@ export class EventModal implements IEventModal {
                                     Accept
                                 </button>
                                 <button
+                                    class="event-action-decline"
+                                    data-event-id="${event.id}"
+                                    data-peer-id="${friendReqEvent.data.remotePeerId}"
+                                    data-friend-name="${friendReqEvent.data.friendName}"
+                                    data-invite-code="${friendReqEvent.data.inviteCode}"
+                                    style="
+                                        background: #DC143C;
+                                        border: 2px solid #B22222;
+                                        color: white;
+                                        padding: 8px 16px;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        margin-right: 10px;
+                                        font-weight: bold;
+                                    ">
+                                    Decline
+                                </button>
+                                <button
                                     class="event-action-ignore"
                                     data-event-id="${event.id}"
                                     style="
@@ -252,7 +270,7 @@ export class EventModal implements IEventModal {
                                 ✅ Friend Approved
                             </div>
                             <div style="color: #F5DEB3; margin-bottom: 5px;">
-                                <strong>${friendApprEvent.data.playerName}</strong> accepted your friend request!
+                                <strong>${friendApprEvent.data.friendName}</strong> accepted your friend request!
                             </div>
                             <div style="color: #8B7355; font-size: 12px;">
                                 ${timestamp}

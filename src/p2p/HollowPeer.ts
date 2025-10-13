@@ -240,6 +240,10 @@ export class HollowPeer {
         return this.friendsManager.getAllFriends();
     }
 
+    getFriendsManager(): IFriendsManager {
+        return this.friendsManager;
+    }
+
     getQuarantined(): Set<string> {
         return new Set(this.quarantined);
     }

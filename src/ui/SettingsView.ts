@@ -105,6 +105,13 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
             const profileService = getProfileService();
             const currentProfile = profileService.getCurrentProfile();
 
+            // Load friends from HollowPeer if available, otherwise use settingsData
+            let friendsArray: IFriend[] = this.settingsData.friends;
+            if (this.hollowPeer) {
+                const friendsMap = this.hollowPeer.getAllFriends();
+                friendsArray = Array.from(friendsMap.values());
+            }
+
             const templateData = {
                 containerClass: this.config.containerClass,
                 titleClass: this.config.titleClass,
@@ -116,7 +123,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 peerId: this.settingsData.peerId,
                 peerCount: this.hollowPeer ? this.hollowPeer.getConnectedPeerCount() : 0,
                 privateNotes: this.settingsData.privateNotes,
-                friends: this.settingsData.friends,
+                friends: friendsArray,
                 hasAudioManager: !!this.audioManager,
                 profileName: `{${currentProfile.name}}`,
                 showProfileName: currentProfile.name !== 'Default'
@@ -272,6 +279,10 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         if (this.playerNameInput) {
             this.playerNameInput.addEventListener('blur', () => {
                 this.saveSettings();
+                // Sync player name to HollowPeer nickname
+                if (this.hollowPeer && this.playerNameInput) {
+                    this.hollowPeer.setNickname(this.playerNameInput.value.trim());
+                }
             });
         }
         // Private notes are auto-saved via Milkdown onChange callback
@@ -407,6 +418,161 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
             if (acceptModal) acceptModal.style.display = 'none';
             if (acceptedInvitationInput) acceptedInvitationInput.value = '';
         });
+
+        // Friend card expand/collapse handlers
+        this.setupFriendCardHandlers();
+    }
+
+    private setupFriendCardHandlers(): void {
+        if (!this.container) return;
+
+        const friendsList = this.container.querySelector('#friends-list');
+        if (!friendsList) return;
+
+        // Use event delegation for friend card interactions
+        friendsList.addEventListener('click', async (e: Event) => {
+            const target = e.target as HTMLElement;
+
+            // Handle clicking on collapsed card to expand
+            const collapsedCard = target.closest('.friend-card-collapsed');
+            if (collapsedCard && !target.classList.contains('friend-kill-btn')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const friendCard = collapsedCard.closest('.friend-card') as HTMLElement;
+                if (friendCard) {
+                    this.expandFriendCard(friendCard);
+                }
+                return;
+            }
+
+            // Handle clicking on header to collapse (except collapse button)
+            const cardHeader = target.closest('.friend-card-header');
+            if (cardHeader && !target.classList.contains('friend-collapse-btn')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const friendCard = cardHeader.closest('.friend-card') as HTMLElement;
+                if (friendCard) {
+                    this.collapseFriendCard(friendCard);
+                }
+                return;
+            }
+
+            // Handle collapse button
+            if (target.classList.contains('friend-collapse-btn')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const friendCard = target.closest('.friend-card') as HTMLElement;
+                if (friendCard) {
+                    this.collapseFriendCard(friendCard);
+                }
+                return;
+            }
+
+            // Handle kill button (quick remove)
+            if (target.classList.contains('friend-kill-btn')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const peerId = target.getAttribute('data-friend-id');
+                if (peerId && this.hollowPeer) {
+                    if (confirm('Remove this friend?')) {
+                        this.hollowPeer.removeFriend(peerId);
+                        this.logService.log(`Removed friend: ${peerId}`);
+                        // Re-render to update the list
+                        if (this.container) {
+                            this.renderSettings(this.container);
+                        }
+                    }
+                }
+                return;
+            }
+
+            // Handle remove button in expanded state
+            if (target.classList.contains('remove-friend-btn')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const peerId = target.getAttribute('data-friend-id');
+                if (peerId && this.hollowPeer) {
+                    if (confirm('Remove this friend?')) {
+                        this.hollowPeer.removeFriend(peerId);
+                        this.logService.log(`Removed friend: ${peerId}`);
+                        // Re-render to update the list
+                        if (this.container) {
+                            this.renderSettings(this.container);
+                        }
+                    }
+                }
+                return;
+            }
+        });
+
+        // Handle friend name input changes (blur event for auto-save)
+        friendsList.addEventListener('blur', (e: Event) => {
+            const target = e.target as HTMLElement;
+            if (target.classList.contains('friend-name-input')) {
+                const input = target as HTMLInputElement;
+                const peerId = input.getAttribute('data-friend-id');
+                const newName = input.value.trim();
+
+                if (peerId && newName && this.hollowPeer) {
+                    // Update friend name in FriendsManager
+                    const friendsManager = this.hollowPeer.getFriendsManager();
+                    const friend = friendsManager.getAllFriends().get(peerId);
+                    if (friend) {
+                        friend.playerName = newName;
+                        friendsManager.updateFriend(peerId, friend);
+                        this.logService.log(`Updated friend name: ${newName}`);
+                    }
+                }
+            }
+        }, true); // Use capture phase for blur events
+    }
+
+    private expandFriendCard(friendCard: HTMLElement): void {
+        const collapsedSection = friendCard.querySelector('.friend-card-collapsed') as HTMLElement;
+        const expandedSection = friendCard.querySelector('.friend-card-expanded') as HTMLElement;
+
+        if (collapsedSection && expandedSection) {
+            collapsedSection.style.display = 'none';
+            expandedSection.style.display = 'block';
+            friendCard.setAttribute('data-expanded', 'true');
+
+            // Initialize Milkdown editor for notes if not already initialized
+            const peerId = friendCard.getAttribute('data-friend-id');
+            if (peerId) {
+                this.initializeFriendNotesEditor(peerId);
+            }
+        }
+    }
+
+    private collapseFriendCard(friendCard: HTMLElement): void {
+        const collapsedSection = friendCard.querySelector('.friend-card-collapsed') as HTMLElement;
+        const expandedSection = friendCard.querySelector('.friend-card-expanded') as HTMLElement;
+
+        if (collapsedSection && expandedSection) {
+            collapsedSection.style.display = 'flex';
+            expandedSection.style.display = 'none';
+            friendCard.setAttribute('data-expanded', 'false');
+        }
+    }
+
+    private async initializeFriendNotesEditor(peerId: string): Promise<void> {
+        const notesContainer = this.container?.querySelector(`#friend-notes-${peerId}`) as HTMLElement;
+        if (!notesContainer || notesContainer.querySelector('.milkdown')) {
+            return; // Already initialized
+        }
+
+        if (!this.hollowPeer) return;
+
+        const friendsManager = this.hollowPeer.getFriendsManager();
+        const friend = friendsManager.getAllFriends().get(peerId);
+        if (!friend) return;
+
+        // Create Milkdown editor for this friend's notes
+        await MilkdownUtils.createEditor(
+            notesContainer,
+            friend.notes || '',
+            (markdown) => {
+                // Auto-save notes on change
+                friend.notes = markdown;
+                friendsManager.updateFriend(peerId, friend);
+                this.logService.log(`Updated friend notes for: ${friend.playerName}`);
+            }
+        );
     }
 
     private setupEventCardHandlers(): void {
@@ -450,6 +616,45 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                     this.logService.log(`Failed to accept friend request: ${error.message}`);
                     console.error('❌ Failed to accept friend request:', error);
                     alert(`Failed to accept friend request: ${error.message}`);
+                }
+            }
+
+            // Handle Decline button in friend request events
+            if (target.classList.contains('event-action-decline')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+
+                const peerId = target.getAttribute('data-peer-id');
+                const friendName = target.getAttribute('data-friend-name');
+                const inviteCode = target.getAttribute('data-invite-code');
+                const eventId = target.getAttribute('data-event-id');
+
+                if (!peerId || !friendName || !inviteCode) {
+                    this.logService.log('Invalid friend request event data');
+                    console.error('Missing data attributes on Decline button');
+                    return;
+                }
+
+                if (!this.hollowPeer) {
+                    this.logService.log('Failed to decline friend request: P2P not initialized');
+                    alert('P2P system not initialized');
+                    return;
+                }
+
+                try {
+                    // Call HollowPeer's approveFriendRequest method with approved: false
+                    await this.hollowPeer.approveFriendRequest(peerId, friendName, inviteCode, false);
+                    this.logService.log(`Declined friend request from ${friendName} (${peerId})`);
+                    console.log(`❌ Declined friend request from ${friendName}`);
+
+                    // Remove the event
+                    if (eventId) {
+                        const eventService = this.hollowPeer.getEventService();
+                        eventService.removeEvent(eventId);
+                    }
+                } catch (error: any) {
+                    this.logService.log(`Failed to decline friend request: ${error.message}`);
+                    console.error('❌ Failed to decline friend request:', error);
+                    alert(`Failed to decline friend request: ${error.message}`);
                 }
             }
 
@@ -559,6 +764,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     updateHollowPeer(hollowPeer: HollowPeer): void {
         this.hollowPeer = hollowPeer;
         this.updatePeerCount();
+        
+        // Re-render the settings view to display friends from HollowPeer
+        if (this.container) {
+            this.renderSettings(this.container);
+        }
     }
 
     private peerCountInterval?: number;

@@ -394,27 +394,6 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
 ### Friend Approval Tests
 **Note**: These tests require TWO tabs open simultaneously with different profiles
 
-- [ ] **Accept friend request - both peers become friends**
-  - **Setup**: Open Tab A with Profile A, open Tab B with Profile B (keep both open!)
-  - Tab A: Set player name to "Alice", create invitation
-  - Tab B: Set player name to "Bob", send friend request using invitation
-  - Tab A: Accept request from event
-  - Tab A: Verify "Bob" added to friends list
-  - Tab A: **Bug Check**: Verify friend name is "Bob" NOT "undefined" or "Anonymous"
-  - Tab A: **Bug Check**: Use test API to verify localStorage: `profileService.getItem('hollowPeerFriends')` contains Bob with correct playerName
-  - Tab A: Verify "Bob" appears in friends list on settings page
-  - Tab A: **Bug Check**: Friend card in UI must display "Bob" as the name
-  - Tab A: Verify event removed from event list
-  - Tab B: Wait for approval message (tab must be open to receive it!)
-  - Tab B: Verify friend approved event appears
-  - Tab B: **Bug Check**: Event must show "Alice" NOT "undefined" or "Anonymous"
-  - Tab B: Verify "Alice" added to friends list
-  - Tab B: **Bug Check**: Use test API to verify localStorage: `profileService.getItem('hollowPeerFriends')` contains Alice with correct playerName
-  - Tab B: Verify "Alice" appears in friends list on settings page
-  - Tab B: **Bug Check**: Friend card in UI must display "Alice" as the name
-  - Tab B: Verify peer removed from pendingFriendRequests
-  - Tab B: Verify "View Friend" button in event
-
 - [ ] **Ignore friend request - no friendship created**
   - **Setup**: Keep Tab A and Tab B open with different profiles
   - Tab A: Create invitation
@@ -433,6 +412,31 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Verify event removed
   - Tab B: Verify peer removed from pendingFriendRequests
   - Tab B: Verify no friend added
+
+- [ ] **Accept friend request - both peers become friends**
+  - **Setup**: Open Tab A with Profile A, open Tab B with Profile B (keep both open!)
+  - Tab A: Set player name to "Alice", create invitation
+  - Tab B: Set player name to "Bob", send friend request using invitation
+  - Tab A: Accept request from event
+  - Tab A: Verify "Bob" added to friends list
+  - Tab A: **Bug Check**: Verify friend name is "Bob" NOT "undefined" or "Anonymous"
+  - Tab A: **Bug Check**: Use test API to verify localStorage: `profileService.getItem('hollowPeerFriends')` contains Bob with correct playerName
+  - Tab A: **CRITICAL Bug Check**: Verify "Bob" appears in Friends List UI section IMMEDIATELY (without page refresh)
+  - Tab A: **CRITICAL Bug Check**: Friend card in UI must display "Bob" as the name RIGHT NOW in the current view
+  - Tab A: **CRITICAL Bug Check**: Scroll to Friends List section, verify Bob's friend card is visible with playerName textbox showing "Bob"
+  - Tab A: **Failure mode**: If localStorage has Bob but UI shows empty Friends List = UI rendering bug (friends not loading from HollowPeer.getAllFriends())
+  - Tab A: Verify event removed from event list
+  - Tab B: Wait for approval message (tab must be open to receive it!)
+  - Tab B: Verify friend approved event appears
+  - Tab B: **Bug Check**: Event must show "Alice" NOT "undefined" or "Anonymous"
+  - Tab B: Verify "Alice" added to friends list
+  - Tab B: **Bug Check**: Use test API to verify localStorage: `profileService.getItem('hollowPeerFriends')` contains Alice with correct playerName
+  - Tab B: **CRITICAL Bug Check**: Verify "Alice" appears in Friends List UI section IMMEDIATELY (without page refresh)
+  - Tab B: **CRITICAL Bug Check**: Friend card in UI must display "Alice" as the name RIGHT NOW in the current view
+  - Tab B: **CRITICAL Bug Check**: Scroll to Friends List section, verify Alice's friend card is visible with playerName textbox showing "Alice"
+  - Tab B: **Failure mode**: If localStorage has Alice but UI shows empty Friends List = UI rendering bug (friends not loading from HollowPeer.getAllFriends())
+  - Tab B: Verify peer removed from pendingFriendRequests
+  - Tab B: Verify "View Friend" button in event
 
 ### Quarantine Tests
 **Note**: These tests require TWO tabs open simultaneously with different profiles
@@ -545,16 +549,32 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
 
 - [ ] **Friends list UI renders from localStorage** ⚠️ BUG DETECTION
   - **Purpose**: Detect when friends are stored but UI doesn't render them
-  - **Setup**: Complete friend approval flow between Tab A and Tab B
-  - Tab A: Use test API to verify friend stored: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
-  - Tab A: Scroll to "Friends List" section in settings
-  - Tab A: **Bug Check**: Verify friend card is visible in UI (NOT empty list)
-  - Tab A: **Bug Check**: Friend card must show: playerName, peerId, notes textbox
-  - Tab B: Use test API to verify friend stored: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
-  - Tab B: Scroll to "Friends List" section in settings
-  - Tab B: **Bug Check**: Verify friend card is visible in UI (NOT empty list)
-  - Tab B: **Bug Check**: Friend card must show: playerName, peerId, notes textbox
-  - **Failure mode**: If localStorage has friend but UI shows empty list = UI rendering bug
+  - **Critical**: This test must verify BOTH immediate rendering (without refresh) AND after page refresh
+
+  - **Part 1: Immediate Rendering Test (catches SettingsView not loading from HollowPeer)**
+    - **Setup**: Complete friend approval flow between Tab A and Tab B (both tabs already on `/settings`)
+    - Tab A: Use test API to verify friend stored: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
+    - Tab A: **CRITICAL**: WITHOUT navigating away or refreshing, scroll to "Friends List" section
+    - Tab A: **Bug Check**: Verify friend card is visible in UI RIGHT NOW (NOT empty list)
+    - Tab A: **Bug Check**: Friend card must show: playerName textbox, peerId text, notes textbox
+    - Tab A: **Failure mode**: If localStorage has friend but UI shows empty list = `SettingsView.renderSettings()` not loading from `HollowPeer.getAllFriends()`
+    - Tab B: Use test API to verify friend stored: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
+    - Tab B: **CRITICAL**: WITHOUT navigating away or refreshing, scroll to "Friends List" section
+    - Tab B: **Bug Check**: Verify friend card is visible in UI RIGHT NOW (NOT empty list)
+    - Tab B: **Bug Check**: Friend card must show: playerName textbox, peerId text, notes textbox
+    - Tab B: **Failure mode**: If localStorage has friend but UI shows empty list = `SettingsView.renderSettings()` not loading from `HollowPeer.getAllFriends()`
+
+  - **Part 2: After Page Refresh Test (catches persistence/loading bugs)**
+    - Tab A: Refresh page (F5 or navigate to `/settings`)
+    - Tab A: Wait for P2P initialization to complete (peer ID appears)
+    - Tab A: Scroll to "Friends List" section
+    - Tab A: **Bug Check**: Verify friend card is visible in UI after refresh
+    - Tab A: **Bug Check**: Friend data must be correct after refresh
+    - Tab B: Refresh page (F5 or navigate to `/settings`)
+    - Tab B: Wait for P2P initialization to complete (peer ID appears)
+    - Tab B: Scroll to "Friends List" section
+    - Tab B: **Bug Check**: Verify friend card is visible in UI after refresh
+    - Tab B: **Bug Check**: Friend data must be correct after refresh
 
 - [ ] **Create invitation UI works**
   - Navigate to `/settings`

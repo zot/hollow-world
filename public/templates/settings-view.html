@@ -3,7 +3,10 @@
     <button class="{{buttonClass}} profiles-btn" id="show-profiles-btn">🎭 Profiles</button>
     <button class="{{buttonClass}} log-view-btn" id="show-log-btn">📜 Log</button>
     <div class="settings-header">
-        <h1 class="{{titleClass}}">⚙️ Settings{{#if showProfileName}} {{profileName}}{{/if}}</h1>
+        <h1 class="{{titleClass}}">⚙️ Settings</h1>
+        {{#if showProfileName}}
+        <div class="profile-subtitle">{{profileName}}</div>
+        {{/if}}
     </div>
 
     <div class="{{sectionClass}}">
@@ -27,25 +30,44 @@
     </div>
 
     <div class="{{sectionClass}}">
-        <h2>Friends List</h2>
+        <h2>Friends</h2>
         <div id="friends-list">
             {{#each friends}}
-            <div class="friend-card" data-friend-id="{{id}}">
-                <div class="friend-info">
-                    <div class="friend-field">
-                        <label>Player Name:</label>
-                        <input type="text" class="friend-name-input" data-friend-id="{{id}}" value="{{playerName}}" />
+            <div class="friend-card" data-friend-id="{{peerId}}" data-expanded="false">
+                <!-- Collapsed State (default) -->
+                <div class="friend-card-collapsed">
+                    <div class="friend-collapsed-content">
+                        <div class="friend-collapsed-name">{{playerName}}</div>
+                        <div class="friend-collapsed-peerid">{{peerId}}</div>
+                        {{#if notes}}
+                        <div class="friend-collapsed-notes">{{notes}}</div>
+                        {{/if}}
                     </div>
-                    <div class="friend-field">
-                        <label>Peer ID:</label>
-                        <span class="friend-peer-id">{{peerId}}</span>
+                    <button class="friend-kill-btn" data-friend-id="{{peerId}}" title="Remove friend">💀</button>
+                </div>
+
+                <!-- Expanded State -->
+                <div class="friend-card-expanded" style="display: none;">
+                    <div class="friend-card-header">
+                        <h3>Friend Details</h3>
+                        <button class="friend-collapse-btn" data-friend-id="{{peerId}}" title="Collapse">⬆️</button>
+                    </div>
+                    <div class="friend-expanded-content">
+                        <div class="friend-field">
+                            <label for="friend-name-{{peerId}}">Player Name:</label>
+                            <input type="text" id="friend-name-{{peerId}}" class="friend-name-input" data-friend-id="{{peerId}}" value="{{playerName}}" />
+                        </div>
+                        <div class="friend-field">
+                            <label for="friend-peerid-{{peerId}}">Peer ID:</label>
+                            <span id="friend-peerid-{{peerId}}" class="friend-peer-id">{{peerId}}</span>
+                        </div>
+                        <div class="friend-notes-section">
+                            <label for="friend-notes-{{peerId}}">Private Notes:</label>
+                            <div class="milkdown-editor" id="friend-notes-{{peerId}}"></div>
+                        </div>
+                        <button class="remove-friend-btn" data-friend-id="{{peerId}}">Remove</button>
                     </div>
                 </div>
-                <div class="friend-notes-section">
-                    <label>Private Notes:</label>
-                    <div class="milkdown-editor" id="friend-notes-{{id}}"></div>
-                </div>
-                <button class="remove-friend-btn" data-friend-id="{{id}}">Remove</button>
             </div>
             {{/each}}
         </div>
