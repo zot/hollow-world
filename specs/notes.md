@@ -1,3 +1,12 @@
+- IPFS Desktop apparently does not connect to go peer -- the browser probably won't see it if IPFS desktop can't
+  - solve go peer connectivity with IPFS desktop
+  - use IPFS peer ID to test
+- still not connecting with go peer
+
+
+- /spec don't use localhost for testing, use network address to ensure other
+ computers on the same network can access the dev servers 
+
 - p2p isn't quite working as well as it was
 
 - simplify invitations to only inviteCode-PEERID again

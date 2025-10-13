@@ -4,7 +4,7 @@ import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioC
 import { IAudioManager } from '../audio/AudioManager.js';
 import { MilkdownUtils, IMilkdownEditor } from '../utils/MilkdownUtils.js';
 import { LogService, ILogEntry } from '../services/LogService.js';
-import { HollowPeer } from '../p2p.js';
+import { HollowPeer } from '../p2p/index.js';
 import { router } from '../utils/Router.js';
 import { getProfileService } from '../services/ProfileService.js';
 import '../styles/SettingsView.css';

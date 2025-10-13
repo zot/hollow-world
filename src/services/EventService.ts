@@ -93,6 +93,30 @@ export class EventService {
         return false;
     }
 
+    removeEventsByPeerIdAndType(peerId: string, eventType: EventType): number {
+        const initialLength = this.events.length;
+        this.events = this.events.filter(e => {
+            if (e.type !== eventType) {
+                return true;
+            }
+            // Check if this event is related to the peer
+            if (e.type === 'friendRequest' && (e as IFriendRequestEvent).data.remotePeerId === peerId) {
+                return false;
+            }
+            if (e.type === 'friendApproved' && (e as IFriendApprovedEvent).data.remotePeerId === peerId) {
+                return false;
+            }
+            return true;
+        });
+
+        const removedCount = initialLength - this.events.length;
+        if (removedCount > 0) {
+            this.persistEvents();
+            this.notifyListeners();
+        }
+        return removedCount;
+    }
+
     getEvents(): IEvent[] {
         return [...this.events];
     }

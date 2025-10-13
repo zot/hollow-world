@@ -59,7 +59,9 @@
 ## Testing
 
 ### General Principles
-- tests should be in a top-level `test` directory
+- **Test organization**:
+  - **TypeScript/JavaScript**: Tests should be in a top-level `test` directory
+  - **Go**: Follow normal Go conventions (`*_test.go` files alongside code)
 - use playwright for integration tests
 - each spec should have a corresponding `.tests.md` file with specific test requirements
 - see [`specs/main.tests.md`](specs/main.tests.md) for integration test requirements

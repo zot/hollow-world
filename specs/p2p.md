@@ -1,39 +1,117 @@
-# 🌐 P2P Networking Specification
+# fill out this spec below the ----
+based on specs/p2p.md
+- preserve as much as possible from p2p.md
+- remove local server dependency
+- specify that
+  - the code is to be modeled on the p2p code on https://github.com/libp2p/universal-connectivity `js-peer/src/lib`
+  - cache the github project in specs/cache for efficient access
+  - put the p2p code in src/p2p
+  - universal-connectivity messages are just strings with content type text/plain but ours will be JSON objects with type application/json
+  - the app should initialize libp2p just like ucp2p, except it should use these bootstrap peers:
+  ```
+    peerDiscovery: [
+      bootstrap({
+        list: [
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+        ]
+      })
+    ]
+  ```
+----
 
-**Peer-to-peer API for the Hollow World game**
+# 🌐 P2P Networking Specification (Universal Connectivity)
 
-*Based on [`../CLAUDE.md`](../CLAUDE.md)*
+**Peer-to-peer API for the Hollow World game - Serverless Edition**
+
+*Based on [`../CLAUDE.md`](../CLAUDE.md) and [`libp2p/universal-connectivity`](https://github.com/libp2p/universal-connectivity)*
+
+---
+
+## ⚠️ CRITICAL: PACKAGE VERSION WARNING
+
+**DO NOT UPGRADE LIBP2P OR HELIA PACKAGES UNLESS EXPLICITLY DIRECTED BY THE USER**
+
+The current package versions are carefully selected for compatibility:
+- **helia: 5.5.1** - DO NOT UPGRADE
+- **libp2p: 2.9.0** - DO NOT UPGRADE
+- **All @libp2p/* packages** - DO NOT UPGRADE
+- **All @chainsafe/libp2p-* packages** - DO NOT UPGRADE
+
+**Why this matters**:
+- These packages have complex version interdependencies
+- Upgrading one package can break compatibility with others
+- The current versions are known to work together
+- Breaking changes in newer versions may require extensive refactoring
+
+**If user requests package upgrades**:
+1. Ask for explicit confirmation
+2. Upgrade ALL related packages together
+3. Test thoroughly after upgrading
+4. Be prepared to rollback if issues occur
+
+**This warning applies to**:
+- `npm install` with version bumps
+- `npm update` commands
+- Manual package.json edits
+- Dependency resolution during installs
+
+---
 
 ## 🎯 Core Requirements
 - Use **SOLID principles** in all implementations
 - Create comprehensive **unit tests** for all components
 - Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
-- p2p transports are functions; to print them, use the raw objects as separate args
+- Model P2P code on the reference implementation from `https://github.com/libp2p/universal-connectivity` (`js-peer/src/lib`)
+- Cache the GitHub project in `specs/cache/universal-connectivity` for efficient access
+- Put the P2P code in `src/p2p/`
+- P2P transports are functions; to print them, use the raw objects as separate args
+
+## 📚 Reference Implementation
+- **Source repository**: https://github.com/libp2p/universal-connectivity
+- **Reference path**: `js-peer/src/lib`
+- **Local cache**: `specs/cache/universal-connectivity/` (clone for offline reference)
+- **Key differences from reference**:
+  - Universal-connectivity uses plain text messages (`text/plain`)
+  - Hollow World uses JSON object messages (`application/json`)
+  - Universal-connectivity is a demo; we build a production P2P game protocol
 
 ## 🌐 Architecture Overview
 
-**Standalone Peer-to-Peer Web Application**
-- **Primary architecture**: Fully decentralized, browser-to-browser connectivity
-- **No server dependency**: Does NOT normally rely on servers for any purpose
-- **Public infrastructure**: Uses IPFS/libp2p bootstrap nodes and public relays
-- **Serverless by design**: All P2P functionality works without custom server infrastructure
+**Fully Decentralized Peer-to-Peer Web Application**
+- **Primary architecture**: Browser-to-browser connectivity without custom servers
+- **No server dependency**: Does NOT rely on custom servers for ANY purpose
+- **Public infrastructure only**: Uses public IPFS/libp2p bootstrap nodes and relays
+- **Universal connectivity**: Follows libp2p universal-connectivity patterns for maximum reach
+- **Serverless by design**: All P2P functionality works without custom infrastructure
 
-**Go Servers - Optional Infrastructure for Edge Cases**
-- **Purpose**: ONLY to enable same-firewall peer communication (browsers struggle with this)
-- **Use case**: When multiple users are co-located behind the same NAT/firewall
-- **Testing focus**: Primary purpose is development/testing of P2P features
-- **Informal production use**: CAN be used opportunistically when users are co-located, but with informal expectations
-- **Not required**: Most production users will NOT be behind the same firewall and will use public IPFS/libp2p infrastructure
-
-**Key Principle**: The app is fundamentally serverless/peer-to-peer. Go servers are "nice to have" infrastructure for edge cases, not core architecture.
+**Key Principle**: The app is fundamentally serverless/peer-to-peer. Uses public IPFS/libp2p infrastructure exclusively.
 
 ## 🔧 Technology Stack
 - **LibP2P** - Decentralized networking protocol
   - **Direct streams** - For peer-to-peer messaging (protocol: `/hollow-world/1.0.0`)
+    - Stream handler registered AFTER libp2p initialization
   - **WebRTC** - For direct browser-to-browser connections
+  - **WebTransport** - For QUIC-based browser connections
+  - **WebSockets** - For connecting to public relays
   - **Circuit relay** - Fallback when direct connection fails
-  - ~~gossipsub~~ - NOT used (reserved for future broadcast features)
-- **Helia** - IPFS implementation for peer discovery and data storage
+- **Public Bootstrap Nodes** - For peer discovery
+  - Uses standard libp2p/IPFS bootstrap nodes
+  - No custom bootstrap infrastructure required
+- **Public Circuit Relays** - For NAT traversal
+  - Uses public libp2p relay servers
+  - No custom relay infrastructure required
+
+### Universal Connectivity Pattern (ucp2p)
+Follow the libp2p universal-connectivity approach for maximum peer reachability:
+
+1. **Multiple transports**: WebRTC, WebTransport, WebSockets
+2. **Public relays**: Use community-provided circuit relays
+3. **DHT for discovery**: Leverage Kademlia DHT for peer finding
+4. **AutoNAT**: Automatic NAT detection and traversal
+5. **Hole punching**: DCUtR (Direct Connection Upgrade through Relay)
 
 ### HollowPeer class holds the peer-to-peer code
 
@@ -67,8 +145,6 @@
 #### Persisted Fields
 - **`privateKey`**: Stores the LibP2P peer ID's private key
 - **`friends`**: Map of peerIds → friend objects
-- **`stunServers`**: Array of STUN server objects (with url and responseTime)
-  - initialized from assets/validated-public-servers.json
 
 #### Non-Persisted Fields
 - **`quarantined`**: Set of untrusted peerIDs
@@ -78,10 +154,181 @@
 
 ### 🔄 Session Restoration
 - **Startup process**: Reload HollowPeer object and restore peer ID from persisted private key
-- **LibP2P initialization**: Use `createLibp2p` with `libp2pInit` object
-- **IPFS**: use Helia to connect to IPFS with current peerID
-  - connect to public bootstrap IPFS nodes
-- **Private key supply**: Include persisted private key as `privateKey` property
+- **LibP2P initialization**: Create libp2p node following exact ucp2p pattern from `js-peer/src/lib/libp2p.ts`
+
+  **Configuration (following ucp2p exactly)**:
+  ```typescript
+  // 1. Create delegated routing client (for discovering relay multiaddrs)
+  const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
+
+  // 2. Get relay listen addresses from bootstrap peers via delegated routing
+  const relayListenAddrs = await getRelayListenAddrs(delegatedClient)
+
+  // 3. Create libp2p node
+  const libp2p = await createLibp2p({
+    privateKey: privateKey,  // Persisted private key
+    addresses: {
+      listen: [
+        '/webrtc',           // Listen for WebRTC connections
+        ...relayListenAddrs  // Listen via discovered circuit relays
+      ]
+    },
+    transports: [
+      webTransport(),        // QUIC-based browser transport
+      webSockets(),          // For connecting to relays (wss://)
+      webRTC(),              // Browser-to-browser direct P2P
+      webRTCDirect(),        // For peers supporting WebRTC-direct (e.g. Rust peers)
+      circuitRelayTransport() // Required to create relay reservations for hole punching
+    ],
+    connectionEncrypters: [noise()],
+    streamMuxers: [yamux()],
+    connectionGater: {
+      denyDialMultiaddr: async () => false  // Allow all connections
+    },
+    peerDiscovery: [
+      pubsubPeerDiscovery({
+        interval: PEER_DISCOVERY_INTERVAL,  // e.g. 10_000 (10 seconds)
+        topics: [PUBSUB_PEER_DISCOVERY_TOPIC],  // 'universal-connectivity-browser-peer-discovery'
+        listenOnly: false
+      })
+    ],
+    services: {
+      pubsub: gossipsub({
+        allowPublishToZeroTopicPeers: true,
+        msgIdFn: msgIdFnStrictNoSign,  // Same as ucp2p for message deduplication
+        ignoreDuplicatePublishError: true,
+        runOnTransientConnection: true  // CRITICAL: Allow gossipsub over circuit relay connections
+      }),
+      // Delegated routing helps discover ephemeral multiaddrs of bootstrap peers
+      // Uses public delegated routing endpoint: https://delegated-ipfs.dev
+      delegatedRouting: () => delegatedClient,
+      identify: identify(),
+      directMessage: directMessage(),  // Custom protocol for direct messaging
+      ping: ping()  // Optional: for connectivity testing
+    }
+  })
+
+  // 4. Subscribe to pubsub peer discovery topic
+  libp2p.services.pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TOPIC)
+
+  // 5. Dial discovered peers (filtering for WebRTC multiaddrs)
+  libp2p.addEventListener('peer:discovery', (event) => {
+    const { id, multiaddrs } = event.detail
+
+    if (libp2p.getConnections(id)?.length > 0) {
+      return  // Already connected
+    }
+
+    // Filter and dial WebRTC multiaddrs one at a time
+    dialWebRTCMaddrs(libp2p, multiaddrs)
+  })
+  ```
+
+  **Helper function (from ucp2p)**:
+  ```typescript
+  // Resolves bootstrap PeerIDs to dialable relay listen addresses
+  async function getRelayListenAddrs(client: DelegatedRoutingV1HttpApiClient): Promise<string[]> {
+    const peers = await Promise.all(
+      BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId))))
+    )
+
+    const relayListenAddrs = []
+    for (const p of peers) {
+      if (p && p.Addrs.length > 0) {
+        for (const maddr of p.Addrs) {
+          const protos = maddr.protoNames()
+          // Filter for secure WebSockets (wss) with TLS
+          if (protos.includes('tls') && protos.includes('ws')) {
+            if (maddr.nodeAddress().address === '127.0.0.1') continue  // Skip loopback
+            relayListenAddrs.push(`${maddr.toString()}/p2p/${p.ID.toString()}/p2p-circuit`)
+          }
+        }
+      }
+    }
+    return relayListenAddrs
+  }
+
+  // Dials WebRTC multiaddrs one at a time to avoid multiple connections to same peer
+  async function dialWebRTCMaddrs(libp2p: Libp2p, multiaddrs: Multiaddr[]): Promise<void> {
+    const webRTCMadrs = multiaddrs.filter((maddr) => maddr.protoNames().includes('webrtc'))
+
+    for (const addr of webRTCMadrs) {
+      try {
+        await libp2p.dial(addr)
+        return  // Success - stop trying other addresses
+      } catch (error) {
+        // Try next address
+      }
+    }
+  }
+
+  // Message ID function for gossipsub (prevents duplicate messages)
+  async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
+    const enc = new TextEncoder()
+    const signedMessage = msg as SignedMessage
+    const encodedSeqNum = enc.encode(signedMessage.sequenceNumber.toString())
+    return await sha256.encode(encodedSeqNum)
+  }
+  ```
+
+  **Hollow World Constants** (adapt from ucp2p's constants.ts):
+  ```typescript
+  // src/p2p/constants.ts
+
+  // CURRENT: Using universal-connectivity topic for peer discovery to benefit from existing bootstrap subscribers
+  // This allows discovery between HollowWorld instances and interoperability with other libp2p browser apps
+  export const PUBSUB_PEER_DISCOVERY_TOPIC = 'universal-connectivity-browser-peer-discovery'
+
+  // FUTURE: Custom topic (currently fails because relay doesn't subscribe, creating chicken-and-egg problem)
+  // export const PUBSUB_PEER_DISCOVERY_TOPIC = 'hollow-world-browser-peer-discovery'
+
+  export const DIRECT_MESSAGE_PROTOCOL = '/hollow-world/dm/1.0.0'
+  export const PEER_DISCOVERY_INTERVAL = 10_000  // 10 seconds
+
+  // Bootstrap peers: Public IPFS bootstrap nodes (peer IDs only)
+  // NOTE: These are used by getRelayListenAddrs() to discover relay addresses via delegated routing
+  // They are NOT relay peer IDs themselves - delegated routing resolves them to relay listen addresses
+
+  // CURRENT: Using only ucp2p bootstrap peer to avoid initialization hangs
+  // IMPORTANT: Using too many relay addresses (100+) causes createLibp2p() to hang
+  export const BOOTSTRAP_PEER_IDS = [
+    '12D3KooWFhXabKDwALpzqMbto94sB7rvmZ6M28hs9Y9xSopDKwQr'  // Universal-connectivity bootstrap peer (ucp2p)
+  ]
+
+  // FUTURE: Public IPFS bootstrap nodes (currently commented out to avoid initialization issues)
+  // export const BOOTSTRAP_PEER_IDS = [
+  //   'QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+  //   'QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+  //   'QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+  //   'QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+  // ]
+  ```
+
+  **How Bootstrap Peers Work (ucp2p pattern)**:
+  - ucp2p uses custom rust/go bootstrap nodes with **ephemeral multiaddrs**
+  - Hollow World CURRENTLY uses the **ucp2p bootstrap node** (FUTURE: may use public IPFS bootstrap nodes)
+  - In both cases, `getRelayListenAddrs()`:
+    1. Uses delegated routing to query each peer ID
+    2. Gets current multiaddrs for that peer (which may change over time)
+    3. Filters for WebSocket addresses with TLS (`wss://`)
+    4. Converts them to circuit relay v2 listen addresses (`/p2p/{peerId}/p2p-circuit`)
+  - These relay listen addresses are then added to the libp2p `listen` array
+  - This allows the node to be dialable via those relays
+
+  **Key Differences from Old Approach**:
+  - ❌ **NO bootstrap() in peerDiscovery** - ucp2p uses delegated routing instead
+  - ✅ **Delegated routing service** - Discovers relay multiaddrs from bootstrap peers
+  - ✅ **Dynamic relay listen addresses** - Resolved at runtime, not hardcoded
+  - ✅ **WebRTC multiaddr filtering** - Only dial WebRTC addresses for browser-to-browser
+  - ✅ **Sequential dialing** - Try one multiaddr at a time to avoid duplicate connections
+
+  **Critical Requirements**:
+  - **MUST use delegated routing** - This is how ucp2p discovers relays
+  - **MUST get relay listen addresses** - Call `getRelayListenAddrs()` before creating libp2p
+  - **MUST filter WebRTC multiaddrs** - Use `dialWebRTCMaddrs()` in peer:discovery handler
+  - **MUST use same msgIdFn** - Ensures message deduplication across network
+
+- **Reference implementation**: Follow `libp2p/universal-connectivity` `js-peer/src/lib/libp2p.ts` EXACTLY
 - if there are pendingFriendRequests, send friendRequest messages for them
 - if there are invites, send approveFriendRequest messages for them
 
@@ -89,56 +336,122 @@
 
 ### LibP2P Stream-Based Communication
 
-**Transport Mechanism**: Direct LibP2P streams (NOT GossipSub pubsub)
-- **Protocol identifier**: `/hollow-world/1.0.0`
-- **Communication pattern**: Unicast peer-to-peer messaging
+**Transport Mechanism**: Direct LibP2P streams (custom libp2p service) and GossipSub pubsub
+- **Protocol identifier**: `/hollow-world/dm/1.0.0` (direct messaging)
+- **Communication pattern**: Unicast peer-to-peer messaging with request-response
 - **Stream type**: Bidirectional streams for request-response patterns
+- **Message format**: JSON objects (NOT plain text like ucp2p demo)
+- **Implementation pattern**: Custom libp2p service (following ucp2p's `DirectMessage` service)
 
-### How Messages Are Sent
+### How ucp2p Does It
+
+**ucp2p uses a custom libp2p service** (`DirectMessage`) that:
+1. Registers as a libp2p service with protocol `/universal-connectivity/dm/1.0.0`
+2. Uses protobuf streaming (`pbStream`) for message serialization
+3. Implements request-response pattern (every send gets a response)
+4. Uses `connection.newStream()` instead of `dialProtocol()`
+5. Opens/reuses connections via `connectionManager.openConnection()`
+6. Dispatches events for received messages
+7. Includes metadata (timestamp, client version) in all messages
+
+### How Messages Are Sent (Following ucp2p Pattern)
 
 ```typescript
-// Sending a message to a specific peer
-async sendMessage(targetPeerId: string, message: P2PMessage): Promise<void> {
-  // 1. Get connection to target peer
-  const connection = await this.libp2p.dial(targetPeerId);
+// Hollow World adaptation of ucp2p's send method
+async sendMessage(peerId: string, message: P2PMessage): Promise<void> {
+  // 1. Open or reuse connection to target peer
+  const connection = await this.libp2p.connectionManager.openConnection(
+    peerId,
+    { signal: AbortSignal.timeout(5000) }
+  );
 
-  // 2. Open a stream using our protocol
-  const stream = await connection.newStream('/hollow-world/1.0.0');
+  // 2. Create new stream for this message
+  const stream = await connection.newStream('/hollow-world/dm/1.0.0', {
+    negotiateFully: false  // Single protocol, skip full negotiation
+  });
 
   // 3. Serialize message to JSON
   const messageJson = JSON.stringify(message);
-  const messageBytes = new TextEncoder().encode(messageJson + '\n');
+  const messageBytes = new TextEncoder().encode(messageJson);
 
-  // 4. Send message bytes
-  await stream.sink([messageBytes]);
+  try {
+    // 4. Send message with length prefix
+    await pipe(
+      [messageBytes],
+      lp.encode,
+      stream
+    );
 
-  // 5. Close stream (for one-way messages)
-  await stream.close();
+    // 5. Wait for acknowledgment response (optional for reliability)
+    const ackData = await pipe(
+      stream,
+      lp.decode,
+      async (source: any) => {
+        const chunks: Uint8Array[] = [];
+        for await (const chunk of source) {
+          chunks.push(chunk.subarray());
+        }
+        return chunks;
+      }
+    );
+
+    console.log(`✅ Message sent and acknowledged`);
+  } finally {
+    await stream.close({ signal: AbortSignal.timeout(5000) });
+  }
 }
 ```
 
-### How Messages Are Received
+### How Messages Are Received (Following ucp2p Pattern)
 
 ```typescript
-// Register stream handler on initialization
-async initialize(): Promise<void> {
-  await this.libp2p.handle('/hollow-world/1.0.0', async ({ stream, connection }) => {
-    // 1. Read incoming message bytes
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of stream.source) {
-      chunks.push(chunk.subarray());
+// Register stream handler as part of service initialization
+// In afterStart() method of custom service
+async afterStart(): Promise<void> {
+  await this.components.registrar.handle(
+    '/hollow-world/dm/1.0.0',
+    async ({ stream, connection }) => {
+      await this.receive(stream, connection);
     }
+  );
+}
+
+// Receive method (adapted from ucp2p)
+async receive(stream: Stream, connection: Connection): Promise<void> {
+  try {
+    // 1. Read incoming message with length prefix
+    const data = await pipe(
+      stream,
+      lp.decode,
+      async (source: any) => {
+        const chunks: Uint8Array[] = [];
+        for await (const chunk of source) {
+          chunks.push(chunk.subarray());
+        }
+        return chunks;
+      }
+    );
 
     // 2. Decode message
-    const messageText = new TextDecoder().decode(concatenate(chunks));
-    const message: P2PMessage = JSON.parse(messageText.trim());
+    if (data.length > 0) {
+      const messageText = new TextDecoder().decode(data[0]);
+      const message: P2PMessage = JSON.parse(messageText);
 
-    // 3. Get sender's peer ID
-    const senderPeerId = connection.remotePeer.toString();
+      // 3. Send acknowledgment response
+      const ackBytes = new TextEncoder().encode(JSON.stringify({ status: 'OK' }));
+      await pipe([ackBytes], lp.encode, stream);
 
-    // 4. Process message based on method
-    await this.handleIncomingMessage(senderPeerId, message);
-  });
+      // 4. Get sender's peer ID
+      const senderPeerId = connection.remotePeer.toString();
+
+      // 5. Dispatch event or call handler
+      this.dispatchEvent(new CustomEvent('message', {
+        detail: { message, peerId: senderPeerId, connection }
+      }));
+    }
+  } finally {
+    await stream.close({ signal: AbortSignal.timeout(5000) });
+  }
 }
 ```
 
@@ -151,7 +464,7 @@ async initialize(): Promise<void> {
 
 **Connection Requirements**:
 - Peer must be connected (or connection will be established automatically)
-- If connection fails, error is thrown to caller
+- If direct connection fails, circuit relay fallback is attempted
 - No message queuing - failed sends must be retried by caller
 
 **Error Handling**:
@@ -161,28 +474,53 @@ async initialize(): Promise<void> {
 - **Invalid JSON**: Receiver logs error and ignores message
 - **Unknown method**: Receiver logs error and ignores message
 
-### Implementation Guidance
+### Implementation Guidance (Following ucp2p)
 
-**Stream Management**:
-- One stream per message for simplicity
-- Streams are short-lived (open, send, close)
-- No persistent streams (avoids state management complexity)
+**Custom LibP2P Service**:
+- Create a custom service class extending `TypedEventEmitter<Events>` and implementing `Startable`
+- Register service with libp2p in the `services` config object
+- Implement `start()`, `afterStart()`, and `stop()` lifecycle methods
+- Use `registrar.register()` for topology management
+- Use `registrar.handle()` for stream handling
+
+**Stream Management** (Following ucp2p):
+- One stream per message (short-lived)
+- Use `connection.newStream()` not `dialProtocol()`
+- Set `negotiateFully: false` for single protocol
+- Always close streams in `finally` blocks
+- Use `AbortSignal.timeout()` for timeouts (5 seconds)
+- Abort streams on errors with `stream.abort(error)`
+
+**Connection Management** (Following ucp2p):
+- Use `connectionManager.openConnection()` to open/reuse connections
+- Connection manager handles connection pooling automatically
+- Track connected peers via topology `onConnect`/`onDisconnect` callbacks
+- Don't create multiple connections to same peer
 
 **Message Framing**:
-- Messages are newline-delimited JSON (`\n` separator)
-- Allows multiple messages on one stream (if needed in future)
+- Messages are length-prefixed using `it-length-prefixed` (`lp.encode`/`lp.decode`)
+- JSON serialization for all messages (NOT protobuf like ucp2p)
 - TextEncoder/TextDecoder for UTF-8 encoding
+- Include metadata: timestamp, message type, etc.
 
-**Concurrency**:
-- Multiple messages can be sent in parallel
-- Each message gets its own stream
-- LibP2P handles stream multiplexing
-
-**Request-Response Pattern**:
-- Request includes `messageId` for correlation
-- Response echoes `messageId` back
-- Response handler registered in `pendingResponses` map
+**Request-Response Pattern** (Following ucp2p):
+- Every message gets an acknowledgment response
+- Sender waits for ack before closing stream
+- Receiver sends ack after processing message
+- Request includes `messageId` for application-level correlation
 - See "Request-Response Messages" section for details
+
+**Event Dispatching** (Following ucp2p):
+- Dispatch events for received messages
+- Use `CustomEvent` with typed detail object
+- Allows multiple listeners for same message type
+- Clean separation between transport and application logic
+
+**Error Handling** (Following ucp2p):
+- Always use try/finally for stream cleanup
+- Abort streams on error
+- Use AbortSignal timeouts to prevent hangs
+- Log errors but don't crash on single message failure
 
 ## 👥 Friends
 
@@ -207,14 +545,13 @@ interface Friend {
 
 **`playerName`** (required):
 - Display name shown in UI
-- Maximum length: 50 characters
-- Minimum length: 1 character
+- No length limits
 - Can be edited by user after friend is added
 - Validation: Non-empty, trimmed string
 
 **`notes`** (required, can be empty string):
 - Private notes about the friend
-- Maximum length: 500 characters
+- No length limits
 - Never transmitted in P2P messages
 - For user's reference only
 - Validation: Any string (including empty)
@@ -254,191 +591,32 @@ this.friends = new Map(Object.entries(friendsObject));
 
 ### Peer connections
 don't log peer connections since the peer count display handles that.
+
 #### if a peer connects and its peerId is not in the friends map, add its peerId to the quarantined set
+
 #### when connecting to another peer that has the same external IP as this one, use the internal IP instead
-#### STUN servers
-- copy validated-public-servers.json to public/assets
-  - just the STUN list
-    - URL and responseTime only
 
 ## 🏗️ Deployment Architecture
 
 **Production Deployment**
 - **Browser-only application**: Served as static files (HTML, CSS, JS)
-- **P2P connectivity**: Direct browser-to-browser via WebRTC and IPFS/libp2p
-- **Bootstrap nodes**: Uses public IPFS bootstrap nodes for peer discovery
-- **Circuit relays**: Uses public libp2p relays when direct connection fails
+- **P2P connectivity**: Direct browser-to-browser via WebRTC and public libp2p infrastructure
+- **Bootstrap nodes**: Uses public IPFS bootstrap nodes
+- **Circuit relays**: Uses public libp2p relays
 - **No custom servers required**: App functions fully without dedicated infrastructure
+- **Static hosting**: Can be deployed to any static file host (GitHub Pages, Netlify, S3, etc.)
 
 **Development Environment**
-1. **Application Server** (Vite dev server)
-   - Serves the web application on port 3000 (HTTPS)
-   - No P2P infrastructure dependencies
-   - Lightweight and focused on app delivery
+- **Application Server** (Vite dev server)
+  - Serves the web application on port 3000 (HTTPS)
+  - No P2P infrastructure dependencies
+  - Lightweight and focused on app delivery
 
-2. **Optional P2P Infrastructure Servers** (Go-based)
-   - Independent processes started separately for testing
-   - Handle TURN/STUN, circuit relay, and WebRTC signaling
-   - Enable same-firewall peer testing (browser limitation)
-   - Use Go's native WebTransport support for better browser compatibility
-
-### 🧪 Local Development Servers
-
-**Go-based P2P infrastructure** - Separate servers started independently from Vite
-
-#### Why Go?
-- **WebTransport support**: Go's `go-libp2p` has native server-side WebTransport support
-- **Certificate handling**: Self-signed certificates work with manual browser approval (see Certificate Setup below)
-- **Performance**: More efficient than Node.js for P2P relay operations
-- **Simplicity**: Single binary with no Node.js dependency conflicts
-
-#### Servers to Implement
-
-1. **TURN/STUN Server** (`test/go-p2p-servers/turn-stun/`)
-   - Port: `3478` (binds to all interfaces)
-   - Protocol: UDP/TCP
-   - Credentials: `testuser` / `testpass`
-   - Provides NAT traversal for WebRTC connections
-   - **Access**: Server provides network address to browser at runtime
-     - Browser may be using `localhost` but needs actual network IP for P2P
-     - Example: Server at `192.168.1.103` → browser receives `stun:192.168.1.103:3478`
-   - **Implementation**: Use `pion/turn` package
-
-2. **LibP2P Circuit Relay** (`test/go-p2p-servers/relay/`)
-   - Port: `9090` (binds to all interfaces)
-   - Transport: **WebTransport** (QUIC-based, uses self-signed certificates)
-   - Peer ID: Generated fresh on each server startup (new private key each run)
-   - Fallback for direct connection failures
-   - **Access**: Server provides network address and peer ID to browser at runtime
-     - Relay peer ID and network address exposed via HTTP endpoint on port 9092
-     - **Multiaddr format**: `/ip4/${networkAddress}/udp/9090/quic-v1/webtransport/p2p/${relayPeerId}`
-   - **Implementation**: Use `libp2p/go-libp2p` with WebTransport transport
-   - **WebTransport advantages**:
-     - QUIC provides better performance than WebSockets
-     - Native support in both browser and Go libp2p
-     - Works with self-signed certificates after manual browser approval (see Certificate Setup)
-
-3. **WebRTC Signaling Server** (`test/go-p2p-servers/signaling/`)
-   - Port: `9091` (binds to all interfaces)
-   - Transport: WebSocket (WSS with self-signed certificate)
-   - Exchanges SDP offers/answers between browser peers
-   - **Access**: `wss://${networkAddress}:9091`
-   - **Implementation**: Standard WebSocket server with message forwarding
-   - **Note**: Uses self-signed certificate; requires manual browser approval on first connection (see Certificate Setup)
-
-#### Certificate Setup for Dev Servers
-
-**Development servers use self-signed certificates** that must be manually approved by the browser.
-
-**Setup Process**:
-1. **Start the dev servers** (TURN/STUN, relay, signaling)
-2. **Visit the web app using network IP** (not localhost) via HTTPS
-   - Example: `https://192.168.1.103:3000`
-   - Browser will show a certificate warning
-3. **Manually approve the self-signed certificate**
-   - Click "Advanced" → "Proceed to site" (or equivalent in your browser)
-   - This tells the browser to trust connections to this IP address
-4. **Browser remembers approval** for this IP/certificate combination
-5. **All subsequent connections** (WebSocket/WebTransport) to dev servers on the same IP will be trusted
-
-**Key Points**:
-- **Network IP required**: Must use actual network IP (e.g., `192.168.1.103`), not `localhost`
-  - Browser treats each IP as a separate trust decision
-  - Approving `localhost` doesn't approve `192.168.1.x`
-- **One-time setup**: Browser remembers approval until certificate changes or expires
-- **Development only**: Production deployments use public IPFS/libp2p infrastructure (no custom servers needed)
-- **WebTransport benefit**: Works with self-signed certs after manual approval (unlike some other protocols)
-
-**Testing Across LAN**:
-- When testing between multiple devices on same LAN, each device must approve the certificate
-- Each browser instance needs to visit `https://${networkIP}:3000` and approve the cert
-- After approval, WebSocket and WebTransport connections to dev servers will work
-
-#### Configuration Endpoint
-- **HTTP endpoint on relay server**: Port 9092
-  - `GET /config` - Returns JSON with relay peer ID and network addresses
-  - Browser fetches this on startup to get current relay configuration
-  - Example response:
-    ```json
-    {
-      "relayPeerId": "12D3KooW...",
-      "networkAddress": "192.168.1.103",
-      "relayMultiaddr": "/ip4/192.168.1.103/udp/9090/quic-v1/webtransport/p2p/12D3KooW..."
-    }
-    ```
-
-#### Dynamic Configuration (Testing/Same-Firewall Use Only)
-- **DO NOT hard-code IP addresses** for local servers
-- **DO NOT hard-code relay peer ID** - it's generated automatically and provided at runtime
-- **DO NOT use `window.location.hostname`** - browser may be using `localhost` but P2P needs network IP
-- Server determines its own network address and provides it to browser at runtime
-- Relay peer ID and network addresses fetched from configuration endpoint at `http://localhost:9092/config`
-- Servers bind to all network interfaces (0.0.0.0)
-- Allows testing across LAN devices without code changes
-
-**Configuration Endpoint Discovery**:
-- Same machine: `http://localhost:9092/config` works directly
-- Same LAN: Developer must manually configure endpoint URL (e.g., `http://192.168.1.103:9092/config`)
-- Browser needs to know where Go servers are running
-- This is acceptable for testing and same-firewall edge cases
-- Not needed for typical production use (different firewalls)
-
-#### Starting Servers
-```bash
-# Start all P2P infrastructure servers
-cd test/go-p2p-servers
-./start-all.sh  # Starts TURN/STUN, relay, and signaling servers
-
-# Or start individually
-cd turn-stun && go run main.go
-cd relay && go run main.go
-cd signaling && go run main.go
-```
-
-### 🧪 Testing Infrastructure Requirements
-
-**Go Servers: Optional Infrastructure for Edge Cases**
-
-**Primary Purpose**: Testing and development of P2P features
-- Test P2P connectivity between browser instances on the same machine
-- Test P2P connectivity between devices on the same LAN
-- Validate circuit relay fallback mechanisms
-- Debug WebRTC signaling issues
-- Enable controlled testing without internet dependency
-
-**Secondary Purpose**: Same-firewall production use (informal)
-- When multiple users are co-located behind the same NAT/firewall
-- Browsers struggle with same-firewall peer discovery
-- Can use test servers opportunistically, but with informal expectations
-- This is an edge case, not the primary production scenario
-
-**When to Use**:
-- Running integration tests with Playwright
-- Testing multi-peer interactions locally or on same LAN
-- Developing P2P features that require peer-to-peer messaging
-- Verifying connection establishment flows
-- Co-located users who want to connect (production edge case)
-
-**Typical Production Scenario** (No Go Servers Needed):
-- Users are on different networks/firewalls
-- Uses public IPFS bootstrap nodes and relays
-- WebRTC direct connections or public circuit relays
-- DHT-based peer discovery
-- No custom server infrastructure required
-
-#### Migration from Node.js
-**Deprecated servers** (to be removed):
-- `test/local-relay-server.js` - Node.js relay (WSS only, no WebTransport)
-- `test/local-turn-server.js` - Node.js TURN server
-- `vite.config.ts` plugin `p2p-test-servers` - Vite-integrated server startup
-
-**Benefits of Go migration**:
-- ✅ WebTransport support (works with self-signed certs after manual browser approval)
-- ✅ Independent processes, no Vite dependency
-- ✅ Better performance and resource usage
-- ✅ Native libp2p support in both browser and server
-- ✅ Cleaner separation of concerns
-- ✅ Certificate approval workflow simpler (one approval enables all dev server connections)
+**No Go Servers Required**
+- Previous architecture used Go servers for local testing
+- New architecture uses only public infrastructure
+- Simpler deployment, maintenance, and testing
+- Universal connectivity approach handles NAT traversal via public relays
 
 ## 🔧 API Methods
 
@@ -449,7 +627,7 @@ cd signaling && go run main.go
 - **`getConnectedPeerCount()`**: Returns number of currently connected peers
 
 ### Implementation Details
-- **Network provider interface**: [`src/p2p.ts`](../src/p2p.ts)
+- **Network provider interface**: `src/p2p/LibP2PNetworkProvider.ts`
 - **Storage integration**: Uses LocalStorageProvider for persistence
 - **Error handling**: Graceful degradation when network fails
 
@@ -457,51 +635,31 @@ cd signaling && go run main.go
 
 ### How it works
 - Peers send messages to each other (see P2P Communication Procedure)
-- Connections are authenticated and encrypted
-- first attempt to connect with WebRTC
-  - use the first STUN server out of `stunServers` that connects out of the first 10
-  - if that fails, try CircuitRelay with public servers
+- Connections are authenticated and encrypted (libp2p defaults)
+- Connection establishment follows universal-connectivity pattern:
+  - WebRTC for direct browser-to-browser connections
+  - WebTransport for QUIC-based connections
+  - Circuit relay fallback when direct connection fails
+  - DCUtR for hole punching and relay upgrade
+- DHT for peer discovery
+- AutoNAT for NAT detection
 
-### Testing Results
+### Universal Connectivity Strategy
 
-**Global IPFS Connectivity** (Verified 2025-10-08):
-- ✅ Successfully connects to 100+ peers using default Helia configuration
-- ✅ Peer discovery working: DHT and bootstrap nodes functioning correctly
-- ✅ No custom LibP2P transport configuration needed - Helia defaults work perfectly
-- ✅ Connection gater configuration successfully applied to allow private IP connections
+**Connection Establishment Priority** (following universal-connectivity pattern):
+1. **Direct WebRTC**: Try direct peer-to-peer via WebRTC
+2. **Direct WebTransport**: Try direct connection via QUIC/WebTransport
+3. **Circuit Relay**: Fall back to public circuit relay
+4. **Relay Upgrade (DCUtR)**: Attempt to upgrade relay to direct connection
 
-**Local P2P Testing Infrastructure** (Updated 2025-10-08):
-- ✅ TURN server operational on port 3478
-- ✅ **Certificate validation resolved**: Manual browser approval enables WebSocket/WebTransport connections
-  - **Solution**: Visit web app via network IP (e.g., `https://192.168.1.103:3000`)
-  - **Workflow**: Browser shows cert warning → User approves → All connections to that IP are trusted
-  - **Status**: WebTransport and WSS connections work after one-time approval
-- 🔄 **Go server migration in progress**: Moving from Node.js to Go-based infrastructure
-  - **Benefit**: Better WebTransport support and performance
-  - **Node.js limitation**: Node.js libp2p doesn't support server-side WebTransport listening
-  - **Go advantage**: Native server-side WebTransport in `go-libp2p`
-
-**Multi-Profile Testing** (Verified 2025-10-08):
-- ✅ Multiple profiles with separate peer IDs working correctly
-- ✅ Profile switching with localStorage isolation
-- ✅ Concurrent profile testing in separate browser tabs via Playwright
-- 🔄 **Ping/pong testing**: Ready to test after Go server migration
-  - **Direct dial**: Will fail on localhost/same-firewall (WebRTC/browser limitation)
-  - **Circuit relay fallback**: Will work with Go-based WebTransport relay
-  - **Certificate approval**: Required one-time setup (see Certificate Setup section)
-
-**Next Steps - Go Server Migration**:
-1. ✅ Certificate validation approach clarified (manual approval workflow)
-2. Implement Go-based circuit relay with WebTransport support
-3. Implement Go-based TURN/STUN server
-4. Implement Go-based signaling server
-5. Update browser code to fetch relay config from HTTP endpoint
-6. Retest ping/pong with WebTransport relay after certificate approval
-7. Remove deprecated Node.js servers and Vite plugin
-8. Document Go server setup and testing procedures
+**Peer Discovery Strategy**:
+1. **Bootstrap nodes**: Connect to public IPFS bootstrap nodes
+2. **DHT**: Use Kademlia DHT for peer routing
+3. **Peer exchange**: Learn about peers from connected peers
+4. **Manual addresses**: Support direct connection via shared multiaddrs
 
 ### Structure of app messages
-#### `specs/p2p-messages.md` has the JSON specifiation for messages.
+#### `specs/p2p-messages.md` has the JSON specification for messages.
 
 #### VERY IMPORTANT: DO NOT CHANGE protocol message structures unless specifically directed to by the `specs/p2p.md` file.
 
@@ -538,7 +696,7 @@ Each p2p message will have a corresponding p2p method implementation in the Holl
     - inviteCode: inviteCode from invitation
   - behavior on receiving peer
     - check activeInvitations Object for inviteCode entry (see Invitations, above)
-      - if entry has a friendId, verfy that it matches the message's sender
+      - if entry has a friendId, verify that it matches the message's sender
     - if valid, add a friend request event
       - the event has the message
         - the event view has `Accept` and `Ignore` buttons
@@ -556,7 +714,7 @@ Each p2p message will have a corresponding p2p method implementation in the Holl
     - add an accepted event to the event list
       - the event view has a "View Friend" button
         - removes the event from the event list
-        - jumps to the settings page and selectes the friend
+        - jumps to the settings page and selects the friend
 - ping(timestamp, messageId)
   - message properties
     - timestamp: Unix timestamp (milliseconds) when ping was sent
@@ -575,3 +733,114 @@ Each p2p message will have a corresponding p2p method implementation in the Holl
     - if handler not found, log warning (unexpected response)
     - log successful connectivity
     - mark peer as reachable
+
+## 📁 File Organization
+
+Following the universal-connectivity reference and SOLID principles:
+
+```
+src/p2p/
+  ├── index.ts                      # Main exports
+  ├── HollowPeer.ts                 # Main HollowPeer class (high-level API)
+  ├── LibP2PNetworkProvider.ts      # LibP2P network implementation
+  ├── FriendsManager.ts             # Friends management (Single Responsibility)
+  ├── LocalStorageProvider.ts       # Storage abstraction (Dependency Inversion)
+  ├── IPAddressDetector.ts          # IP detection utilities
+  ├── types.ts                      # TypeScript interfaces and types
+  └── constants.ts                  # Protocol constants and config
+
+specs/cache/universal-connectivity/  # Reference implementation cache
+```
+
+## 🧪 Testing Strategy
+
+**Unit Tests**:
+- Test each component in isolation
+- Mock dependencies (storage, network)
+- Test message handling logic
+- Test friend management
+- Test invitation generation/validation
+
+**Integration Tests** (Playwright):
+- Test multi-tab P2P connectivity
+- Test peer discovery via public infrastructure
+- Test message exchange between peers
+- Test friend request flow
+- Test circuit relay fallback
+- See `specs/main.tests.md` for detailed test requirements
+
+**Public Infrastructure Testing**:
+- Verify connection to public bootstrap nodes
+- Verify peer discovery via DHT
+- Verify circuit relay fallback
+- Verify WebRTC direct connections
+- No custom server infrastructure needed
+
+## 🔄 Migration from Previous Architecture
+
+**Changes from previous specs/p2p.md**:
+- ✅ **Removed**: Local Go server dependency
+- ✅ **Removed**: Custom TURN/STUN servers (not needed with universal-connectivity)
+- ✅ **Removed**: Custom circuit relay servers
+- ✅ **Removed**: WebTransport dev server configuration
+- ✅ **Added**: Public circuit relay usage (via delegated routing)
+- ✅ **Added**: Universal connectivity patterns
+- ✅ **Added**: DHT-based peer discovery
+- ✅ **Added**: DCUtR hole punching
+- ✅ **Simplified**: Development and deployment workflow
+
+**Code Migration Path**:
+1. Update libp2p configuration to follow universal-connectivity pattern
+2. Remove local relay detection/connection code
+3. Remove STUN/TURN server configuration (not needed)
+4. Add delegated routing for relay discovery
+5. Update tests to work without local servers
+6. Verify connectivity via public infrastructure
+7. Remove Go server code from repository
+
+**Benefits**:
+- ✅ No custom server infrastructure required
+- ✅ Simpler deployment (static files only)
+- ✅ Better scalability (leverage public infrastructure)
+- ✅ Easier testing (no local server setup)
+- ✅ Lower maintenance burden
+- ✅ More reliable (public infrastructure has high uptime)
+
+## 📚 Reference Implementation Details
+
+**Cache the universal-connectivity repository**:
+```bash
+# Clone to specs/cache for offline reference
+cd specs/cache
+git clone https://github.com/libp2p/universal-connectivity.git
+```
+
+**Key files to reference**:
+- `js-peer/src/lib/libp2p.ts` - LibP2P configuration
+- `js-peer/src/lib/store.ts` - Message handling
+- `js-peer/src/lib/constants.ts` - Protocol constants
+
+**Adapt for Hollow World**:
+- Message format: JSON objects (not plain text)
+- Protocol: `/hollow-world/1.0.0` (not `/universal-connectivity/...`)
+- Storage: localStorage with profile support
+- UI: Integrate with existing Hollow World UI
+- Testing: Playwright multi-tab tests
+
+## ✅ Implementation Checklist
+
+- [x] Clone universal-connectivity to `specs/cache/` ✅
+- [ ] Create `src/p2p/` directory structure
+- [ ] Implement LibP2PNetworkProvider following universal-connectivity pattern
+- [ ] Configure public bootstrap nodes
+- [ ] Add delegated routing for relay discovery
+- [ ] Configure WebRTC transport (no STUN config needed)
+- [ ] Configure WebTransport transport
+- [ ] Configure circuit relay transport
+- [ ] Implement JSON message serialization
+- [ ] Implement stream handlers
+- [ ] Migrate friend management code
+- [ ] Update tests for public infrastructure
+- [ ] Remove Go server dependencies
+- [ ] Verify connectivity via public infrastructure
+- [ ] Document deployment process for static hosting

@@ -1,6 +1,6 @@
 // Type definitions for window extensions used in testing
 import type { ProfileService } from '../services/ProfileService';
-import type { HollowPeer } from '../p2p';
+import type { HollowPeer } from '../p2p/index';
 import type { AudioManager } from '../audio/AudioManager';
 import type { EventService } from '../services/EventService';
 
@@ -12,9 +12,9 @@ declare global {
      */
     __HOLLOW_WORLD_TEST__?: {
       profileService: ProfileService;
-      hollowPeer: HollowPeer;
+      hollowPeer?: HollowPeer;
       audioManager?: AudioManager;
-      eventService: EventService;
+      eventService?: EventService;
     };
   }
 }

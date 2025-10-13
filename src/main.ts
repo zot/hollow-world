@@ -8,7 +8,9 @@ import { SplashScreen } from './ui/SplashScreen.js';
 import { CharacterManagerView } from './ui/CharacterManagerView.js';
 import { CharacterEditorView } from './ui/CharacterEditorView.js';
 import { SettingsView } from './ui/SettingsView.js';
-import { HollowPeer, LocalStorageProvider } from './p2p.js';
+import { EventNotificationButton } from './ui/EventNotificationButton.js';
+import { EventModal } from './ui/EventModal.js';
+import { HollowPeer, LocalStorageProvider } from './p2p/index.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
 import { characterStorageService } from './services/CharacterStorageService.js';
@@ -28,6 +30,8 @@ let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
 let characterEditor: CharacterEditorView;
 let settingsView: SettingsView;
+let eventNotificationButton: EventNotificationButton | undefined;
+let eventModal: EventModal | undefined;
 let appContainer: HTMLElement;
 
 // Current view components
@@ -115,8 +119,37 @@ async function initializeHollowPeer(): Promise<void> {
         // HollowPeer will create and manage its own network provider
         hollowPeer = new HollowPeer(undefined, profileAwareStorage);
 
-        // Initialize P2P in background - don't block on it
-        await hollowPeer.initialize();
+        // Initialize P2P with retry logic and exponential backoff
+        const maxRetries = 3;
+        const baseDelay = 1000; // 1 second
+        let lastError: Error | undefined;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`🤝 P2P initialization attempt ${attempt}/${maxRetries}...`);
+                await hollowPeer.initialize();
+                console.log('🤝 HollowPeer initialized successfully');
+                lastError = undefined;
+                break; // Success, exit retry loop
+            } catch (error) {
+                lastError = error as Error;
+                console.warn(`⚠️ P2P initialization attempt ${attempt} failed:`, error);
+
+                if (attempt < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff: 1s, 2s, 4s
+                    console.log(`🔄 Retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    console.error('🚨 All P2P initialization attempts failed');
+                    throw error; // Rethrow on final attempt
+                }
+            }
+        }
+
+        if (lastError) {
+            throw lastError;
+        }
+
         console.log('🤝 HollowPeer initialized successfully');
 
         // Update splash screen with peer ID now that initialization is complete
@@ -141,6 +174,32 @@ async function initializeHollowPeer(): Promise<void> {
                 console.log('🤝 Settings view updated with peer ID and hollowPeer reference');
             } catch (e) {
                 console.warn('Failed to update settings view:', e);
+            }
+        }
+
+        // Initialize event notification UI
+        if (hollowPeer) {
+            try {
+                const eventService = hollowPeer.getEventService();
+                console.log('📯 Initializing event notification UI...');
+
+                // Create event modal
+                eventModal = new EventModal(eventService, hollowPeer);
+                const modalElement = eventModal.render();
+                document.body.appendChild(modalElement);
+
+                // Create event notification button
+                eventNotificationButton = new EventNotificationButton(eventService, () => {
+                    if (eventModal) {
+                        eventModal.show();
+                    }
+                });
+                const buttonElement = eventNotificationButton.render();
+                document.body.appendChild(buttonElement);
+
+                console.log('📯 Event notification UI initialized successfully');
+            } catch (e) {
+                console.error('Failed to initialize event notification UI:', e);
             }
         }
     } catch (error) {
@@ -452,6 +511,12 @@ function cleanup(): void {
     }
     if (characterEditor) {
         characterEditor.destroy();
+    }
+    if (eventNotificationButton) {
+        eventNotificationButton.destroy();
+    }
+    if (eventModal) {
+        eventModal.destroy();
     }
 }
 

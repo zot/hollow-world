@@ -315,11 +315,6 @@ Critical: Assets must load from origin on ALL routes
 ### Peer Connectivity Tests
 **Note**: These tests verify basic P2P connectivity infrastructure using ping/pong messages
 
-**IMPORTANT**: These tests require either:
-- A working public WSS circuit relay server (default `relay.libp2p.io` is currently unreachable)
-- Self-hosted relay server with public WSS endpoint
-- OR deployment on public internet with routable IPs
-
 See [`specs/coms.md`](coms.md#-testing-findings--limitations) for detailed explanation of browser P2P limitations on localhost.
 
 - [ ] **Peer address resolution via DHT and relay**
@@ -337,6 +332,7 @@ See [`specs/coms.md`](coms.md#-testing-findings--limitations) for detailed expla
     - Ping message delivered to Tab B
     - Pong response delivered back to Tab A
     - Round-trip time < 5 seconds (DHT + relay latency)
+    - When sending ping or pong, receiver's multiaddresses are logged to console
   - **Note**: May take up to 2 minutes for background peer discovery to resolve addresses
 
 - [ ] **Bidirectional connectivity verification**
@@ -346,6 +342,7 @@ See [`specs/coms.md`](coms.md#-testing-findings--limitations) for detailed expla
   - Tab B: Verify pong received
   - Verify connectivity works in both directions
   - Verify similar round-trip times in both directions
+  - Verify receiver's multiaddresses are logged when sending ping/pong in both directions
 
 ### Local TURN and Relay servers
 - there are local TURN and Relay servers in the test directory
@@ -354,42 +351,22 @@ See [`specs/coms.md`](coms.md#-testing-findings--limitations) for detailed expla
 ### Friend Request Send/Receive Tests
 **Note**: These tests require TWO tabs open simultaneously with different profiles
 
-**⚠️ INFRASTRUCTURE GAP - TESTS BLOCKED**
-Current Status: P2P communication tests are **blocked** due to WebRTC signaling requirements:
-
 **Implementation Status:**
-1. ✅ **Helia/IPFS Integration** - Successfully initialized (per p2p.md line 36-37)
-2. ✅ **LibP2P with WebRTC** - Node starts successfully
-3. ✅ **Bootstrap Nodes** - Connected to public IPFS bootstrap nodes (4 nodes configured)
-4. ❌ **WebRTC Signaling** - No mechanism for SDP exchange between browser peers
-5. ❌ **Circuit Relay Servers** - Circuit relay transport included but no relay servers configured
+1. ✅ **LibP2P Node** - Initializes successfully with circuit relay v2 transport
+2. ✅ **Bootstrap Nodes** - Connected to universal-connectivity bootstrap peer for relay discovery
+3. ✅ **Circuit Relay v2** - Peers connect via public relay server (147.28.186.157:9095)
+4. ✅ **Gossipsub Peer Discovery** - Peers discover each other via pubsub on topic `universal-connectivity-browser-peer-discovery`
+5. ✅ **DirectMessage Protocol** - P2P messaging works via `/hollow-world/dm/1.0.0` over circuit relay
+6. ⚠️ **WebRTC Direct Connections** - Attempts fail, but circuit relay provides working fallback
 
-**Current Error:** `The dial request has no valid addresses`
-- Occurs when Tab B tries to send friend request to Tab A
-- Both peers connect to bootstrap nodes successfully
-- Bootstrap provides DHT peer discovery (peer IDs) but not WebRTC addresses
-- WebRTC requires SDP offer/answer exchange to establish connection
+**How It Works:**
+- **Peer Discovery**: Gossipsub broadcasts peer multiaddresses; peers must subscribe to receive them
+- **Connection Method**: Circuit relay v2 (browser-to-relay-to-browser) via delegated routing
+- **Message Delivery**: DirectMessage protocol over circuit relay connections
+- **Performance**: ~2-3 second peer discovery latency, immediate message delivery after connection
 
-**Root Cause - WebRTC Signaling Gap:**
-- IPFS bootstrap nodes enable DHT peer discovery (finding peer IDs)
-- However, WebRTC in browsers requires **signaling** to exchange connection info:
-  - SDP (Session Description Protocol) offers and answers
-  - ICE (Interactive Connectivity Establishment) candidates
-- Without signaling, peers know each other exist but can't connect
-
-**The Chicken-and-Egg Problem:**
-1. To connect via WebRTC → Need to exchange SDPs
-2. To exchange SDPs → Need a communication channel
-3. But can't communicate → Until WebRTC is connected
-
-**Possible Solutions:**
-1. ✅ **Bootstrap Nodes** - IMPLEMENTED but only solves DHT discovery, not WebRTC signaling
-2. **Circuit Relay Servers** - Configure public libp2p relay servers for message forwarding
-3. **Manual Address Exchange** - Exchange WebRTC multiaddrs via invitation system (copy/paste)
-4. **Dedicated Signaling Server** - Custom WebSocket/HTTP server for SDP exchange
-5. **WebRTC-Star** - Specialized WebRTC signaling via star topology servers
-
-Until WebRTC signaling is implemented, the following tests **cannot pass**:
+**Critical Implementation Detail:**
+The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TOPIC)` after libp2p initialization. The `pubsubPeerDiscovery` module publishes to gossipsub but does NOT subscribe to receive messages. Without manual subscription, peers cannot discover each other's addresses.
 
 - [ ] **Send friend request with valid invitation**
   - **Setup**: Open Tab A with Profile A, open Tab B with Profile B (keep both open!)
@@ -423,10 +400,18 @@ Until WebRTC signaling is implemented, the following tests **cannot pass**:
   - Tab B: Set player name to "Bob", send friend request using invitation
   - Tab A: Accept request from event
   - Tab A: Verify "Bob" added to friends list
+  - Tab A: **Bug Check**: Verify friend name is "Bob" NOT "undefined" or "Anonymous"
+  - Tab A: **Bug Check**: Use test API to verify localStorage: `profileService.getItem('hollowPeerFriends')` contains Bob with correct playerName
+  - Tab A: Verify "Bob" appears in friends list on settings page
+  - Tab A: **Bug Check**: Friend card in UI must display "Bob" as the name
   - Tab A: Verify event removed from event list
   - Tab B: Wait for approval message (tab must be open to receive it!)
   - Tab B: Verify friend approved event appears
+  - Tab B: **Bug Check**: Event must show "Alice" NOT "undefined" or "Anonymous"
   - Tab B: Verify "Alice" added to friends list
+  - Tab B: **Bug Check**: Use test API to verify localStorage: `profileService.getItem('hollowPeerFriends')` contains Alice with correct playerName
+  - Tab B: Verify "Alice" appears in friends list on settings page
+  - Tab B: **Bug Check**: Friend card in UI must display "Alice" as the name
   - Tab B: Verify peer removed from pendingFriendRequests
   - Tab B: Verify "View Friend" button in event
 
@@ -474,6 +459,17 @@ Until WebRTC signaling is implemented, the following tests **cannot pass**:
   - Tab A: Verify friend still in friends list
   - Verify friend data intact (name, peer ID, notes)
 
+- [ ] **Friend player names stored correctly in localStorage** ⚠️ BUG DETECTION
+  - **Purpose**: Detect when friend names are stored as "undefined" or "Anonymous" instead of actual player names
+  - **Setup**: Complete friend approval flow with Tab A (Alice) and Tab B (Bob) both open
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
+  - Tab A: **Bug Check**: Bob's entry must have `playerName: "Bob"` NOT "undefined" or "Anonymous"
+  - Tab A: **Bug Check**: Verify peerId matches Bob's peer ID
+  - Tab B: Use test API: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
+  - Tab B: **Bug Check**: Alice's entry must have `playerName: "Alice"` NOT "undefined" or "Anonymous"
+  - Tab B: **Bug Check**: Verify peerId matches Alice's peer ID
+  - **Failure mode**: If playerName is "undefined" or "Anonymous" = player name not transmitted in P2P messages
+
 - [ ] **Active invitations persist**
   - Single tab: Create invitations
   - Close and reopen application
@@ -492,26 +488,33 @@ Until WebRTC signaling is implemented, the following tests **cannot pass**:
 
 - [ ] **Friend request event displays correctly**
   - **Setup**: Open Tab A and Tab B with different profiles (keep both open!)
+  - Tab A: Set player name to "Alice"
+  - Tab B: Set player name to "Bob"
   - Complete friend request flow
   - Tab A: Verify event notification button appears with red count
   - Tab A: Click event button, verify modal opens
   - Tab A: Verify event card shows:
     - Event type (friend request)
     - Friend name from invitation
+    - **Bug Check**: Event text must show "Bob wants to be friends" NOT "undefined wants to be friends"
     - Peer ID
     - Accept/Ignore buttons
     - Skull button to remove
 
-- [ ] **Friend approved event displays correctly**
+- [ ] **Friend approved event displays correctly** ⚠️ BUG DETECTION
+  - **Purpose**: Detect when player names are not transmitted in approval messages
   - **Setup**: Keep Tab A and Tab B open with different profiles
+  - Tab A: Set player name to "Alice"
+  - Tab B: Set player name to "Bob"
   - Complete friend approval flow (both tabs open)
   - Tab B: Verify event notification appears (tab must be open!)
   - Tab B: Click event button
   - Tab B: Verify event card shows:
     - Event type (friend approved)
-    - Friend's nickname
+    - **Bug Check**: Event text must show "Alice accepted your friend request!" NOT "undefined" or "Anonymous"
     - "View Friend" button
     - Skull button to remove
+  - **Failure mode**: If event shows "undefined" or "Anonymous" = player name not transmitted in approveFriendRequest message
 
 - [ ] **View Friend button navigates to settings**
   - **Setup**: Keep Tab A and Tab B open with different profiles
@@ -539,6 +542,19 @@ Until WebRTC signaling is implemented, the following tests **cannot pass**:
   - Navigate to `/settings`
   - Verify friends list shows all friends
   - Verify each friend shows: name, peer ID, notes field
+
+- [ ] **Friends list UI renders from localStorage** ⚠️ BUG DETECTION
+  - **Purpose**: Detect when friends are stored but UI doesn't render them
+  - **Setup**: Complete friend approval flow between Tab A and Tab B
+  - Tab A: Use test API to verify friend stored: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
+  - Tab A: Scroll to "Friends List" section in settings
+  - Tab A: **Bug Check**: Verify friend card is visible in UI (NOT empty list)
+  - Tab A: **Bug Check**: Friend card must show: playerName, peerId, notes textbox
+  - Tab B: Use test API to verify friend stored: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
+  - Tab B: Scroll to "Friends List" section in settings
+  - Tab B: **Bug Check**: Verify friend card is visible in UI (NOT empty list)
+  - Tab B: **Bug Check**: Friend card must show: playerName, peerId, notes textbox
+  - **Failure mode**: If localStorage has friend but UI shows empty list = UI rendering bug
 
 - [ ] **Create invitation UI works**
   - Navigate to `/settings`
