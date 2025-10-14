@@ -1,15 +1,20 @@
 console.log('Main.ts starting to load...');
 
-// Set Base URL to app root (origin) for SPA routing
-const Base = new URL(window.location.origin + '/');
-console.log('Base URL set to:', Base);
-
+// Base URL is initialized in index.html at top of body
+// Access it via window.Base
+declare global {
+    interface Window {
+        Base: URL;
+    }
+}
+const Base = window.Base;
 import { SplashScreen } from './ui/SplashScreen.js';
 import { CharacterManagerView } from './ui/CharacterManagerView.js';
 import { CharacterEditorView } from './ui/CharacterEditorView.js';
 import { SettingsView } from './ui/SettingsView.js';
 import { EventNotificationButton } from './ui/EventNotificationButton.js';
 import { EventModal } from './ui/EventModal.js';
+import { GlobalAudioControl } from './ui/GlobalAudioControl.js';
 import { HollowPeer, LocalStorageProvider } from './p2p/index.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
@@ -26,6 +31,7 @@ console.log('📁 Profile service initialized. Current profile:', profileService
 // Global app state
 let hollowPeer: HollowPeer | undefined;
 let audioManager: AudioManager | undefined;
+let globalAudioControl: GlobalAudioControl | undefined;
 let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
 let characterEditor: CharacterEditorView;
@@ -97,6 +103,19 @@ async function initializeAudio(): Promise<void> {
         }
 
         console.log('🎶 Enhanced audio system initialized successfully');
+
+        // Create and render global audio control if audioManager is available
+        if (audioManager) {
+            try {
+                console.log('🎛️ Creating global audio control...');
+                globalAudioControl = new GlobalAudioControl(audioManager);
+                const audioControlElement = await globalAudioControl.render();
+                document.body.appendChild(audioControlElement);
+                console.log('🎛️ Global audio control added to page');
+            } catch (audioControlError) {
+                console.error('🚨 Failed to create global audio control:', audioControlError);
+            }
+        }
     } catch (error) {
         console.error('🚨 Audio system failed to initialize:', error);
         console.error('🚨 Error details:', {
@@ -517,6 +536,9 @@ function cleanup(): void {
     }
     if (eventModal) {
         eventModal.destroy();
+    }
+    if (globalAudioControl) {
+        globalAudioControl.destroy();
     }
 }
 

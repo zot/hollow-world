@@ -24,6 +24,17 @@ export default defineConfig({
       key: readFileSync('key.pem'),
       cert: readFileSync('cert.pem'),
     },
+    cors: {
+      origin: [
+        'https://localhost:3000',
+        'http://localhost:3000',
+        'https://zotimer.itch.io',
+        /^https?:\/\/localhost(:\d+)?$/, // localhost with any port
+        /^https?:\/\/127\.0\.0\.1(:\d+)?$/, // 127.0.0.1 with any port
+        /^https?:\/\/[^/]+$/, // current host (any origin)
+      ],
+      credentials: true,
+    },
   },
   preview: {
     host: '0.0.0.0',

@@ -10,8 +10,23 @@
 - Follow specifications for consistent western frontier theme
 - html templates are in public/templates
 
+## 📋 TODO Items
+- [ ] **Refactor EventModal to use HTML templates** - Move event card HTML from `src/ui/EventModal.ts` to template files
+  - Create `public/templates/event-card-friend-request.html`
+  - Create `public/templates/event-card-friend-approved.html`
+  - Create `public/templates/event-card-new-friend-request.html`
+  - Move inline styles to CSS files
+  - Refactor `EventModal.renderEventCard()` to use TemplateEngine
+- [ ] **Refactor SettingsView pending invitations to use HTML template** - Move pending invitation item HTML from `src/ui/SettingsView.ts` (lines 686-693) to template file
+  - Create `public/templates/pending-invitation-item.html`
+  - Refactor `SettingsView.renderPendingNewInvitations()` to use TemplateEngine
+
 ## UI principles
-- audio control should appear on all pages at the bottom-right
+- **REQUIRED**: Audio control **MUST** be visible on all pages at the bottom-right
+  - The audio control must be rendered and visible at all times when AudioManager exists
+  - Position: fixed at bottom-right corner (z-index high enough to appear above other content)
+  - Must include play/pause toggle and be accessible on every view/route
+  - Must display current track information and provide next/previous track controls
 - use Milkdown crepe for markdown editing
   - use `crepe.on` for events like in the docs about using Crepe
   - don't put padding around the editor content
@@ -185,7 +200,11 @@ const isPlaying = await page.evaluate(() => {
 ```
 
 ### 🚀 App Initialization
-- [x] `let Base = new URL(location.toString())` ✅ **IMPLEMENTED**
+- [x] important: this is in a script element at the top of body ✅ **IMPLEMENTED**
+  - [x] `window.Base = new URL('', document.location)`
+
+### CORS
+- allow requests from current host, localhost, and zotimer.itch.io
 
 ### 🌐 Asset URL Management
 - [x] **Pervasively**: use Base as parent URL for all assets, including templates ✅ **IMPLEMENTED**
@@ -239,13 +258,36 @@ const isPlaying = await page.evaluate(() => {
   - [x] Set appropriate low volume for background ambiance ✅ **IMPLEMENTED** (0.3 volume)
   - [x] Test music persistence across view navigation ✅ **IMPLEMENTED**
 
-### 🎛️ **New Audio Features Available**
+### 🎛️ **Audio Control UI Requirements**
+- **REQUIRED**: Audio controls **MUST be visible** on all pages/routes
+  - Position: Fixed at bottom-right corner of viewport
+  - z-index: High enough to appear above all page content (9999+)
+  - Persistence: Must remain visible during route navigation
+  - Functionality available on every view: `/`, `/settings`, `/settings/log`, `/characters`, `/character/:id`, `/game`
+- **Western Frontier Theme** (REQUIRED):
+  - Background: Dark brown/wood texture (e.g., `#2C1810` with transparency)
+  - Border: Saddle brown (`#8B4513`) with 2-3px solid border
+  - Text colors: Gold (`#D4AF37`) for headers, Wheat (`#F5DEB3`) for content
+  - Buttons: Western-style with brown/tan color scheme
+  - Font: Western/frontier-appropriate styling where possible
+  - Overall aesthetic must match the "Hollow World" western ghost town theme
+- **Interaction Requirements**:
+  - **Clicking the control header** (title area) **MUST** toggle collapse/expand state
+  - Collapsed state: Shows compact play/pause indicator
+  - Expanded state: Shows full controls (track info, navigation, cycling)
+  - Smooth transition between states
+- **Required Controls**:
+  - Play/Pause toggle button (must reflect current playback state)
+  - Next track button
+  - Previous track button
+  - Current track name display
+  - Track position indicator (e.g., "Track 3 of 8")
+  - Collapse/Expand toggle (clickable header)
 - **Track Navigation**: Skip to next/previous track manually
 - **Cycling Control**: Enable/disable automatic track cycling
 - **Track Information**: Get current track name, index, and total tracks
 - **Smooth Transitions**: Automatic fade-out when switching tracks
 - **Enhanced Console Logging**: Detailed track information and cycling status
-- the audio control UI component should give the user access to the new audio features
 
 **Testing**: AudioManager is accessible via `window.__HOLLOW_WORLD_TEST__.audioManager` in dev/test environments (optional, may be undefined)
 - Check playback state: `audioManager?.isMusicPlaying()`

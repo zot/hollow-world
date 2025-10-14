@@ -14,7 +14,8 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub';
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery';
 import { ping } from '@libp2p/ping';
 import { createEd25519PeerId } from '@libp2p/peer-id-factory';
-import type { PeerId, Message, SignedMessage, Multiaddr } from '@libp2p/interface';
+import type { PeerId, Message, SignedMessage } from '@libp2p/interface';
+import type { Multiaddr } from '@multiformats/multiaddr';
 import { sha256 } from 'multiformats/hashes/sha2';
 import { peerIdFromString } from '@libp2p/peer-id';
 import { createDelegatedRoutingV1HttpApiClient, type DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client';
@@ -61,11 +62,32 @@ async function getRelayListenAddrs(client: DelegatedRoutingV1HttpApiClient): Pro
 
 // Function which dials one maddr at a time to avoid establishing multiple connections to the same peer
 async function dialWebRTCMaddrs(libp2p: Libp2p, multiaddrs: Multiaddr[]): Promise<void> {
-    // Don't dial anything - let libp2p handle circuit relay connections automatically
-    // The relay addresses in the listen array are sufficient for libp2p to establish connections
-    // Explicitly dialing can cause issues with transport compatibility
-    console.log('🔗 Peer discovered with', multiaddrs.length, 'addresses - letting libp2p handle connection automatically');
-    return;
+    console.log('🔗 Peer discovered with', multiaddrs.length, 'addresses');
+
+    // Filter for circuit relay addresses (p2p-circuit protocol)
+    // These are the addresses we can actually dial from the browser
+    const circuitAddrs = multiaddrs.filter(ma => {
+        const protos = ma.protoNames();
+        return protos.includes('p2p-circuit');
+    });
+
+    console.log(`🔗 Found ${circuitAddrs.length} circuit relay addresses to dial`);
+
+    if (circuitAddrs.length === 0) {
+        console.log('⚠️  No circuit relay addresses found - cannot dial peer');
+        return;
+    }
+
+    // Try to dial the first circuit relay address
+    // Only dial one at a time to avoid multiple connections to the same peer
+    try {
+        const addr = circuitAddrs[0];
+        console.log(`📞 Dialing circuit relay address: ${addr.toString()}`);
+        await libp2p.dial(addr);
+        console.log(`✅ Successfully dialed peer via circuit relay`);
+    } catch (error: any) {
+        console.error(`❌ Failed to dial circuit relay address:`, error.message);
+    }
 }
 
 export class LibP2PNetworkProvider implements INetworkProvider {
@@ -154,6 +176,13 @@ export class LibP2PNetworkProvider implements INetworkProvider {
                 streamMuxers: [yamux()],
                 connectionGater: {
                     denyDialMultiaddr: async () => false,
+                    // Allow local network connections (localhost, private IPs)
+                    denyInboundConnection: async () => false,
+                    denyOutboundConnection: async () => false,
+                    denyInboundEncryptedConnection: async () => false,
+                    denyOutboundEncryptedConnection: async () => false,
+                    denyInboundUpgradedConnection: async () => false,
+                    denyOutboundUpgradedConnection: async () => false,
                 },
                 peerDiscovery: [
                     pubsubPeerDiscovery({
@@ -167,7 +196,6 @@ export class LibP2PNetworkProvider implements INetworkProvider {
                         allowPublishToZeroTopicPeers: true,
                         msgIdFn: msgIdFnStrictNoSign,
                         ignoreDuplicatePublishError: true,
-                        runOnTransientConnection: true, // Critical: Allow gossipsub over circuit relay connections
                     }) as any,
                     // Delegated routing helps discover ephemeral multiaddrs of bootstrap peers
                     delegatedRouting: () => delegatedClient,
@@ -215,14 +243,58 @@ export class LibP2PNetworkProvider implements INetworkProvider {
 
             // DEBUG: Listen for pubsub messages to see what's being received
             console.log('🔍 DEBUG: Adding pubsub message listener for debugging...');
-            pubsub?.addEventListener?.('message', (evt: any) => {
+            pubsub?.addEventListener?.('message', async (evt: any) => {
                 const msg = evt.detail;
+                const senderPeerId = msg.from?.toString();
+
+                // Try to get sender's multiaddrs from peerStore
+                let senderAddrs: string[] = [];
+                if (senderPeerId && this.libp2p) {
+                    try {
+                        const peer = await this.libp2p.peerStore.get(msg.from);
+                        senderAddrs = peer.addresses.map(addr => addr.multiaddr.toString());
+                    } catch (e) {
+                        // Peer not in peerStore yet
+                    }
+                }
+
                 console.log('🔍 DEBUG: Received pubsub message:', {
                     topic: msg.topic,
-                    from: msg.from?.toString(),
+                    from: senderPeerId,
+                    senderAddrs: senderAddrs.length > 0 ? senderAddrs : 'not in peerStore',
                     dataLength: msg.data?.length
-                });
+                }, msg);
             });
+
+            // CRITICAL: Manually publish our multiaddrs to the peer discovery topic
+            // The pubsubPeerDiscovery module should do this, but it seems to not be working reliably
+            console.log('📢 Publishing our multiaddrs to peer discovery topic...');
+            const publishOurAddrs = async () => {
+                try {
+                    const multiaddrs = this.libp2p!.getMultiaddrs();
+                    if (multiaddrs.length > 0) {
+                        // Encode multiaddrs as the peer discovery protocol expects
+                        const addrsBytes = multiaddrs.map(ma => ma.bytes);
+                        const encoder = new TextEncoder();
+                        // Create a simple JSON payload with our multiaddrs
+                        const payload = {
+                            multiaddrs: multiaddrs.map(ma => ma.toString())
+                        };
+                        const payloadBytes = encoder.encode(JSON.stringify(payload));
+
+                        await pubsub.publish(PUBSUB_PEER_DISCOVERY_TOPIC, payloadBytes);
+                        console.log('📢 Published', multiaddrs.length, 'multiaddrs to discovery topic');
+                    } else {
+                        console.log('⚠️  No multiaddrs to publish yet');
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to publish multiaddrs:', error);
+                }
+            };
+
+            // Publish immediately and then every 10 seconds
+            await publishOurAddrs();
+            setInterval(publishOurAddrs, 10000);
 
             // Dial discovered peers (following ucp2p pattern - dial WebRTC multiaddrs one at a time)
             this.libp2p.addEventListener('peer:discovery', async (event: any) => {

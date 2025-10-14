@@ -12,6 +12,9 @@ import {
     STORAGE_KEY_NICKNAME,
     STORAGE_KEY_ACTIVE_INVITATIONS,
     STORAGE_KEY_PENDING_REQUESTS,
+    STORAGE_KEY_PENDING_NEW_INVITATIONS,
+    STORAGE_KEY_PENDING_NEW_FRIEND_REQUESTS,
+    STORAGE_KEY_DECLINED_FRIEND_REQUESTS,
     PEER_DISCOVERY_TIMEOUT
 } from './constants';
 import type {
@@ -25,7 +28,8 @@ import type {
     IRequestFriendMessage,
     IApproveFriendRequestMessage,
     IPingMessage,
-    IPongMessage
+    IPongMessage,
+    INewFriendRequestMessage
 } from './types';
 
 export class HollowPeer {
@@ -37,6 +41,11 @@ export class HollowPeer {
     private activeInvitations: Record<string, IActiveInvitation> = {};
     private quarantined: Set<string> = new Set();
     private pendingFriendRequests: Record<string, IInvitation> = {};
+
+    // New Invitations (Peer Discovery-Based)
+    private pendingNewInvitations: string[] = []; // Array of peer IDs
+    private pendingNewFriendRequests: Record<string, boolean> = {}; // peer ID -> true
+    private declinedFriendRequests: Record<string, boolean> = {}; // peer ID -> true
 
     // Request-Response Infrastructure
     private messagePrefix: string;
@@ -101,6 +110,24 @@ export class HollowPeer {
             this.pendingFriendRequests = storedPendingRequests;
         }
 
+        // Load pending new invitations
+        const storedPendingNewInvitations = await this.storageProvider.load<string[]>(STORAGE_KEY_PENDING_NEW_INVITATIONS);
+        if (storedPendingNewInvitations) {
+            this.pendingNewInvitations = storedPendingNewInvitations;
+        }
+
+        // Load pending new friend requests
+        const storedPendingNewFriendRequests = await this.storageProvider.load<Record<string, boolean>>(STORAGE_KEY_PENDING_NEW_FRIEND_REQUESTS);
+        if (storedPendingNewFriendRequests) {
+            this.pendingNewFriendRequests = storedPendingNewFriendRequests;
+        }
+
+        // Load declined friend requests
+        const storedDeclinedFriendRequests = await this.storageProvider.load<Record<string, boolean>>(STORAGE_KEY_DECLINED_FRIEND_REQUESTS);
+        if (storedDeclinedFriendRequests) {
+            this.declinedFriendRequests = storedDeclinedFriendRequests;
+        }
+
         // Set up message handler
         this.networkProvider.onMessage(this.handleMessage.bind(this));
 
@@ -109,6 +136,9 @@ export class HollowPeer {
 
         // Session restoration: resend pending friend requests
         await this.resendPendingRequests();
+
+        // Session restoration: retry pending new invitations
+        await this.resendPendingNewInvitations();
 
         // Log connected peers periodically
         this.logConnectedPeers();
@@ -175,10 +205,59 @@ export class HollowPeer {
         tryConnect();
     }
 
+    private async resendPendingNewInvitations(): Promise<void> {
+        if (this.pendingNewInvitations.length === 0) {
+            return;
+        }
+
+        console.log(`🔄 Found ${this.pendingNewInvitations.length} pending new invitation(s)`);
+        console.log('🔍 Starting background peer resolution for new invitations (up to 2 minutes)...');
+
+        for (const peerId of this.pendingNewInvitations) {
+            this.startBackgroundNewInvitationResolution(peerId);
+        }
+    }
+
+    private startBackgroundNewInvitationResolution(peerId: string): void {
+        const startTime = Date.now();
+        const retryInterval = 10000;
+        let attemptCount = 0;
+
+        const tryConnect = async () => {
+            const elapsed = Date.now() - startTime;
+
+            if (elapsed >= PEER_DISCOVERY_TIMEOUT) {
+                console.warn(`⏱️  New invitation peer discovery timeout for ${peerId.substring(0, 20)}... (${attemptCount} attempts)`);
+                return;
+            }
+
+            attemptCount++;
+            console.log(`🔍 Attempt ${attemptCount}: Trying to send newFriendRequest to ${peerId.substring(0, 20)}...`);
+
+            try {
+                await this.sendNewFriendRequest(peerId);
+                console.log(`✅ Successfully sent newFriendRequest to ${peerId.substring(0, 20)}... (attempt ${attemptCount})`);
+                return;
+            } catch (error: any) {
+                setTimeout(tryConnect, retryInterval);
+            }
+        };
+
+        tryConnect();
+    }
+
     private handlePeerConnection(remotePeerId: string): void {
         const isFriend = this.friendsManager.getFriend(remotePeerId);
         if (!isFriend) {
             this.quarantined.add(remotePeerId);
+        }
+
+        // Check if this peer is in pendingNewInvitations
+        if (this.pendingNewInvitations.includes(remotePeerId)) {
+            console.log(`📤 Peer ${remotePeerId.substring(0, 20)}... from pendingNewInvitations discovered! Sending newFriendRequest...`);
+            this.sendNewFriendRequest(remotePeerId).catch(error => {
+                console.error(`❌ Failed to send newFriendRequest to ${remotePeerId.substring(0, 20)}...:`, error);
+            });
         }
     }
 
@@ -318,6 +397,9 @@ export class HollowPeer {
                 break;
             case 'approveFriendRequest':
                 this.handleApproveFriendRequest(remotePeerId, message as IApproveFriendRequestMessage);
+                break;
+            case 'newFriendRequest':
+                this.handleNewFriendRequest(remotePeerId, message as INewFriendRequestMessage);
                 break;
             case 'ping':
                 this.handlePing(remotePeerId, message as IPingMessage);
@@ -494,6 +576,149 @@ export class HollowPeer {
 
     getPendingFriendRequests(): Record<string, IInvitation> {
         return { ...this.pendingFriendRequests };
+    }
+
+    // ==================== New Invitations (Peer Discovery-Based) ====================
+
+    addPendingNewInvitation(peerId: string): void {
+        if (!this.pendingNewInvitations.includes(peerId)) {
+            this.pendingNewInvitations.push(peerId);
+            this.persistPendingNewInvitations();
+            console.log(`✅ Added ${peerId.substring(0, 20)}... to pending new invitations`);
+
+            // Start background retry logic
+            this.startBackgroundNewInvitationResolution(peerId);
+        }
+    }
+
+    removePendingNewInvitation(peerId: string): boolean {
+        const index = this.pendingNewInvitations.indexOf(peerId);
+        if (index !== -1) {
+            this.pendingNewInvitations.splice(index, 1);
+            this.persistPendingNewInvitations();
+            console.log(`🗑️  Removed ${peerId.substring(0, 20)}... from pending new invitations`);
+            return true;
+        }
+        return false;
+    }
+
+    getPendingNewInvitations(): string[] {
+        return [...this.pendingNewInvitations];
+    }
+
+    getPendingNewFriendRequests(): Record<string, boolean> {
+        return { ...this.pendingNewFriendRequests };
+    }
+
+    private async sendNewFriendRequest(peerId: string): Promise<void> {
+        const message: INewFriendRequestMessage = {
+            method: 'newFriendRequest'
+        };
+
+        await this.networkProvider.sendMessage(peerId, message);
+        console.log(`📤 Sent newFriendRequest to ${peerId.substring(0, 20)}...`);
+    }
+
+    private handleNewFriendRequest(remotePeerId: string, message: INewFriendRequestMessage): void {
+        console.log(`👥 New friend request from ${remotePeerId.substring(0, 20)}...`);
+
+        // Check if sender is in declined list
+        if (this.declinedFriendRequests[remotePeerId]) {
+            console.log(`⚠️  Ignoring new friend request from declined peer ${remotePeerId.substring(0, 20)}...`);
+            return;
+        }
+
+        // Check if sender is already a friend
+        if (this.friendsManager.getFriend(remotePeerId)) {
+            console.log(`ℹ️  Peer ${remotePeerId.substring(0, 20)}... is already a friend`);
+            return;
+        }
+
+        // Check if request already pending
+        if (this.pendingNewFriendRequests[remotePeerId]) {
+            console.log(`ℹ️  New friend request from ${remotePeerId.substring(0, 20)}... already pending`);
+            return;
+        }
+
+        // Add to pending requests
+        this.pendingNewFriendRequests[remotePeerId] = true;
+        this.persistPendingNewFriendRequests();
+
+        // Create event
+        const event = this.eventService.createNewFriendRequestEvent(remotePeerId);
+        this.eventService.addEvent(event);
+
+        console.log(`✅ Created newFriendRequest event for ${remotePeerId.substring(0, 20)}...`);
+    }
+
+    async acceptNewFriendRequest(remotePeerId: string): Promise<void> {
+        // Add as friend with peer ID as initial name
+        const friend: IFriend = {
+            playerName: remotePeerId.substring(0, 20) + '...',
+            peerId: remotePeerId,
+            notes: ''
+        };
+        this.friendsManager.addFriend(friend);
+
+        // Remove from pending requests
+        delete this.pendingNewFriendRequests[remotePeerId];
+        this.persistPendingNewFriendRequests();
+
+        // Remove from pending new invitations if present
+        this.removePendingNewInvitation(remotePeerId);
+
+        // Remove from quarantine
+        if (this.quarantined.has(remotePeerId)) {
+            this.quarantined.delete(remotePeerId);
+        }
+
+        // Remove all newFriendRequest events for this peer
+        const removedCount = this.eventService.removeEventsByPeerIdAndType(remotePeerId, 'newFriendRequest');
+        console.log(`🗑️  Removed ${removedCount} newFriendRequest event(s) for ${remotePeerId.substring(0, 20)}...`);
+
+        console.log(`✅ Accepted new friend request from ${remotePeerId.substring(0, 20)}...`);
+    }
+
+    declineNewFriendRequest(remotePeerId: string): void {
+        // Add to declined list
+        this.declinedFriendRequests[remotePeerId] = true;
+        this.persistDeclinedFriendRequests();
+
+        // Remove from pending requests
+        delete this.pendingNewFriendRequests[remotePeerId];
+        this.persistPendingNewFriendRequests();
+
+        // Remove all newFriendRequest events for this peer
+        const removedCount = this.eventService.removeEventsByPeerIdAndType(remotePeerId, 'newFriendRequest');
+        console.log(`🗑️  Removed ${removedCount} newFriendRequest event(s) for ${remotePeerId.substring(0, 20)}...`);
+
+        console.log(`❌ Declined new friend request from ${remotePeerId.substring(0, 20)}...`);
+    }
+
+    ignoreNewFriendRequest(remotePeerId: string): void {
+        // Just remove the event, keep in pending requests
+        const removedCount = this.eventService.removeEventsByPeerIdAndType(remotePeerId, 'newFriendRequest');
+        console.log(`🗑️  Removed ${removedCount} newFriendRequest event(s) for ${remotePeerId.substring(0, 20)}...`);
+
+        console.log(`ℹ️  Ignored new friend request from ${remotePeerId.substring(0, 20)}... (still pending)`);
+    }
+
+    private persistPendingNewInvitations(): void {
+        this.storageProvider.save(STORAGE_KEY_PENDING_NEW_INVITATIONS, this.pendingNewInvitations).catch(error => {
+            console.warn('Failed to persist pending new invitations:', error);
+        });
+    }
+
+    private persistPendingNewFriendRequests(): void {
+        this.storageProvider.save(STORAGE_KEY_PENDING_NEW_FRIEND_REQUESTS, this.pendingNewFriendRequests).catch(error => {
+            console.warn('Failed to persist pending new friend requests:', error);
+        });
+    }
+
+    private persistDeclinedFriendRequests(): void {
+        this.storageProvider.save(STORAGE_KEY_DECLINED_FRIEND_REQUESTS, this.declinedFriendRequests).catch(error => {
+            console.warn('Failed to persist declined friend requests:', error);
+        });
     }
 
     async sendMessage(peerId: string, message: P2PMessage): Promise<void> {

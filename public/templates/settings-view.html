@@ -74,6 +74,13 @@
         <div class="friend-actions">
             <button class="{{buttonClass}}" id="invite-friend-btn">Invite Friend</button>
             <button class="{{buttonClass}}" id="accept-invitation-btn">Accept Invitation</button>
+            <button class="{{buttonClass}}" id="add-friend-by-peerid-btn">Add Friend by Peer ID</button>
+        </div>
+
+        <!-- Pending New Invitations List -->
+        <div id="pending-new-invitations-section" class="pending-invitations-section">
+            <h3 class="collapsible-header">Pending Invitations <span class="badge" id="pending-invitations-count">0</span></h3>
+            <div id="pending-invitations-list" class="pending-invitations-list"></div>
         </div>
     </div>
 
@@ -122,6 +129,29 @@
             <div class="modal-actions">
                 <button id="accept-invite-btn" class="{{buttonClass}}">Accept</button>
                 <button id="close-accept-modal-btn" class="{{buttonClass}}">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Friend by Peer ID Modal -->
+    <div id="add-friend-peerid-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Add Friend by Peer ID</h2>
+            <div class="modal-field">
+                <label for="new-friend-name">Friend Name:</label>
+                <input type="text" id="new-friend-name" placeholder="Enter a friendly name" />
+            </div>
+            <div class="modal-field">
+                <label for="new-friend-peerid">Peer ID:</label>
+                <input type="text" id="new-friend-peerid" placeholder="Paste peer ID here" />
+            </div>
+            <div class="modal-field">
+                <label for="new-friend-notes">Notes:</label>
+                <div id="new-friend-notes" class="milkdown-editor"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="add-friend-peerid-submit-btn" class="{{buttonClass}}">Add Friend</button>
+                <button id="close-add-friend-peerid-modal-btn" class="{{buttonClass}}">Cancel</button>
             </div>
         </div>
     </div>

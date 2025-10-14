@@ -42,6 +42,9 @@ export const STORAGE_KEY_FRIENDS = 'hollowPeerFriends';
 export const STORAGE_KEY_NICKNAME = 'hollowPeerNickname';
 export const STORAGE_KEY_ACTIVE_INVITATIONS = 'hollowPeerActiveInvitations';
 export const STORAGE_KEY_PENDING_REQUESTS = 'hollowPeerPendingFriendRequests';
+export const STORAGE_KEY_PENDING_NEW_INVITATIONS = 'hollowPeerPendingNewInvitations';
+export const STORAGE_KEY_PENDING_NEW_FRIEND_REQUESTS = 'hollowPeerPendingNewFriendRequests';
+export const STORAGE_KEY_DECLINED_FRIEND_REQUESTS = 'hollowPeerDeclinedFriendRequests';
 
 // MIME type
 export const MIME_APPLICATION_JSON = 'application/json';

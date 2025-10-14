@@ -97,6 +97,49 @@ Each friend is shown on an expandable card:
     - creates the profile
     - selects the new profile
 
+### `Add Friend by Peer ID` button presents modal dialog
+- **Purpose:** Add a friend directly by their peer ID (uses peer discovery-based invitation)
+- **Fields:**
+  - **Friend Name:** textbox for the friendly name to display in friend list
+  - **Peer ID:** textbox for pasting the peer's ID
+  - **Private Notes:** markdown editor for notes about the friend
+- **Actions:**
+  - **Add Friend button:**
+    - Validates that Peer ID is not empty
+    - Adds peer ID to `pendingNewInvitations` storage
+    - Closes the dialog
+    - When the peer is discovered via broadcast, automatically sends `newFriendRequest` message
+  - **Cancel button:** closes dialog without saving
+
+### New Friend Request Event UI
+When a `newFriendRequest` event is received:
+- **Event Card displays:**
+  - **Title:** "New Friend Request"
+  - **Content:** "Peer [peer ID] wants to add you as a friend"
+  - **Three Action Buttons:**
+    - **Accept button:**
+      - Adds peer to friends list with peer ID as initial name
+      - Removes peer ID from `pendingNewFriendRequests`
+      - Removes the event from event list
+      - Sends acceptance confirmation to peer (if connection still active)
+    - **Decline button:**
+      - Adds peer ID to `declinedFriendRequests` storage
+      - Removes peer ID from `pendingNewFriendRequests`
+      - Removes the event from event list
+      - Does NOT send any message to peer (silent decline)
+    - **Ignore button:**
+      - Removes the event from event list
+      - Keeps peer ID in `pendingNewFriendRequests` (may reappear)
+      - Does NOT modify `declinedFriendRequests`
+
+### Pending New Invitations List
+- **Location:** In Friends section, below friend cards
+- **Display:** Collapsible section "Pending Invitations" with count badge
+- **For each pending invitation:**
+  - Shows peer ID (truncated with ellipsis if too long)
+  - Shows "Waiting for peer discovery..." status
+  - **Remove button:** removes peer ID from `pendingNewInvitations`
+
 ## `Log` button (see CLAUDE.md "Log")
 - there is a log button under the Profile button that flips to a log view
   - log messages are in tabular format with sortable Date and Message columns

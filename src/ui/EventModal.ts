@@ -2,8 +2,7 @@
  * Event Modal - Displays event cards with actions
  */
 
-import type { EventService } from '../services/EventService';
-import type { IEvent, IFriendRequestEvent, IFriendApprovedEvent } from '../types/events';
+import type { EventService, IEvent, IFriendRequestEvent, IFriendApprovedEvent, INewFriendRequestEvent } from '../services/EventService';
 import type { HollowPeer } from '../p2p/HollowPeer';
 
 export interface IEventModal {
@@ -289,6 +288,99 @@ export class EventModal implements IEventModal {
                                         font-weight: bold;
                                     ">
                                     View Friend
+                                </button>
+                            </div>
+                        </div>
+                        <button
+                            class="event-remove-btn"
+                            data-event-id="${event.id}"
+                            title="Remove event"
+                            style="
+                                background: transparent;
+                                border: none;
+                                color: #8B7355;
+                                font-size: 24px;
+                                cursor: pointer;
+                                padding: 0;
+                                width: 30px;
+                                height: 30px;
+                                line-height: 1;
+                            ">
+                            💀
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else if (event.type === 'newFriendRequest') {
+            const newFriendReqEvent = event as INewFriendRequestEvent;
+            const truncatedPeerId = newFriendReqEvent.data.remotePeerId.substring(0, 20) + '...';
+            return `
+                <div class="event-card" style="
+                    background: #3A2817;
+                    border: 2px solid #654321;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                    position: relative;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div style="color: #D4AF37; font-weight: bold; font-size: 16px; margin-bottom: 8px;">
+                                👥 New Friend Request
+                            </div>
+                            <div style="color: #F5DEB3; margin-bottom: 5px;">
+                                Peer <strong>${truncatedPeerId}</strong> wants to add you as a friend
+                            </div>
+                            <div style="color: #8B7355; font-size: 12px;">
+                                ${timestamp}
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <button
+                                    class="event-action-accept-new"
+                                    data-event-id="${event.id}"
+                                    data-peer-id="${newFriendReqEvent.data.remotePeerId}"
+                                    style="
+                                        background: #228B22;
+                                        border: 2px solid #1F7A1F;
+                                        color: white;
+                                        padding: 8px 16px;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        margin-right: 10px;
+                                        font-weight: bold;
+                                    ">
+                                    Accept
+                                </button>
+                                <button
+                                    class="event-action-decline-new"
+                                    data-event-id="${event.id}"
+                                    data-peer-id="${newFriendReqEvent.data.remotePeerId}"
+                                    style="
+                                        background: #DC143C;
+                                        border: 2px solid #B22222;
+                                        color: white;
+                                        padding: 8px 16px;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        margin-right: 10px;
+                                        font-weight: bold;
+                                    ">
+                                    Decline
+                                </button>
+                                <button
+                                    class="event-action-ignore-new"
+                                    data-event-id="${event.id}"
+                                    data-peer-id="${newFriendReqEvent.data.remotePeerId}"
+                                    style="
+                                        background: #8B4513;
+                                        border: 2px solid #654321;
+                                        color: #F5DEB3;
+                                        padding: 8px 16px;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        font-weight: bold;
+                                    ">
+                                    Ignore
                                 </button>
                             </div>
                         </div>

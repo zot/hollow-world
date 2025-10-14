@@ -5,6 +5,7 @@ import { IAudioManager } from '../audio/AudioManager.js';
 import { MilkdownUtils, IMilkdownEditor } from '../utils/MilkdownUtils.js';
 import { LogService, ILogEntry } from '../services/LogService.js';
 import { HollowPeer } from '../p2p/index.js';
+import type { IFriend } from '../p2p/types.js';
 import { router } from '../utils/Router.js';
 import { getProfileService } from '../services/ProfileService.js';
 import '../styles/SettingsView.css';
@@ -35,13 +36,6 @@ export interface ISettingsData {
     activeInvitations: Record<string, IInvitation>;
 }
 
-export interface IFriend {
-    id: string;
-    peerId: string;
-    playerName: string;
-    notes: string;
-}
-
 export interface IInvitation {
     friendName: string;
     friendId: string | null;
@@ -69,6 +63,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     private playerNameInput: HTMLInputElement | null = null;
     private privateNotesEditor: IMilkdownEditor | null = null;
     private inviteFriendNotesEditor: IMilkdownEditor | null = null;
+    private newFriendNotesEditor: IMilkdownEditor | null = null;
     public musicButtonElement: HTMLElement | null = null;
     private logService: LogService;
     private logSortColumn: string = 'serial';
@@ -189,6 +184,10 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         if (this.inviteFriendNotesEditor) {
             this.inviteFriendNotesEditor.destroy();
             this.inviteFriendNotesEditor = null;
+        }
+        if (this.newFriendNotesEditor) {
+            this.newFriendNotesEditor.destroy();
+            this.newFriendNotesEditor = null;
         }
         if (this.container) {
             this.container.innerHTML = '';
@@ -419,8 +418,98 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
             if (acceptedInvitationInput) acceptedInvitationInput.value = '';
         });
 
+        // Add Friend by Peer ID modal
+        const addFriendByPeerIdBtn = this.container?.querySelector('#add-friend-by-peerid-btn');
+        const addFriendPeerIdModal = this.container?.querySelector('#add-friend-peerid-modal') as HTMLElement;
+        const closeAddFriendPeerIdModalBtn = this.container?.querySelector('#close-add-friend-peerid-modal-btn');
+        const addFriendPeerIdSubmitBtn = this.container?.querySelector('#add-friend-peerid-submit-btn');
+        const newFriendNameInput = this.container?.querySelector('#new-friend-name') as HTMLInputElement;
+        const newFriendPeerIdInput = this.container?.querySelector('#new-friend-peerid') as HTMLInputElement;
+
+        addFriendByPeerIdBtn?.addEventListener('click', async () => {
+            await AudioControlUtils.playButtonSound(this.audioManager);
+            if (addFriendPeerIdModal) addFriendPeerIdModal.style.display = 'flex';
+
+            // Initialize notes editor if not already created
+            const notesContainer = this.container?.querySelector('#new-friend-notes') as HTMLElement;
+            if (notesContainer && !this.newFriendNotesEditor) {
+                this.newFriendNotesEditor = await MilkdownUtils.createEditor(notesContainer, '');
+            }
+        });
+
+        closeAddFriendPeerIdModalBtn?.addEventListener('click', async () => {
+            await AudioControlUtils.playButtonSound(this.audioManager);
+            if (addFriendPeerIdModal) addFriendPeerIdModal.style.display = 'none';
+            // Clear inputs
+            if (newFriendNameInput) newFriendNameInput.value = '';
+            if (newFriendPeerIdInput) newFriendPeerIdInput.value = '';
+
+            // Clear and destroy notes editor
+            if (this.newFriendNotesEditor) {
+                this.newFriendNotesEditor.destroy();
+                this.newFriendNotesEditor = null;
+            }
+        });
+
+        addFriendPeerIdSubmitBtn?.addEventListener('click', async () => {
+            await AudioControlUtils.playButtonSound(this.audioManager);
+            const friendName = newFriendNameInput?.value.trim();
+            const peerId = newFriendPeerIdInput?.value.trim();
+            const notes = this.newFriendNotesEditor?.getMarkdown() || '';
+
+            if (!friendName) {
+                alert('Please enter a friend name');
+                return;
+            }
+
+            if (!peerId) {
+                alert('Please enter a peer ID');
+                return;
+            }
+
+            if (!this.hollowPeer) {
+                this.logService.log('Failed to add friend: P2P not initialized');
+                alert('P2P system not initialized. Please try again later.');
+                return;
+            }
+
+            // Add to pending new invitations
+            this.hollowPeer.addPendingNewInvitation(peerId);
+            this.logService.log(`Added ${peerId} to pending new invitations`);
+
+            // Add as friend with notes (will be contacted when discovered)
+            try {
+                this.hollowPeer.addFriend(friendName, peerId, notes);
+                this.logService.log(`Added friend ${friendName} (${peerId}) - will send friend request when discovered`);
+                alert('Friend added! Will send friend request when peer is discovered.');
+            } catch (error: any) {
+                this.logService.log(`Failed to add friend: ${error.message}`);
+                alert(`Failed to add friend: ${error.message}`);
+                return;
+            }
+
+            if (addFriendPeerIdModal) addFriendPeerIdModal.style.display = 'none';
+            // Clear inputs
+            if (newFriendNameInput) newFriendNameInput.value = '';
+            if (newFriendPeerIdInput) newFriendPeerIdInput.value = '';
+
+            // Clear and destroy notes editor
+            if (this.newFriendNotesEditor) {
+                this.newFriendNotesEditor.destroy();
+                this.newFriendNotesEditor = null;
+            }
+
+            // Re-render to update the lists
+            if (this.container) {
+                this.renderSettings(this.container);
+            }
+        });
+
         // Friend card expand/collapse handlers
         this.setupFriendCardHandlers();
+
+        // Render pending new invitations
+        this.renderPendingNewInvitations();
     }
 
     private setupFriendCardHandlers(): void {
@@ -575,10 +664,146 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         );
     }
 
+    private renderPendingNewInvitations(): void {
+        if (!this.container || !this.hollowPeer) return;
+
+        const pendingList = this.container.querySelector('#pending-invitations-list');
+        const countBadge = this.container.querySelector('#pending-invitations-count');
+
+        if (!pendingList || !countBadge) return;
+
+        const pendingInvitations = this.hollowPeer.getPendingNewInvitations();
+        countBadge.textContent = pendingInvitations.length.toString();
+
+        if (pendingInvitations.length === 0) {
+            pendingList.innerHTML = '<p class="no-pending">No pending invitations</p>';
+            return;
+        }
+
+        // Render each pending invitation
+        const invitationsHtml = pendingInvitations.map(peerId => {
+            const truncatedId = peerId.length > 30 ? peerId.substring(0, 30) + '...' : peerId;
+            return `
+<div class="pending-invitation-item" data-peer-id="${peerId}">
+    <div class="pending-invitation-info">
+        <div class="pending-invitation-peerid">${truncatedId}</div>
+        <div class="pending-invitation-status">Waiting for peer discovery...</div>
+    </div>
+    <button class="remove-pending-invitation-btn" data-peer-id="${peerId}" title="Remove">❌</button>
+</div>`;
+        }).join('');
+
+        pendingList.innerHTML = invitationsHtml;
+
+        // Set up remove button handlers
+        const removeButtons = pendingList.querySelectorAll('.remove-pending-invitation-btn');
+        removeButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const peerId = btn.getAttribute('data-peer-id');
+                if (peerId && this.hollowPeer) {
+                    this.hollowPeer.removePendingNewInvitation(peerId);
+                    this.logService.log(`Removed ${peerId} from pending new invitations`);
+                    // Re-render the list
+                    this.renderPendingNewInvitations();
+                }
+            });
+        });
+    }
+
     private setupEventCardHandlers(): void {
         // Use event delegation for dynamically rendered event cards
         document.addEventListener('click', async (e: Event) => {
             const target = e.target as HTMLElement;
+
+            // Handle Accept button in newFriendRequest events
+            if (target.classList.contains('event-action-accept-new')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+
+                const peerId = target.getAttribute('data-peer-id');
+                const eventId = target.getAttribute('data-event-id');
+
+                if (!peerId) {
+                    this.logService.log('Invalid new friend request event data');
+                    console.error('Missing peer ID on Accept button');
+                    return;
+                }
+
+                if (!this.hollowPeer) {
+                    this.logService.log('Failed to accept new friend request: P2P not initialized');
+                    alert('P2P system not initialized');
+                    return;
+                }
+
+                try {
+                    // Call HollowPeer's acceptNewFriendRequest method
+                    await this.hollowPeer.acceptNewFriendRequest(peerId);
+                    this.logService.log(`Accepted new friend request from ${peerId.substring(0, 20)}...`);
+                    console.log(`✅ Accepted new friend request from ${peerId.substring(0, 20)}...`);
+
+                    // Re-render to show the new friend
+                    if (this.container) {
+                        this.renderSettings(this.container);
+                    }
+                } catch (error: any) {
+                    this.logService.log(`Failed to accept new friend request: ${error.message}`);
+                    console.error('❌ Failed to accept new friend request:', error);
+                    alert(`Failed to accept new friend request: ${error.message}`);
+                }
+            }
+
+            // Handle Decline button in newFriendRequest events
+            if (target.classList.contains('event-action-decline-new')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+
+                const peerId = target.getAttribute('data-peer-id');
+                const eventId = target.getAttribute('data-event-id');
+
+                if (!peerId) {
+                    this.logService.log('Invalid new friend request event data');
+                    console.error('Missing peer ID on Decline button');
+                    return;
+                }
+
+                if (!this.hollowPeer) {
+                    this.logService.log('Failed to decline new friend request: P2P not initialized');
+                    alert('P2P system not initialized');
+                    return;
+                }
+
+                try {
+                    // Call HollowPeer's declineNewFriendRequest method
+                    this.hollowPeer.declineNewFriendRequest(peerId);
+                    this.logService.log(`Declined new friend request from ${peerId.substring(0, 20)}...`);
+                    console.log(`❌ Declined new friend request from ${peerId.substring(0, 20)}...`);
+                } catch (error: any) {
+                    this.logService.log(`Failed to decline new friend request: ${error.message}`);
+                    console.error('❌ Failed to decline new friend request:', error);
+                    alert(`Failed to decline new friend request: ${error.message}`);
+                }
+            }
+
+            // Handle Ignore button in newFriendRequest events
+            if (target.classList.contains('event-action-ignore-new')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+
+                const peerId = target.getAttribute('data-peer-id');
+                const eventId = target.getAttribute('data-event-id');
+
+                if (!peerId) {
+                    console.error('Missing peer ID on Ignore button');
+                    return;
+                }
+
+                if (!this.hollowPeer) {
+                    return;
+                }
+
+                // Just remove the event without sending any response
+                this.hollowPeer.ignoreNewFriendRequest(peerId);
+                this.logService.log(`Ignored new friend request from ${peerId.substring(0, 20)}...`);
+            }
 
             // Handle Accept button in friend request events
             if (target.classList.contains('event-action-accept')) {
@@ -795,8 +1020,8 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     }
 
     removeFriend(friendId: string): void {
-        const friend = this.settingsData.friends.find(f => f.id === friendId);
-        this.settingsData.friends = this.settingsData.friends.filter(f => f.id !== friendId);
+        const friend = this.settingsData.friends.find(f => f.peerId === friendId);
+        this.settingsData.friends = this.settingsData.friends.filter(f => f.peerId !== friendId);
         if (friend) {
             this.logService.log(`Friend removed: ${friend.playerName}`);
         }

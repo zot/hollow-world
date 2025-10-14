@@ -183,7 +183,15 @@ Follow the libp2p universal-connectivity approach for maximum peer reachability:
     connectionEncrypters: [noise()],
     streamMuxers: [yamux()],
     connectionGater: {
-      denyDialMultiaddr: async () => false  // Allow all connections
+      // Allow all connections (including local network connections)
+      // This is required for local testing between browser tabs
+      denyDialMultiaddr: async () => false,
+      denyInboundConnection: async () => false,
+      denyOutboundConnection: async () => false,
+      denyInboundEncryptedConnection: async () => false,
+      denyOutboundEncryptedConnection: async () => false,
+      denyInboundUpgradedConnection: async () => false,
+      denyOutboundUpgradedConnection: async () => false,
     },
     peerDiscovery: [
       pubsubPeerDiscovery({
@@ -589,6 +597,24 @@ this.friends = new Map(Object.entries(friendsObject));
   - friendId can be null
 - there is a `pendingFriendRequests` Object of peerID -> invitation
 
+### New Invitations (Peer Discovery-Based)
+
+**Storage Items**:
+- **`pendingNewInvitations`** (Array of peer IDs): Peer IDs that user wants to add as friends
+- **`pendingNewFriendRequests`** (Object): Incoming new friend requests, keyed by peer ID
+- **`declinedFriendRequests`** (Object): Declined peer IDs, keyed by peer ID with value `true`
+
+**Behavior**:
+- When a peer from `pendingNewInvitations` appears in a broadcast/discovery event:
+  - Attempt to connect to the peer
+  - Send a `newFriendRequest` message
+  - Keep peer ID in `pendingNewInvitations` until accepted
+- When receiving a `newFriendRequest` message:
+  - If sending peer ID is in `declinedFriendRequests`: ignore silently
+  - If sending peer ID is already in friends list: ignore
+  - If sending peer ID is not in `pendingNewFriendRequests`: add it and create a newFriendRequest event
+- All storage items are persisted to localStorage
+
 ### Peer connections
 don't log peer connections since the peer count display handles that.
 
@@ -733,6 +759,16 @@ Each p2p message will have a corresponding p2p method implementation in the Holl
     - if handler not found, log warning (unexpected response)
     - log successful connectivity
     - mark peer as reachable
+- newFriendRequest
+  - message properties: (none, sender's peer ID is implicit)
+  - behavior on sending peer
+    - sent automatically when a peer from `pendingNewInvitations` is discovered
+    - keeps peer ID in `pendingNewInvitations` until friend request is accepted
+  - behavior on receiving peer
+    - if sender peer ID is in `declinedFriendRequests` storage: ignore silently
+    - if sender peer ID is already in friends list: ignore
+    - if sender peer ID is not in `pendingNewFriendRequests`: add it and create a newFriendRequest event
+      - the event view has `Accept`, `Decline`, and `Ignore` buttons (see UI spec for details)
 
 ## 📁 File Organization
 

@@ -5,7 +5,7 @@
 
 import { getProfileService } from './ProfileService.js';
 
-export type EventType = 'friendRequest' | 'friendApproved' | 'friendDeclined';
+export type EventType = 'friendRequest' | 'friendApproved' | 'friendDeclined' | 'newFriendRequest';
 
 export interface IEvent {
     id: string;
@@ -28,6 +28,13 @@ export interface IFriendApprovedEvent extends IEvent {
     data: {
         remotePeerId: string;
         friendName: string; // The friend who approved
+    };
+}
+
+export interface INewFriendRequestEvent extends IEvent {
+    type: 'newFriendRequest';
+    data: {
+        remotePeerId: string;
     };
 }
 
@@ -162,6 +169,18 @@ export class EventService {
             data: {
                 remotePeerId,
                 friendName
+            }
+        };
+    }
+
+    // Helper to create new friend request event
+    createNewFriendRequestEvent(remotePeerId: string): INewFriendRequestEvent {
+        return {
+            id: `new-friend-request-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'newFriendRequest',
+            timestamp: new Date(),
+            data: {
+                remotePeerId
             }
         };
     }

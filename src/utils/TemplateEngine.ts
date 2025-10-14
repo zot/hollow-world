@@ -95,4 +95,4 @@ export class TemplateEngine implements ITemplateEngine {
 }
 
 // Singleton instance for the application
-export const templateEngine = new TemplateEngine();
+export const templateEngine = new TemplateEngine(window.Base);

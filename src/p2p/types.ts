@@ -35,11 +35,16 @@ export interface IPongMessage extends IP2PMessage {
     messageId: string;
 }
 
+export interface INewFriendRequestMessage extends IP2PMessage {
+    method: 'newFriendRequest';
+}
+
 export type P2PMessage =
     | IRequestFriendMessage
     | IApproveFriendRequestMessage
     | IPingMessage
-    | IPongMessage;
+    | IPongMessage
+    | INewFriendRequestMessage;
 
 // ==================== Friend Types ====================
 
@@ -79,6 +84,7 @@ export interface IFriendsManager {
     removeFriend(peerId: string): boolean;
     getFriend(peerId: string): IFriend | undefined;
     getAllFriends(): Map<string, IFriend>;
+    updateFriend(peerId: string, friend: IFriend): void;
 }
 
 // ==================== Network Provider Interface ====================
