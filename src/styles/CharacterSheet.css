@@ -423,6 +423,83 @@
     border-radius: 3px 0 0 3px; /* Connect to spinner buttons */
 }
 
+/* Attribute box layout for character sheet */
+.attribute-box {
+    border: 1px solid #8b7355;
+    border-radius: 5px;
+    padding: 8px;
+    margin-right: 5px;
+    background: rgba(139, 115, 85, 0.1);
+    min-width: 120px;
+    text-align: center;
+    transition: background-color 0.2s ease;
+}
+
+.attribute-box:hover {
+    cursor: ns-resize;
+    background-color: rgba(139, 115, 85, 0.2);
+}
+
+.attribute-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.attribute-line .attribute-value {
+    min-width: 25px;
+    font-size: 16px;
+}
+
+/* Attribute category row with emoji */
+.attribute-category-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 5px;
+}
+
+.category-emoji {
+    margin-right: 10px;
+    font-size: 20px;
+    min-width: 30px;
+}
+
+/* Attribute spinner buttons in box layout */
+.attribute-box .attribute-spinner {
+    display: flex;
+    flex-direction: column;
+}
+
+.attribute-box .attr-btn {
+    background: #8b7355;
+    color: white;
+    border: none;
+    border-radius: 2px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    font-size: 10px;
+    line-height: 1;
+}
+
+.attribute-box .attr-btn.inc-btn {
+    margin-bottom: 1px;
+}
+
+.attribute-box .attr-btn:hover {
+    background: #6d5b43;
+}
+
+.attribute-box .attr-btn:active {
+    background: #5a4a36;
+}
+
+.attributes-container {
+    padding: 0 5px;
+}
+
 /* Medium screens: 2 columns for better fit on smaller desktops/tablets */
 @media (max-width: 1024px) and (min-width: 769px) {
     .attributes-grid {

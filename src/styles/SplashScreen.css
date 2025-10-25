@@ -262,6 +262,7 @@ html, body {
 .splash-join-button,
 .splash-start-button,
 .splash-characters-button,
+.splash-adventure-button,
 .splash-credits-button,
 .splash-settings-button {
     font-family: 'Rye', 'Impact', 'Arial Black', sans-serif;
@@ -294,6 +295,7 @@ html, body {
 .splash-join-button::before,
 .splash-start-button::before,
 .splash-characters-button::before,
+.splash-adventure-button::before,
 .splash-credits-button::before,
 .splash-settings-button::before {
     content: '';
@@ -309,6 +311,7 @@ html, body {
 .splash-join-button::after,
 .splash-start-button::after,
 .splash-characters-button::after,
+.splash-adventure-button::after,
 .splash-credits-button::after,
 .splash-settings-button::after {
     content: '★';
@@ -323,6 +326,7 @@ html, body {
 .splash-join-button:hover,
 .splash-start-button:hover,
 .splash-characters-button:hover,
+.splash-adventure-button:hover,
 .splash-credits-button:hover,
 .splash-settings-button:hover {
     background:
@@ -344,6 +348,7 @@ html, body {
 .splash-join-button:active,
 .splash-start-button:active,
 .splash-characters-button:active,
+.splash-adventure-button:active,
 .splash-credits-button:active,
 .splash-settings-button:active {
     transform: perspective(150px) rotateX(-5deg) translateY(1px);

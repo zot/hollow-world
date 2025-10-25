@@ -6,17 +6,7 @@
         </div>
         <div class="event-modal-content">
             <div class="event-list">
-                {{#if hasEvents}}
-                    {{#each events}}
-                        <div class="event-card" data-event-id="{{id}}">
-                            {{> event-card}}
-                        </div>
-                    {{/each}}
-                {{else}}
-                    <div class="no-events">
-                        <p>No pending events</p>
-                    </div>
-                {{/if}}
+                <!-- Event list will be populated dynamically -->
             </div>
         </div>
     </div>

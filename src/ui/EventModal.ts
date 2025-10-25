@@ -4,9 +4,10 @@
 
 import type { EventService, IEvent, IFriendRequestEvent, IFriendDeclinedEvent } from '../services/EventService';
 import type { HollowPeer } from '../p2p/HollowPeer';
+import '../styles/EventModal.css';
 
 export interface IEventModal {
-    render(): HTMLElement;
+    render(): Promise<HTMLElement>;
     show(): void;
     hide(): void;
     destroy(): void;
@@ -27,95 +28,22 @@ export class EventModal implements IEventModal {
         });
     }
 
-    render(): HTMLElement {
-        // Create modal overlay
-        this.modal = document.createElement('div');
-        this.modal.className = 'event-modal-overlay';
-        this.modal.style.cssText = `
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        `;
+    async render(): Promise<HTMLElement> {
+        // Load template
+        const { TemplateEngine } = await import('../utils/TemplateEngine.js');
+        const templateEngine = new TemplateEngine();
+        const html = await templateEngine.loadTemplate('event-modal', {});
 
-        // Create modal content
-        const modalContent = document.createElement('div');
-        modalContent.className = 'event-modal-content';
-        modalContent.style.cssText = `
-            background: #2C1810;
-            border: 3px solid #8B4513;
-            border-radius: 8px;
-            padding: 20px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-        `;
+        // Create container from template
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        this.modal = temp.firstElementChild as HTMLDivElement;
 
-        // Modal header
-        const header = document.createElement('div');
-        header.style.cssText = `
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #654321;
-            padding-bottom: 10px;
-        `;
-
-        const title = document.createElement('h2');
-        title.textContent = '📯 Events';
-        title.style.cssText = `
-            color: #D4AF37;
-            margin: 0;
-            font-family: 'Western', serif;
-        `;
-
-        const closeBtn = document.createElement('button');
-        closeBtn.innerHTML = '✕';
-        closeBtn.title = 'Close';
-        closeBtn.style.cssText = `
-            background: #8B4513;
-            border: 2px solid #654321;
-            color: #F5DEB3;
-            width: 36px;
-            height: 36px;
-            border-radius: 4px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        `;
-
-        closeBtn.addEventListener('mouseenter', () => {
-            closeBtn.style.background = '#654321';
-        });
-
-        closeBtn.addEventListener('mouseleave', () => {
-            closeBtn.style.background = '#8B4513';
-        });
-
-        closeBtn.addEventListener('click', () => {
+        // Setup event listeners
+        const closeBtn = this.modal.querySelector('.event-modal-close');
+        closeBtn?.addEventListener('click', () => {
             this.hide();
         });
-
-        header.appendChild(title);
-        header.appendChild(closeBtn);
-
-        // Event list container
-        const eventList = document.createElement('div');
-        eventList.className = 'event-list';
-
-        modalContent.appendChild(header);
-        modalContent.appendChild(eventList);
-        this.modal.appendChild(modalContent);
 
         // Close on overlay click
         this.modal.addEventListener('click', (e) => {
@@ -130,7 +58,7 @@ export class EventModal implements IEventModal {
         return this.modal;
     }
 
-    private updateEventList(): void {
+    private async updateEventList(): Promise<void> {
         if (!this.modal) return;
 
         const eventList = this.modal.querySelector('.event-list');
@@ -140,196 +68,58 @@ export class EventModal implements IEventModal {
 
         if (events.length === 0) {
             eventList.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #8B7355;">
-                    <p style="font-size: 18px; margin: 0;">No events</p>
+                <div class="no-events">
+                    <p>No events</p>
                 </div>
             `;
             return;
         }
 
-        // Render event cards
-        eventList.innerHTML = events.map(event => this.renderEventCard(event)).join('');
+        // Render event cards asynchronously
+        const cardPromises = events.map(event => this.renderEventCard(event));
+        const cards = await Promise.all(cardPromises);
+        eventList.innerHTML = cards.join('');
 
         // Attach event listeners
         this.attachEventCardListeners();
     }
 
-    private renderEventCard(event: IEvent): string {
+    private async renderEventCard(event: IEvent): Promise<string> {
         const timestamp = new Date(event.timestamp).toLocaleString();
+        const { TemplateEngine } = await import('../utils/TemplateEngine.js');
+        const templateEngine = new TemplateEngine();
 
         if (event.type === 'friendRequest') {
             const friendReqEvent = event as IFriendRequestEvent;
             const truncatedPeerId = friendReqEvent.data.remotePeerId.substring(0, 20) + '...';
-            return `
-                <div class="event-card" style="
-                    background: #3A2817;
-                    border: 2px solid #654321;
-                    border-radius: 8px;
-                    padding: 15px;
-                    margin-bottom: 15px;
-                    position: relative;
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div style="flex: 1;">
-                            <div style="color: #D4AF37; font-weight: bold; font-size: 16px; margin-bottom: 8px;">
-                                👥 Friend Request
-                            </div>
-                            <div style="color: #F5DEB3; margin-bottom: 5px;">
-                                <strong>${friendReqEvent.data.playerName}</strong> (Peer ID: ${truncatedPeerId}) wants to add you as a friend
-                            </div>
-                            <div style="color: #8B7355; font-size: 12px;">
-                                ${timestamp}
-                            </div>
-                            <div style="margin-top: 10px;">
-                                <button
-                                    class="event-action-ignore-friend"
-                                    data-event-id="${event.id}"
-                                    data-peer-id="${friendReqEvent.data.remotePeerId}"
-                                    data-peer-name="${friendReqEvent.data.playerName}"
-                                    style="
-                                        background: #8B4513;
-                                        border: 2px solid #654321;
-                                        color: #F5DEB3;
-                                        padding: 8px 16px;
-                                        border-radius: 4px;
-                                        cursor: pointer;
-                                        margin-right: 10px;
-                                        font-weight: bold;
-                                    ">
-                                    Ignore
-                                </button>
-                                <button
-                                    class="event-action-decline-friend"
-                                    data-event-id="${event.id}"
-                                    data-peer-id="${friendReqEvent.data.remotePeerId}"
-                                    style="
-                                        background: #DC143C;
-                                        border: 2px solid #B22222;
-                                        color: white;
-                                        padding: 8px 16px;
-                                        border-radius: 4px;
-                                        cursor: pointer;
-                                        margin-right: 10px;
-                                        font-weight: bold;
-                                    ">
-                                    Decline
-                                </button>
-                                <button
-                                    class="event-action-accept-friend"
-                                    data-event-id="${event.id}"
-                                    data-peer-id="${friendReqEvent.data.remotePeerId}"
-                                    data-peer-name="${friendReqEvent.data.playerName}"
-                                    style="
-                                        background: #228B22;
-                                        border: 2px solid #1F7A1F;
-                                        color: white;
-                                        padding: 8px 16px;
-                                        border-radius: 4px;
-                                        cursor: pointer;
-                                        font-weight: bold;
-                                    ">
-                                    Accept
-                                </button>
-                            </div>
-                        </div>
-                        <button
-                            class="event-remove-btn"
-                            data-event-id="${event.id}"
-                            title="Remove event"
-                            style="
-                                background: transparent;
-                                border: none;
-                                color: #8B7355;
-                                font-size: 24px;
-                                cursor: pointer;
-                                padding: 0;
-                                width: 30px;
-                                height: 30px;
-                                line-height: 1;
-                            ">
-                            💀
-                        </button>
-                    </div>
-                </div>
-            `;
+            
+            return await templateEngine.renderTemplateFromFile('event-card-friend-request', {
+                eventId: event.id,
+                playerName: friendReqEvent.data.playerName,
+                remotePeerId: friendReqEvent.data.remotePeerId,
+                truncatedPeerId: truncatedPeerId,
+                timestamp: timestamp
+            });
         }
 
         if (event.type === 'friendDeclined') {
             const friendDeclinedEvent = event as IFriendDeclinedEvent;
-            return `
-                <div class="event-card" style="
-                    background: #3A2817;
-                    border: 2px solid #654321;
-                    border-radius: 8px;
-                    padding: 15px;
-                    margin-bottom: 15px;
-                    position: relative;
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div style="flex: 1;">
-                            <div style="color: #D4AF37; font-weight: bold; font-size: 16px; margin-bottom: 8px;">
-                                ❌ Friend Request Declined
-                            </div>
-                            <div style="color: #F5DEB3; margin-bottom: 5px;">
-                                <strong>${friendDeclinedEvent.data.playerName}</strong> declined your friend request
-                            </div>
-                            <div style="color: #8B7355; font-size: 12px;">
-                                ${timestamp}
-                            </div>
-                            <div style="margin-top: 10px;">
-                                <button
-                                    class="event-action-dismiss"
-                                    data-event-id="${event.id}"
-                                    style="
-                                        background: #8B4513;
-                                        border: 2px solid #654321;
-                                        color: #F5DEB3;
-                                        padding: 8px 16px;
-                                        border-radius: 4px;
-                                        cursor: pointer;
-                                        font-weight: bold;
-                                    ">
-                                    Dismiss
-                                </button>
-                            </div>
-                        </div>
-                        <button
-                            class="event-remove-btn"
-                            data-event-id="${event.id}"
-                            title="Remove event"
-                            style="
-                                background: transparent;
-                                border: none;
-                                color: #8B7355;
-                                font-size: 24px;
-                                cursor: pointer;
-                                padding: 0;
-                                width: 30px;
-                                height: 30px;
-                                line-height: 1;
-                            ">
-                            💀
-                        </button>
-                    </div>
-                </div>
-            `;
+            
+            return await templateEngine.renderTemplateFromFile('event-card-friend-declined', {
+                eventId: event.id,
+                playerName: friendDeclinedEvent.data.playerName,
+                timestamp: timestamp
+            });
         }
 
         // Fallback for unknown event types
         return `
-            <div class="event-card" style="
-                background: #3A2817;
-                border: 2px solid #654321;
-                border-radius: 8px;
-                padding: 15px;
-                margin-bottom: 15px;
-                color: #F5DEB3;
-            ">
-                <div>Unknown event type: ${event.type}</div>
+            <div class="event-card">
+                <div class="event-card-message">Unknown event type: ${event.type}</div>
                 <button
                     class="event-remove-btn"
                     data-event-id="${event.id}"
-                    style="margin-top: 10px; background: #8B4513; border: 2px solid #654321; color: #F5DEB3; padding: 5px 10px; cursor: pointer;">
+                    style="margin-top: 10px;">
                     Remove
                 </button>
             </div>

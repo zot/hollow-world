@@ -1,16 +1,18 @@
 <h2>Benefits & Drawbacks</h2>
 <div class="benefits-drawbacks">
     {{#if hasBenefits}}
-        <h3>Benefits</h3>
-        {{benefitsHtml}}
-    {{else}}
-        <p>No benefits defined</p>
+    <h3>Benefits</h3>
+    {{benefitsHtml}}
+    {{/if}}
+    {{#if noBenefits}}
+    <p>No benefits defined</p>
     {{/if}}
 
     {{#if hasDrawbacks}}
-        <h3>Drawbacks</h3>
-        {{drawbacksHtml}}
-    {{else}}
-        <p>No drawbacks defined</p>
+    <h3>Drawbacks</h3>
+    {{drawbacksHtml}}
+    {{/if}}
+    {{#if noDrawbacks}}
+    <p>No drawbacks defined</p>
     {{/if}}
 </div>

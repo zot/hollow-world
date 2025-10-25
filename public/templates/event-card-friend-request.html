@@ -1,15 +1,43 @@
-<div class="event-card-content friend-request-event">
-    <div class="event-info">
-        <div class="event-icon">👥</div>
-        <div class="event-details">
-            <h3>Friend Request</h3>
-            <p class="event-friend-name">{{data.friendName}}</p>
-            <p class="event-timestamp">{{formattedTimestamp}}</p>
+<div class="event-card">
+    <div class="event-card-header">
+        <div class="event-card-content">
+            <div class="event-card-title">
+                👥 Friend Request
+            </div>
+            <div class="event-card-message">
+                <strong>{{playerName}}</strong> (Peer ID: {{truncatedPeerId}}) wants to add you as a friend
+            </div>
+            <div class="event-card-timestamp">
+                {{timestamp}}
+            </div>
+            <div class="event-card-actions">
+                <button
+                    class="event-action-ignore-friend"
+                    data-event-id="{{eventId}}"
+                    data-peer-id="{{remotePeerId}}"
+                    data-peer-name="{{playerName}}">
+                    Ignore
+                </button>
+                <button
+                    class="event-action-decline-friend"
+                    data-event-id="{{eventId}}"
+                    data-peer-id="{{remotePeerId}}">
+                    Decline
+                </button>
+                <button
+                    class="event-action-accept-friend"
+                    data-event-id="{{eventId}}"
+                    data-peer-id="{{remotePeerId}}"
+                    data-peer-name="{{playerName}}">
+                    Accept
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="event-actions">
-        <button class="event-action-accept" data-peer-id="{{data.remotePeerId}}" data-friend-name="{{data.friendName}}" data-invite-code="{{data.inviteCode}}" data-event-id="{{id}}">Accept</button>
-        <button class="event-action-ignore" data-event-id="{{id}}">Ignore</button>
-        <button class="event-remove" data-event-id="{{id}}" aria-label="Remove event">💀</button>
+        <button
+            class="event-remove-btn"
+            data-event-id="{{eventId}}"
+            title="Remove event">
+            💀
+        </button>
     </div>
 </div>

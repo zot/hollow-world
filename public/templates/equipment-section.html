@@ -1,16 +1,18 @@
 <h2>Equipment & Companions</h2>
 <div class="equipment-list">
     {{#if hasItems}}
-        <h3>Items</h3>
-        {{itemsHtml}}
-    {{else}}
-        <p>No items</p>
+    <h3>Items</h3>
+    {{itemsHtml}}
+    {{/if}}
+    {{#if noItems}}
+    <p>No items</p>
     {{/if}}
 
     {{#if hasCompanions}}
-        <h3>Companions</h3>
-        {{companionsHtml}}
-    {{else}}
-        <p>No companions</p>
+    <h3>Companions</h3>
+    {{companionsHtml}}
+    {{/if}}
+    {{#if noCompanions}}
+    <p>No companions</p>
     {{/if}}
 </div>

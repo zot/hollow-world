@@ -3,14 +3,16 @@
     {{#if hasFields}}
         <h3>Fields</h3>
         {{fieldsHtml}}
-    {{else}}
+    {{/if}}
+    {{#if noFields}}
         <p>No fields defined</p>
     {{/if}}
 
     {{#if hasSkills}}
         <h3>Skills</h3>
         {{skillsHtml}}
-    {{else}}
+    {{/if}}
+    {{#if noSkills}}
         <p>No skills defined</p>
     {{/if}}
 </div>

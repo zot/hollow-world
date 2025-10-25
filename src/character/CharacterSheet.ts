@@ -86,19 +86,22 @@ export class CharacterSheet implements ICharacterSheet {
 
     updateCharacter(updates: Partial<ICharacter>): void {
         this.character = CharacterUpdater.updateCharacter(this.character, updates);
-        this.refreshComponents();
+        // Fire-and-forget async refresh
+        this.refreshComponents().catch(error => {
+            console.error('Failed to refresh components:', error);
+        });
     }
 
-    render(container: HTMLElement): void {
+    async render(container: HTMLElement): Promise<void> {
         if (!container) {
             throw new Error('Container element is required');
         }
 
         this.container = container;
-        const sheetHtml = this.createCharacterSheetHTML();
+        const sheetHtml = await this.createCharacterSheetHTML();
         container.innerHTML = sheetHtml;
 
-        this.initializeSubComponents();
+        await this.initializeSubComponents();
         this.applyStyles();
     }
 
@@ -124,7 +127,10 @@ export class CharacterSheet implements ICharacterSheet {
             }
 
             this.character = CharacterUpdater.updateCharacter(this.character, importedCharacter);
-            this.refreshComponents();
+            // Fire-and-forget async refresh
+            this.refreshComponents().catch(error => {
+                console.error('Failed to refresh components:', error);
+            });
             return true;
         } catch (error) {
             console.error('Failed to import character:', error);
@@ -144,7 +150,10 @@ export class CharacterSheet implements ICharacterSheet {
         return {
             onAttributeChange: (attribute: AttributeType, value: number) => {
                 this.character = CharacterUpdater.updateAttribute(this.character, attribute, value);
-                this.refreshComponents();
+                // Fire-and-forget async refresh
+                this.refreshComponents().catch(error => {
+                    console.error('Failed to refresh components:', error);
+                });
             },
             onSkillChange: (skillId: string, level: number) => {
                 const skills = this.character.skills.map(skill =>
@@ -179,369 +188,333 @@ export class CharacterSheet implements ICharacterSheet {
         };
     }
 
-    private createCharacterSheetHTML(): string {
-        return `
-            <div class="${this.config.containerClass}">
-                <div class="${this.config.headerClass}" id="character-header">
-                    <!-- Character Header will be populated by sub-component -->
-                </div>
-
-                <div class="character-main-content">
-                    <div class="character-left-column">
-                        <div class="${this.config.attributesClass}" id="character-attributes">
-                            <!-- Attributes Grid will be populated by sub-component -->
-                        </div>
-
-                        <div class="${this.config.hollowClass}" id="character-hollow">
-                            <!-- Hollow Tracker will be populated by sub-component -->
-                        </div>
-                    </div>
-
-                    <div class="character-right-column">
-                        <div class="${this.config.skillsClass}" id="character-skills">
-                            <!-- Skills Panel will be populated by sub-component -->
-                        </div>
-
-                        <div class="${this.config.benefitsClass}" id="character-benefits">
-                            <!-- Benefits/Drawbacks will be populated by sub-component -->
-                        </div>
-
-                        <div class="${this.config.equipmentClass}" id="character-equipment">
-                            <!-- Equipment will be populated by sub-component -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="character-actions">
-                    ${!this.config.readOnly ? `
-                        <button class="export-btn" id="export-character">Export Character</button>
-                        <button class="import-btn" id="import-character">Import Character</button>
-                        <button class="validate-btn" id="validate-character">Validate</button>
-                    ` : ''}
-                </div>
-            </div>
-        `;
+    private async createCharacterSheetHTML(): Promise<string> {
+        const { TemplateEngine } = await import('../utils/TemplateEngine.js');
+        const templateEngine = new TemplateEngine();
+        
+        return await templateEngine.renderTemplateFromFile('character-sheet', {
+            containerClass: this.config.containerClass,
+            headerClass: this.config.headerClass,
+            attributesClass: this.config.attributesClass,
+            skillsClass: this.config.skillsClass,
+            benefitsClass: this.config.benefitsClass,
+            hollowClass: this.config.hollowClass,
+            equipmentClass: this.config.equipmentClass,
+            showActions: !this.config.readOnly
+        });
     }
 
-    private initializeSubComponents(): void {
+    private async initializeSubComponents(): Promise<void> {
         if (!this.container) return;
 
         // Initialize each sub-component (will be implemented in separate files)
         // For now, add placeholder content
-        this.initializePlaceholderContent();
+        await this.initializePlaceholderContent();
         this.setupActionButtons();
 
         // Ensure proper appearance when first showing the editor
         this.updateDisplay();
     }
 
-    private initializePlaceholderContent(): void {
+    private async initializePlaceholderContent(): Promise<void> {
         if (!this.container) return;
+
+        const { TemplateEngine } = await import('../utils/TemplateEngine.js');
+        const templateEngine = new TemplateEngine();
 
         // Character Header placeholder
         const headerEl = this.container.querySelector('#character-header');
         if (headerEl) {
-            headerEl.innerHTML = `
-                <h1>${this.character.name}</h1>
-                <p class="character-description">${this.character.description}</p>
-                <div class="character-stats">
-                    <span class="rank">Rank ${this.character.rank}</span>
-                    <span class="damage-capacity">Damage Capacity: ${this.character.damageCapacity}</span>
-                    <span class="dust">Dust: ${this.character.hollow.dust}</span>
-                </div>
-                <div class="resource-displays">
-                    <span class="available-xp">Available XP (${CharacterCalculations.calculateTotalXPForRank(this.character.rank)}): ${CharacterCalculations.calculateAvailableXP(this.character)}</span>
-                    <span class="available-chips">Attribute Chips (${CharacterCalculations.calculateTotalAttributeChipsForRank(this.character.rank)}): ${CharacterCalculations.calculateAvailableAttributeChips(this.character)}</span>
-                </div>
-            `;
+            const availableXP = CharacterCalculations.calculateAvailableXP(this.character);
+            const totalXP = CharacterCalculations.calculateTotalXPForRank(this.character.rank);
+            const availableChips = CharacterCalculations.calculateAvailableAttributeChips(this.character);
+            const totalChips = CharacterCalculations.calculateTotalAttributeChipsForRank(this.character.rank);
+            
+            headerEl.innerHTML = await templateEngine.renderTemplateFromFile('character-header-section', {
+                name: this.character.name,
+                description: this.character.description,
+                rank: this.character.rank,
+                damageCapacity: this.character.damageCapacity,
+                dust: this.character.hollow.dust,
+                totalXP,
+                availableXP,
+                totalChips,
+                availableChips
+            });
         }
 
         // Attributes placeholder
         const attributesEl = this.container.querySelector('#character-attributes');
         if (attributesEl) {
-            // Organize attributes by category and cost order per spec - group them in rows
-            const physicalAttrs = [
-                { type: AttributeType.DEX, cost: 4 },
-                { type: AttributeType.STR, cost: 3 },
-                { type: AttributeType.CON, cost: 1 }
-            ];
-            const socialAttrs = [
-                { type: AttributeType.CHA, cost: 4 },
-                { type: AttributeType.WIS, cost: 3 },
-                { type: AttributeType.GRI, cost: 1 }
-            ];
-            const mentalAttrs = [
-                { type: AttributeType.INT, cost: 4 },
-                { type: AttributeType.PER, cost: 4 }
-            ];
-
-            const createAttributeBox = ({ type, cost }: { type: AttributeType; cost: number }) => `
-                <div class="attribute-box" data-attribute="${type}" style="
-                    border: 1px solid #8b7355; 
-                    border-radius: 5px; 
-                    padding: 8px; 
-                    margin-right: 5px; 
-                    background: rgba(139, 115, 85, 0.1);
-                    min-width: 120px;
-                    text-align: center;
-                ">
-                    <div class="attribute-line" style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-                        <span class="attribute-name" style="font-weight: bold;">${type}</span>
-                        <span class="attribute-cost">(${cost})</span>
-                        <span class="attribute-value" id="attr-${type}" style="
-                            min-width: 25px; 
-                            text-align: center; 
-                            font-weight: bold; 
-                            font-size: 16px;
-                        ">${this.character.attributes[type]}</span>
-                        <div class="attribute-spinner" style="display: flex; flex-direction: column;">
-                            <button class="attr-btn inc-btn" data-action="inc" data-attribute="${type}" data-cost="${cost}"
-                                    ${this.config.readOnly ? 'disabled' : ''} style="
-                                        background: #8b7355; 
-                                        color: white; 
-                                        border: none; 
-                                        border-radius: 2px; 
-                                        width: 16px; 
-                                        height: 16px; 
-                                        cursor: pointer;
-                                        font-size: 10px;
-                                        line-height: 1;
-                                        margin-bottom: 1px;
-                                    ">▲</button>
-                            <button class="attr-btn dec-btn" data-action="dec" data-attribute="${type}" data-cost="${cost}"
-                                    ${this.config.readOnly ? 'disabled' : ''} style="
-                                        background: #8b7355; 
-                                        color: white; 
-                                        border: none; 
-                                        border-radius: 2px; 
-                                        width: 16px; 
-                                        height: 16px; 
-                                        cursor: pointer;
-                                        font-size: 10px;
-                                        line-height: 1;
-                                    ">▼</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const createAttributeRow = (emoji: string, attrs: any[]) => `
-                <div class="attribute-category-row" style="
-                    display: flex; 
-                    align-items: center; 
-                    margin-bottom: 15px;
-                    gap: 5px;
-                ">
-                    <span class="category-emoji" style="
-                        margin-right: 10px; 
-                        font-size: 20px;
-                        min-width: 30px;
-                    ">${emoji}</span>
-                    ${attrs.map(createAttributeBox).join('')}
-                </div>
-            `;
-
-            attributesEl.innerHTML = `
-                <h2>Attributes</h2>
-                
-                <div class="attributes-container" style="padding: 0 5px;">
-                    ${createAttributeRow('💪', physicalAttrs)}
-                    ${createAttributeRow('🗣️', socialAttrs)}  
-                    ${createAttributeRow('🧠', mentalAttrs)}
-                </div>
-            `;
-
-            // Add increment/decrement button listeners per specs
-            if (!this.config.readOnly) {
-                attributesEl.querySelectorAll('.attr-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const target = e.target as HTMLButtonElement;
-                        const action = target.dataset.action;
-                        const attribute = target.dataset.attribute as AttributeType;
-                        const cost = parseInt(target.dataset.cost || '1');
-
-                        if (action === 'inc') {
-                            this.incrementAttribute(attribute, cost);
-                        } else if (action === 'dec') {
-                            this.decrementAttribute(attribute, cost);
-                        }
-                    });
-                });
-
-                // Add mouse wheel support per specs - make the whole attribute box responsive
-                attributesEl.querySelectorAll('.attribute-box').forEach(attributeBox => {
-                    attributeBox.addEventListener('wheel', (e: Event) => {
-                        const wheelEvent = e as WheelEvent;
-
-                        // Prevent page scroll - must be called before any other logic
-                        wheelEvent.preventDefault();
-                        wheelEvent.stopPropagation();
-
-                        console.log('Mouse wheel on attribute box:', wheelEvent.deltaY);
-
-                        const attributeBoxElement = attributeBox as HTMLElement;
-
-                        const attribute = attributeBoxElement.dataset.attribute as AttributeType;
-                        const costElement = attributeBoxElement.querySelector('.attribute-cost');
-                        const costText = costElement?.textContent || '(1)';
-                        const cost = parseInt(costText.match(/\((\d+)\)/)?.[1] || '1');
-
-                        console.log('Wheel event - Attribute:', attribute, 'Cost:', cost, 'Delta:', wheelEvent.deltaY);
-
-                        // Determine direction (negative deltaY = wheel up = increment)
-                        if (wheelEvent.deltaY < 0) {
-                            console.log('Incrementing attribute');
-                            this.incrementAttribute(attribute, cost);
-                        } else {
-                            console.log('Decrementing attribute');
-                            this.decrementAttribute(attribute, cost);
-                        }
-                    }, { passive: false }); // Explicitly set passive to false for preventDefault to work
-
-                    // Add visual feedback for mouse wheel interaction
-                    attributeBox.addEventListener('mouseenter', (e) => {
-                        const target = e.target as HTMLElement;
-                        target.style.cursor = 'ns-resize';
-                        target.style.backgroundColor = 'rgba(139, 115, 85, 0.2)'; // Slightly darker on hover
-                        target.title = 'Use mouse wheel to increment/decrement';
-                    });
-
-                    attributeBox.addEventListener('mouseleave', (e) => {
-                        const target = e.target as HTMLElement;
-                        target.style.cursor = '';
-                        target.style.backgroundColor = 'rgba(139, 115, 85, 0.1)'; // Back to original
-                        target.title = '';
-                    });
-                });
-
-                // Update button states based on current resources
-                this.updateAttributeButtonStates(attributesEl);
-            }
+            await this.renderAttributes(attributesEl, templateEngine);
         }
 
         // Hollow tracker placeholder
         const hollowEl = this.container.querySelector('#character-hollow');
         if (hollowEl) {
-            hollowEl.innerHTML = `
-                <h2>Hollow Tracker</h2>
-                <div class="hollow-stats">
-                    <div class="dust-counter">
-                        <label>Dust: ${this.character.hollow.dust}</label>
-                    </div>
-                    <div class="burned-counter">
-                        <label>Burned: ${this.character.hollow.burned}</label>
-                    </div>
-                    <div class="hollow-influence">
-                        <label>Hollow Influence: -${this.character.hollow.hollowInfluence}</label>
-                    </div>
-                    <div class="glimmer-debt">
-                        <label>Glimmer Debt: ${this.character.hollow.glimmerDebt || 0}</label>
-                    </div>
-                    <div class="glimmer-debt-total">
-                        <label>Total Debt: ${this.character.hollow.glimmerDebtTotal || 0}</label>
-                    </div>
-                    ${this.character.hollow.newMoonMarks > 0 ? `
-                        <div class="new-moon-marks warning">
-                            New Moon Marks: ${this.character.hollow.newMoonMarks}/3
-                        </div>
-                    ` : ''}
-                </div>
-            `;
+            hollowEl.innerHTML = await templateEngine.renderTemplateFromFile('hollow-tracker-section', {
+                dust: this.character.hollow.dust,
+                burned: this.character.hollow.burned,
+                hollowInfluence: this.character.hollow.hollowInfluence,
+                glimmerDebt: this.character.hollow.glimmerDebt || 0,
+                glimmerDebtTotal: this.character.hollow.glimmerDebtTotal || 0,
+                newMoonMarks: this.character.hollow.newMoonMarks > 0 ? this.character.hollow.newMoonMarks : ''
+            });
         }
 
         // Skills placeholder
         const skillsEl = this.container.querySelector('#character-skills');
         if (skillsEl) {
-            skillsEl.innerHTML = `
-                <h2>Skills & Fields</h2>
-                <div class="skills-list">
-                    ${this.character.fields.length > 0 ? `
-                        <h3>Fields</h3>
-                        ${this.character.fields.map(field => `
-                            <div class="field-item">
-                                <label>${field.name}</label>
-                                <span class="level">Level ${field.level}</span>
-                                ${field.isFrozen ? '<span class="frozen">🔒</span>' : ''}
-                            </div>
-                        `).join('')}
-                    ` : '<p>No fields defined</p>'}
-
-                    ${this.character.skills.length > 0 ? `
-                        <h3>Skills</h3>
-                        ${this.character.skills.map(skill => `
-                            <div class="skill-item">
-                                <label>${skill.isListed ? '⭐' : ''} ${skill.name}</label>
-                                <span class="level">Level ${CharacterCalculations.calculateSkillLevel(skill.id, this.character.fields)}</span>
-                                ${skill.costMultiplier === 2 ? '<span class="x2">x2</span>' : ''}
-                            </div>
-                        `).join('')}
-                    ` : '<p>No skills defined</p>'}
-                </div>
-            `;
+            await this.renderSkills(skillsEl, templateEngine);
         }
 
         // Benefits/Drawbacks placeholder
         const benefitsEl = this.container.querySelector('#character-benefits');
         if (benefitsEl) {
-            benefitsEl.innerHTML = `
-                <h2>Benefits & Drawbacks</h2>
-                <div class="benefits-drawbacks">
-                    ${this.character.benefits.length > 0 ? `
-                        <h3>Benefits</h3>
-                        ${this.character.benefits.map(benefit => `
-                            <div class="benefit-item">
-                                <strong>${benefit.name} +${benefit.level}</strong>
-                                <p class="condition">${benefit.condition}</p>
-                                <p class="description">${benefit.description}</p>
-                            </div>
-                        `).join('')}
-                    ` : '<p>No benefits defined</p>'}
-
-                    ${this.character.drawbacks.length > 0 ? `
-                        <h3>Drawbacks</h3>
-                        ${this.character.drawbacks.map(drawback => `
-                            <div class="drawback-item">
-                                <strong>${drawback.name} -${drawback.level}</strong>
-                                <p class="condition">${drawback.condition}</p>
-                                <p class="description">${drawback.description}</p>
-                            </div>
-                        `).join('')}
-                    ` : '<p>No drawbacks defined</p>'}
-                </div>
-            `;
+            await this.renderBenefits(benefitsEl, templateEngine);
         }
 
         // Equipment placeholder
         const equipmentEl = this.container.querySelector('#character-equipment');
         if (equipmentEl) {
-            equipmentEl.innerHTML = `
-                <h2>Equipment & Companions</h2>
-                <div class="equipment-list">
-                    ${this.character.items.length > 0 ? `
-                        <h3>Items</h3>
-                        ${this.character.items.map(item => `
-                            <div class="item-entry">
-                                <strong>${item.name}</strong>
-                                ${item.level ? `<span class="item-level">+${item.level}</span>` : ''}
-                                <p class="item-description">${item.description}</p>
-                            </div>
-                        `).join('')}
-                    ` : '<p>No items</p>'}
-
-                    ${this.character.companions.length > 0 ? `
-                        <h3>Companions</h3>
-                        ${this.character.companions.map(companion => `
-                            <div class="companion-entry">
-                                <strong>${companion.name}</strong>
-                                <span class="companion-type">(${companion.type})</span>
-                                <span class="xp-spent">XP: ${companion.xpSpent}</span>
-                                <p class="companion-description">${companion.description}</p>
-                            </div>
-                        `).join('')}
-                    ` : '<p>No companions</p>'}
-                </div>
-            `;
+            await this.renderEquipment(equipmentEl, templateEngine);
         }
+    }
+
+    private async renderAttributes(attributesEl: Element, templateEngine: any): Promise<void> {
+        // Organize attributes by category and cost order per spec - group them in rows
+        const physicalAttrs = [
+            { type: AttributeType.DEX, cost: 4 },
+            { type: AttributeType.STR, cost: 3 },
+            { type: AttributeType.CON, cost: 1 }
+        ];
+        const socialAttrs = [
+            { type: AttributeType.CHA, cost: 4 },
+            { type: AttributeType.WIS, cost: 3 },
+            { type: AttributeType.GRI, cost: 1 }
+        ];
+        const mentalAttrs = [
+            { type: AttributeType.INT, cost: 4 },
+            { type: AttributeType.PER, cost: 4 }
+        ];
+
+        const createAttributeBoxHtml = async (attr: { type: AttributeType; cost: number }) => {
+            const disabledAttr = this.config.readOnly ? 'disabled' : '';
+            return await templateEngine.renderTemplateFromFile('attribute-box', {
+                type: attr.type,
+                cost: attr.cost,
+                value: this.character.attributes[attr.type],
+                disabledAttr
+            });
+        };
+
+        const createAttributeRow = async (emoji: string, attrs: any[]) => {
+            const attributeBoxesPromises = attrs.map(createAttributeBoxHtml);
+            const attributeBoxes = await Promise.all(attributeBoxesPromises);
+            const attributeBoxesHtml = attributeBoxes.join('');
+            
+            return await templateEngine.renderTemplateFromFile('attribute-category-row', {
+                emoji,
+                attributeBoxesHtml
+            });
+        };
+
+        const physicalRow = await createAttributeRow('💪', physicalAttrs);
+        const socialRow = await createAttributeRow('🗣️', socialAttrs);
+        const mentalRow = await createAttributeRow('🧠', mentalAttrs);
+        const attributeRowsHtml = physicalRow + socialRow + mentalRow;
+
+        attributesEl.innerHTML = await templateEngine.renderTemplateFromFile('attributes-section', {
+            attributeRowsHtml
+        });
+
+        // Add increment/decrement button listeners per specs
+        if (!this.config.readOnly) {
+            attributesEl.querySelectorAll('.attr-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const target = e.target as HTMLButtonElement;
+                    const action = target.dataset.action;
+                    const attribute = target.dataset.attribute as AttributeType;
+                    const cost = parseInt(target.dataset.cost || '1');
+
+                    if (action === 'inc') {
+                        this.incrementAttribute(attribute, cost);
+                    } else if (action === 'dec') {
+                        this.decrementAttribute(attribute, cost);
+                    }
+                });
+            });
+
+            // Add mouse wheel support per specs - make the whole attribute box responsive
+            attributesEl.querySelectorAll('.attribute-box').forEach(attributeBox => {
+                attributeBox.addEventListener('wheel', (e: Event) => {
+                    const wheelEvent = e as WheelEvent;
+
+                    // Prevent page scroll - must be called before any other logic
+                    wheelEvent.preventDefault();
+                    wheelEvent.stopPropagation();
+
+                    console.log('Mouse wheel on attribute box:', wheelEvent.deltaY);
+
+                    const attributeBoxElement = attributeBox as HTMLElement;
+
+                    const attribute = attributeBoxElement.dataset.attribute as AttributeType;
+                    const costElement = attributeBoxElement.querySelector('.attribute-cost');
+                    const costText = costElement?.textContent || '(1)';
+                    const cost = parseInt(costText.match(/\((\d+)\)/)?.[1] || '1');
+
+                    console.log('Wheel event - Attribute:', attribute, 'Cost:', cost, 'Delta:', wheelEvent.deltaY);
+
+                    // Determine direction (negative deltaY = wheel up = increment)
+                    if (wheelEvent.deltaY < 0) {
+                        console.log('Incrementing attribute');
+                        this.incrementAttribute(attribute, cost);
+                    } else {
+                        console.log('Decrementing attribute');
+                        this.decrementAttribute(attribute, cost);
+                    }
+                }, { passive: false }); // Explicitly set passive to false for preventDefault to work
+
+                // Add visual feedback for mouse wheel interaction
+                attributeBox.addEventListener('mouseenter', (e) => {
+                    const target = e.target as HTMLElement;
+                    target.title = 'Use mouse wheel to increment/decrement';
+                });
+            });
+
+            // Update button states based on current resources
+            this.updateAttributeButtonStates(attributesEl);
+        }
+    }
+
+    private async renderSkills(skillsEl: Element, templateEngine: any): Promise<void> {
+        const hasFields = this.character.fields.length > 0;
+        const noFields = !hasFields;
+        const hasSkills = this.character.skills.length > 0;
+        const noSkills = !hasSkills;
+
+        let fieldsHtml = '';
+        if (hasFields) {
+            const fieldPromises = this.character.fields.map(field =>
+                templateEngine.renderTemplateFromFile('field-item', {
+                    name: field.name,
+                    level: field.level,
+                    isFrozen: field.isFrozen
+                })
+            );
+            const fieldItems = await Promise.all(fieldPromises);
+            fieldsHtml = fieldItems.join('');
+        }
+
+        let skillsHtml = '';
+        if (hasSkills) {
+            const skillPromises = this.character.skills.map(skill =>
+                templateEngine.renderTemplateFromFile('skill-item', {
+                    skillTypeIndicator: skill.isListed ? '⭐' : '',
+                    skillName: skill.name,
+                    skillLevel: CharacterCalculations.calculateSkillLevel(skill.id, this.character.fields),
+                    isX2: skill.costMultiplier === 2
+                })
+            );
+            const skillItems = await Promise.all(skillPromises);
+            skillsHtml = skillItems.join('');
+        }
+
+        skillsEl.innerHTML = await templateEngine.renderTemplateFromFile('skills-fields-section', {
+            hasFields,
+            noFields,
+            fieldsHtml,
+            hasSkills,
+            noSkills,
+            skillsHtml
+        });
+    }
+
+    private async renderBenefits(benefitsEl: Element, templateEngine: any): Promise<void> {
+        const hasBenefits = this.character.benefits.length > 0;
+        const noBenefits = !hasBenefits;
+        const hasDrawbacks = this.character.drawbacks.length > 0;
+        const noDrawbacks = !hasDrawbacks;
+
+        let benefitsHtml = '';
+        if (hasBenefits) {
+            const benefitPromises = this.character.benefits.map(benefit =>
+                templateEngine.renderTemplateFromFile('benefit-item', {
+                    name: benefit.name,
+                    level: benefit.level,
+                    condition: benefit.condition,
+                    description: benefit.description
+                })
+            );
+            const benefitItems = await Promise.all(benefitPromises);
+            benefitsHtml = benefitItems.join('');
+        }
+
+        let drawbacksHtml = '';
+        if (hasDrawbacks) {
+            const drawbackPromises = this.character.drawbacks.map(drawback =>
+                templateEngine.renderTemplateFromFile('drawback-item', {
+                    name: drawback.name,
+                    level: drawback.level,
+                    condition: drawback.condition,
+                    description: drawback.description
+                })
+            );
+            const drawbackItems = await Promise.all(drawbackPromises);
+            drawbacksHtml = drawbackItems.join('');
+        }
+
+        benefitsEl.innerHTML = await templateEngine.renderTemplateFromFile('benefits-drawbacks-section', {
+            hasBenefits,
+            noBenefits,
+            benefitsHtml,
+            hasDrawbacks,
+            noDrawbacks,
+            drawbacksHtml
+        });
+    }
+
+    private async renderEquipment(equipmentEl: Element, templateEngine: any): Promise<void> {
+        const hasItems = this.character.items.length > 0;
+        const noItems = !hasItems;
+        const hasCompanions = this.character.companions.length > 0;
+        const noCompanions = !hasCompanions;
+
+        let itemsHtml = '';
+        if (hasItems) {
+            const itemPromises = this.character.items.map(item =>
+                templateEngine.renderTemplateFromFile('item-entry', {
+                    name: item.name,
+                    level: item.level,
+                    description: item.description
+                })
+            );
+            const itemEntries = await Promise.all(itemPromises);
+            itemsHtml = itemEntries.join('');
+        }
+
+        let companionsHtml = '';
+        if (hasCompanions) {
+            const companionPromises = this.character.companions.map(companion =>
+                templateEngine.renderTemplateFromFile('companion-entry', {
+                    name: companion.name,
+                    type: companion.type,
+                    xpSpent: companion.xpSpent,
+                    description: companion.description
+                })
+            );
+            const companionEntries = await Promise.all(companionPromises);
+            companionsHtml = companionEntries.join('');
+        }
+
+        equipmentEl.innerHTML = await templateEngine.renderTemplateFromFile('equipment-section', {
+            hasItems,
+            noItems,
+            itemsHtml,
+            hasCompanions,
+            noCompanions,
+            companionsHtml
+        });
     }
 
     private setupActionButtons(): void {
@@ -615,9 +588,9 @@ export class CharacterSheet implements ICharacterSheet {
         }
     }
 
-    private refreshComponents(): void {
+    private async refreshComponents(): Promise<void> {
         if (this.container) {
-            this.initializePlaceholderContent();
+            await this.initializePlaceholderContent();
         }
     }
 

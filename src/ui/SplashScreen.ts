@@ -22,6 +22,7 @@ export interface ISplashScreen extends IUIComponent {
     onCharacters?: () => void;
     onCredits?: () => void;
     onSettings?: () => void;
+    onAdventure?: () => void;
     toggleMusic?(): Promise<void>;
 }
 
@@ -35,6 +36,7 @@ export interface ISplashScreenConfig {
     joinButtonClass: string;
     startButtonClass: string;
     charactersButtonClass: string;
+    adventureButtonClass: string;
     musicButtonClass: string;
     settingsButtonClass: string;
 }
@@ -49,6 +51,7 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
     joinButtonClass: 'splash-join-button',
     startButtonClass: 'splash-start-button',
     charactersButtonClass: 'splash-characters-button',
+    adventureButtonClass: 'splash-adventure-button',
     musicButtonClass: 'splash-music-button',
     settingsButtonClass: 'splash-settings-button'
 };
@@ -66,9 +69,11 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     public onCharacters?: () => void;
     public onCredits?: () => void;
     public onSettings?: () => void;
+    public onAdventure?: () => void;
     private joinButtonElement: HTMLElement | null = null;
     private startButtonElement: HTMLElement | null = null;
     private charactersButtonElement: HTMLElement | null = null;
+    private adventureButtonElement: HTMLElement | null = null;
     private creditsButtonElement: HTMLElement | null = null;
     private settingsButtonElement: HTMLElement | null = null;
     public musicButtonElement: HTMLElement | null = null;
@@ -115,6 +120,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                 joinButtonClass: this.config.joinButtonClass,
                 startButtonClass: this.config.startButtonClass,
                 charactersButtonClass: this.config.charactersButtonClass,
+                adventureButtonClass: this.config.adventureButtonClass,
                 hasAudioManager: !!this.audioManager,
                 musicButtonClass: this.config.musicButtonClass,
                 settingsButtonClass: this.config.settingsButtonClass,
@@ -153,6 +159,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         this.joinButtonElement = container.querySelector(`.${this.config.joinButtonClass}`);
         this.startButtonElement = container.querySelector(`.${this.config.startButtonClass}`);
         this.charactersButtonElement = container.querySelector(`.${this.config.charactersButtonClass}`);
+        this.adventureButtonElement = container.querySelector(`.${this.config.adventureButtonClass}`);
         this.creditsButtonElement = container.querySelector('.splash-credits-button');
         this.settingsButtonElement = container.querySelector(`.${this.config.settingsButtonClass}`);
         this.musicButtonElement = container.querySelector('#music-toggle-btn'); // Enhanced control only
@@ -194,6 +201,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         this.joinButtonElement = null;
         this.startButtonElement = null;
         this.charactersButtonElement = null;
+        this.adventureButtonElement = null;
         this.settingsButtonElement = null;
         this.musicButtonElement = null;
     }
@@ -295,6 +303,15 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                 await AudioControlUtils.playButtonSound(this.audioManager);
                 if (this.onCharacters) {
                     this.onCharacters();
+                }
+            });
+        }
+
+        if (this.adventureButtonElement) {
+            this.adventureButtonElement.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                if (this.onAdventure) {
+                    this.onAdventure();
                 }
             });
         }

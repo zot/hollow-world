@@ -1,0 +1,81 @@
+<div id="adventure-view" class="adventure-view">
+    <!-- Header -->
+    <div class="adventure-header">
+        <h1 class="adventure-title">🤠 Adventure Mode 🤠</h1>
+        <div class="adventure-controls">
+            <button class="adventure-btn adventure-back-btn" id="adventure-back-btn" title="Back to Menu">
+                ⬅️ Back
+            </button>
+            <div class="adventure-status" id="adventure-status">
+                <span class="status-indicator" id="status-indicator">●</span>
+                <span class="status-text" id="status-text">Solo</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="adventure-main">
+        <!-- Output/Display Area -->
+        <div class="adventure-output-container">
+            <div class="adventure-output" id="adventure-output">
+                <div class="welcome-message">
+                    <p>🌵 Welcome to Adventure Mode! 🌵</p>
+                    <p>This is your gateway to text-based adventures in the Hollow World.</p>
+                    <p>Type <strong>help</strong> to see available commands.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="adventure-input-container">
+            <div class="adventure-prompt">></div>
+            <input
+                type="text"
+                id="adventure-input"
+                class="adventure-input"
+                placeholder="Type a command..."
+                autocomplete="off"
+                spellcheck="false"
+            />
+            <button class="adventure-btn adventure-submit-btn" id="adventure-submit-btn" title="Submit Command">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <!-- Session Controls (Host/Join) -->
+    <div class="adventure-session-controls">
+        <div class="session-control-group">
+            <button class="adventure-btn session-btn" id="host-session-btn">
+                🏠 Host Session
+            </button>
+            <button class="adventure-btn session-btn" id="join-session-btn">
+                🚪 Join Session
+            </button>
+        </div>
+        <div class="session-info" id="session-info" style="display: none;">
+            <div class="session-info-content">
+                <strong>Connection Info:</strong>
+                <div class="connection-string" id="connection-string"></div>
+                <button class="adventure-btn copy-btn" id="copy-connection-btn" title="Copy to clipboard">
+                    📋 Copy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Session Modal -->
+    <div id="join-modal" class="adventure-modal" style="display: none;">
+        <div class="adventure-modal-content">
+            <h2>Join Adventure Session</h2>
+            <div class="modal-field">
+                <label for="join-peer-id">Host Peer ID:</label>
+                <input type="text" id="join-peer-id" placeholder="Paste host's peer ID here" />
+            </div>
+            <div class="modal-actions">
+                <button class="adventure-btn" id="join-confirm-btn">Join</button>
+                <button class="adventure-btn" id="join-cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

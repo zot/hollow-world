@@ -37,25 +37,30 @@ export class HollowIPeer implements IPeer {
     currentVersionID: string = '1.0.0';
     versionID: string = '1.0.0';
 
-    private networkProvider: LibP2PNetworkProvider;
+    private networkProvider: LibP2PNetworkProvider | null;
     private mudConnections: Map<PeerID, MudConnection> = new Map();
     private isHost: boolean = false;
     private hostPeerID: PeerID | null = null;
     private currentWorld: any = null; // Will be set during startHosting
     private storage: MudStorage | null = null;
     private app: any = null;
+    
+    /**
+     * Solo mode connection - used when no network provider is available
+     */
+    private soloConnection: MudConnection | null = null;
 
     /**
      * Map from Thing to PeerID for tracking which peer owns which character
      */
     private thingToPeerMap: Map<Thing, PeerID> = new Map();
 
-    constructor(networkProvider: LibP2PNetworkProvider) {
-        this.networkProvider = networkProvider;
+    constructor(networkProvider?: LibP2PNetworkProvider) {
+        this.networkProvider = networkProvider || null;
     }
 
     init(app: any): void {
-        console.log('🎮 HollowIPeer initialized');
+        console.log('🎮 HollowIPeer initialized (solo mode:', !this.networkProvider, ')');
         this.app = app;
     }
 
@@ -63,18 +68,31 @@ export class HollowIPeer implements IPeer {
         console.log('🎮 HollowIPeer starting with MUD storage');
         this.storage = storage;
 
-        // Register message handler for MUD messages
-        this.networkProvider.onMessage((peerId: string, message: P2PMessage) => {
-            if (message.method === 'mud') {
-                this.handleMudMessage(peerId, message.payload as MudMessage);
-            }
-        });
-
-        console.log('✅ HollowIPeer started and listening for MUD messages');
+        if (this.networkProvider) {
+            // Register message handler for MUD messages (multiplayer mode)
+            this.networkProvider.onMessage((peerId: string, message: P2PMessage) => {
+                if (message.method === 'mud') {
+                    this.handleMudMessage(peerId, message.payload as MudMessage);
+                }
+            });
+            console.log('✅ HollowIPeer started in multiplayer mode');
+        } else {
+            console.log('✅ HollowIPeer started in solo mode');
+        }
     }
 
     reset(): void {
         console.log('🔄 Resetting HollowIPeer');
+
+        // Close solo connection if exists
+        if (this.soloConnection) {
+            try {
+                this.soloConnection.close();
+            } catch (error) {
+                console.error('❌ Error closing solo connection:', error);
+            }
+            this.soloConnection = null;
+        }
 
         // Close all MudConnections
         const connections = Array.from(this.mudConnections.values());
@@ -96,6 +114,10 @@ export class HollowIPeer implements IPeer {
     }
 
     connectString(): string {
+        if (!this.networkProvider) {
+            return 'solo-mode';
+        }
+        
         // Return the peer ID as the connection string
         // In Hollow, peers connect via the friend system and peer discovery
         const peerId = this.networkProvider.getPeerId();
@@ -108,6 +130,10 @@ export class HollowIPeer implements IPeer {
     }
 
     startHosting(): void {
+        if (!this.networkProvider) {
+            throw new Error('Cannot start hosting in solo mode - network provider required');
+        }
+        
         console.log('🏠 Starting MUD hosting...');
         this.isHost = true;
 
@@ -123,6 +149,10 @@ export class HollowIPeer implements IPeer {
     }
 
     async joinSession(session: string): Promise<void> {
+        if (!this.networkProvider) {
+            throw new Error('Cannot join session in solo mode - network provider required');
+        }
+        
         console.log('🚪 Joining MUD session:', session);
         this.isHost = false;
         this.hostPeerID = session; // The session string is the host's peer ID
@@ -179,19 +209,84 @@ export class HollowIPeer implements IPeer {
     }
 
     command(cmd: string): void {
+        // Solo mode - handle locally
+        if (!this.networkProvider) {
+            console.log('🎮 Solo command:', cmd);
+            if (this.soloConnection) {
+                try {
+                    this.soloConnection.toplevelCommand(cmd);
+                } catch (error) {
+                    console.error('❌ Error executing solo command:', error);
+                    if (this.app && this.app.displayOutput) {
+                        this.app.displayOutput(`Error: ${error}`);
+                    }
+                }
+            } else {
+                console.error('❌ No solo connection available');
+            }
+            return;
+        }
+        
         if (this.isHost) {
-            // For hosts, commands might be routed to their own MudConnection
-            // This is an edge case - usually guests send commands
+            // For hosts, commands go to their own MudConnection
             console.log('🎮 Host command:', cmd);
-            // TODO: Handle host commands if needed
-        } else {
-            // Send command to host
+            // Find host's own connection (will be implemented with world loading)
+            // For now, inform user that host command handling requires a world
+            if (this.app && this.app.displayOutput) {
+                this.app.displayOutput('Host command processing requires world initialization (Phase 3)');
+            }
+        } else if (this.hostPeerID) {
+            // Guest mode - send command to host
             console.log('📤 Sending command to host:', cmd);
             const message: MudMessage = {
                 type: 'command',
                 text: cmd
             };
             this.sendToHost(message);
+        } else {
+            // Network available but not in a session - handle basic commands locally
+            console.log('🎮 Local command (not in session):', cmd);
+            this.handleLocalCommand(cmd);
+        }
+    }
+
+    /**
+     * Handle basic commands locally when network is available but not in a session
+     */
+    private handleLocalCommand(cmd: string): void {
+        const lower = cmd.toLowerCase().trim();
+        
+        if (!this.app || !this.app.displayOutput) {
+            console.error('❌ No app display output available');
+            return;
+        }
+        
+        if (lower === 'help') {
+            this.app.displayOutput(`
+<strong>Available Commands (Idle Mode):</strong>
+• help - Show this help message
+• status - Show current session status
+• clear - Clear the output (if supported by UI)
+
+<strong>To Play:</strong>
+• Click "Host Session" to start hosting a multiplayer session
+• Click "Join Session" to join someone else's session
+
+<strong>Note:</strong> Full solo play and MUD world features coming in Phase 3!
+            `.trim());
+        } else if (lower === 'status') {
+            const peerId = this.networkProvider?.getPeerId() || 'unknown';
+            this.app.displayOutput(`
+<strong>Session Status:</strong>
+Mode: Idle (network available, not in session)
+Your Peer ID: ${peerId}
+Network: Connected
+            `.trim());
+        } else if (lower === 'clear') {
+            // Let the UI handle this if it has a clear method
+            this.app.displayOutput('Use the UI clear function if available');
+        } else {
+            this.app.displayOutput(`Unknown command: "${cmd}". Type "help" for available commands.`);
         }
     }
 
@@ -350,6 +445,11 @@ export class HollowIPeer implements IPeer {
      * Send a MUD message to a specific peer
      */
     private sendMessageToPeer(peerId: string, message: MudMessage): void {
+        if (!this.networkProvider) {
+            console.error('❌ Cannot send message in solo mode');
+            return;
+        }
+        
         const p2pMessage: P2PMessage = {
             method: 'mud',
             payload: message
@@ -405,5 +505,29 @@ export class HollowIPeer implements IPeer {
      */
     getWorld(): any {
         return this.currentWorld;
+    }
+    
+    /**
+     * Initialize solo mode - creates a local MudConnection without networking
+     */
+    startSoloMode(world: any): void {
+        console.log('🎮 Starting solo mode...');
+        
+        this.currentWorld = world;
+        this.isHost = false; // Solo mode is not hosting
+        
+        // Create a local MudConnection for solo play
+        this.soloConnection = createConnection(
+            world,
+            (text: string) => {
+                // Output callback - display directly in UI
+                if (this.app && this.app.displayOutput) {
+                    this.app.displayOutput(text);
+                }
+            },
+            false // remote = false for local play
+        );
+        
+        console.log('✅ Solo mode started - ready to play!');
     }
 }

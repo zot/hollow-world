@@ -15,6 +15,7 @@ import { SettingsView } from './ui/SettingsView.js';
 import { EventNotificationButton } from './ui/EventNotificationButton.js';
 import { EventModal } from './ui/EventModal.js';
 import { GlobalAudioControl } from './ui/GlobalAudioControl.js';
+import { AdventureView } from './ui/AdventureView.js';
 import { HollowPeer, LocalStorageProvider } from './p2p/index.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
@@ -36,12 +37,13 @@ let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
 let characterEditor: CharacterEditorView;
 let settingsView: SettingsView;
+let adventureView: AdventureView | undefined;
 let eventNotificationButton: EventNotificationButton | undefined;
 let eventModal: EventModal | undefined;
 let appContainer: HTMLElement;
 
 // Current view components
-let currentView: 'splash' | 'characters' | 'editor' | 'game' | 'settings' = 'splash';
+let currentView: 'splash' | 'characters' | 'editor' | 'game' | 'settings' | 'adventure' = 'splash';
 
 // Initialize audio manager in background (non-blocking)
 async function initializeAudio(): Promise<void> {
@@ -204,7 +206,7 @@ async function initializeHollowPeer(): Promise<void> {
 
                 // Create event modal
                 eventModal = new EventModal(eventService, hollowPeer);
-                const modalElement = eventModal.render();
+                const modalElement = await eventModal.render();
                 document.body.appendChild(modalElement);
 
                 // Create event notification button
@@ -367,6 +369,12 @@ function setupRoutes(): void {
         title: "Don't Go Hollow - Log",
         handler: () => renderLogView()
     });
+
+    router.addRoute({
+        path: '/adventure',
+        title: "Don't Go Hollow - Adventure Mode",
+        handler: () => renderAdventureView()
+    });
 }
 
 function setupComponentCallbacks(): void {
@@ -387,6 +395,10 @@ function setupComponentCallbacks(): void {
 
     splashScreen.onSettings = () => {
         router.navigate('/settings');
+    };
+
+    splashScreen.onAdventure = () => {
+        router.navigate('/adventure');
     };
 
     // Character manager callbacks (list only)
@@ -517,6 +529,45 @@ async function renderLogView(): Promise<void> {
     }
 }
 
+async function renderAdventureView(): Promise<void> {
+    currentView = 'adventure';
+
+    try {
+        // Adventure mode now works in both solo and multiplayer modes
+        // Solo mode: No network required, local MUD only
+        // Multiplayer mode: Requires hollowPeer for host/guest functionality
+        
+        console.log('🎮 Starting adventure mode (network:', !!hollowPeer, ')');
+
+        // Create or reuse adventure view
+        if (!adventureView) {
+            adventureView = new AdventureView({
+                hollowPeer: hollowPeer || undefined,
+                onBack: () => {
+                    router.navigate('/');
+                }
+            });
+        }
+
+        const viewElement = await adventureView.render();
+        appContainer.innerHTML = '';
+        appContainer.appendChild(viewElement);
+
+        console.log('✅ Adventure view rendered successfully');
+    } catch (error) {
+        console.error('Failed to render adventure view:', error);
+        appContainer.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #F5DEB3; background: #2C1810; height: 100vh;">
+                <h1 style="color: #D4AF37;">Error</h1>
+                <p>Failed to load adventure mode: ${error}</p>
+                <button onclick="window.location.href='/';" style="padding: 10px 20px; font-size: 1rem;">
+                    Back to Menu
+                </button>
+            </div>
+        `;
+    }
+}
+
 // Cleanup function for when the page is unloaded
 function cleanup(): void {
     if (router) {
@@ -536,6 +587,9 @@ function cleanup(): void {
     }
     if (eventModal) {
         eventModal.destroy();
+    }
+    if (adventureView) {
+        adventureView.destroy();
     }
     if (globalAudioControl) {
         globalAudioControl.destroy();
