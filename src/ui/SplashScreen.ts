@@ -246,23 +246,6 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         }
     }
 
-    private getSplashFallbackTemplate(): string {
-        // Inline template as last resort fallback
-        return `<div class="{{containerClass}}">
-    <h1 class="{{titleClass}}">{{titleWithHollow}}</h1>
-    <div class="{{peerIdClass}}">Peer ID: {{currentPeerId}}</div>
-    <div class="{{buttonsContainerClass}}">
-        <button class="{{joinButtonClass}}">Join Game</button>
-        <button class="{{startButtonClass}}">Start Game</button>
-        <button class="{{charactersButtonClass}}">Characters</button>
-    </div>
-    <div class="splash-credits-container">
-        <button class="splash-credits-button">Credits</button>
-    </div>
-    <div class="splash-version">Version {{version}}</div>
-</div>`;
-    }
-
     private setupPeerIdInteraction(): void {
         if (!this.peerIdElement) return;
 
@@ -455,8 +438,14 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         } catch (error) {
             console.warn('Failed to load credits template, using fallback:', error);
             // Fallback to minimal credits display
-            const fallbackHtml = '<div class="credits-overlay"><div class="credits-popup"><div class="credits-header"><h2>🤠 Credits</h2></div><div class="credits-content"><p>Audio assets from Pixabay and Freesound</p><p>Thanks to all the creators who make this frontier adventure possible!</p></div><div class="credits-footer"><button class="credits-close-btn">Close</button></div></div></div>';
-            this.displayCreditsPopup(fallbackHtml);
+            try {
+                const fallbackHtml = await templateEngine.renderTemplateFromFile('credits-popup-fallback', {});
+                this.displayCreditsPopup(fallbackHtml);
+            } catch (fallbackError) {
+                console.error('Even fallback template failed:', fallbackError);
+                // Last resort - show alert
+                alert('Credits: Audio assets from Pixabay and Freesound. Thanks to all creators!');
+            }
         }
     }
 

@@ -1,0 +1,46 @@
+<div class="audio-control-content">
+    <!-- Header (clickable to collapse/expand) -->
+    <div class="audio-header" id="audio-header" title="Click to collapse/expand">
+        <span class="audio-header-title">🎵 Music</span>
+        <span class="audio-toggle-icon" id="audio-toggle-icon">▼</span>
+    </div>
+
+    <!-- Expanded Content -->
+    <div class="audio-expanded-panel" id="audio-expanded-panel">
+        <!-- Track Info -->
+        <div class="audio-track-info">
+            <div class="current-track-name" id="current-track-name">
+                {{trackName}}
+            </div>
+            <div class="track-position" id="track-position">
+                Track {{trackIndex}}/{{trackTotal}}
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="audio-controls">
+            <button class="audio-btn prev-track-btn" id="prev-track-btn" title="Previous Track">
+                ⏮
+            </button>
+            <button class="audio-btn play-pause-btn {{playPauseClass}}" id="play-pause-btn" title="{{playPauseTitle}}">
+                {{playPauseIcon}}
+            </button>
+            <button class="audio-btn next-track-btn" id="next-track-btn" title="Next Track">
+                ⏭
+            </button>
+        </div>
+
+        <!-- Cycling Toggle -->
+        <div class="audio-cycling-control">
+            <span>Auto-cycle:</span>
+            <button class="cycling-toggle-btn {{cyclingClass}}" id="cycling-toggle-btn" title="Toggle Auto-Cycling">
+                {{cyclingText}}
+            </button>
+        </div>
+    </div>
+
+    <!-- Collapsed Content (hidden by default) -->
+    <div class="audio-collapsed-panel" id="audio-collapsed-panel">
+        {{collapsedStatus}}
+    </div>
+</div>

@@ -6,9 +6,54 @@
 - Use **SOLID principles** in all implementations
 - **🔒 Strict TypeScript typing** - All function parameters, return values, and object properties must use explicit TypeScript types. Never use `any` type except for truly dynamic content. Interface types like `AttributeType` must be used when indexing typed objects like `IAttributes` *(Type your code tighter than a hangman's noose)*
 - Create comprehensive **unit tests** for all components
-- Use **HTML templates** instead of JavaScript template literals *(Separate your concerns like a good sheriff)*
 - Follow specifications for consistent western frontier theme
-- html templates are in public/templates
+
+### 🚫 NO HTML Strings in TypeScript/JavaScript
+**CRITICAL**: Never use template literals or string concatenation for HTML in `.ts` or `.js` files.
+All HTML must be in template files under `public/templates/`
+
+❌ **FORBIDDEN:**
+```typescript
+// Direct HTML strings
+const html = `<div class="foo">${bar}</div>`;
+element.innerHTML = '<span>text</span>';
+
+// Functions returning HTML strings
+function createCard(name: string): string {
+    return `<div class="card"><h2>${name}</h2></div>`;
+}
+
+// String concatenation for HTML
+let html = '<ul>';
+items.forEach(item => html += `<li>${item}</li>`);
+html += '</ul>';
+```
+
+✅ **REQUIRED:**
+```typescript
+// Use TemplateEngine for all HTML
+const html = await templateEngine.renderTemplateFromFile('foo', { bar });
+
+// For functions that need to return HTML, return template results
+async function createCard(name: string): Promise<string> {
+    return await templateEngine.renderTemplateFromFile('card', { name });
+}
+
+// Use templates with loops
+const itemsHtml = items.map(item =>
+    templateEngine.renderTemplateFromFile('list-item', { item })
+);
+const html = await templateEngine.renderTemplateFromFile('list', {
+    itemsHtml: (await Promise.all(itemsHtml)).join('')
+});
+```
+
+**Exceptions (RARE):**
+- Single-tag empty elements: `document.createElement('div')`
+- Test files that verify HTML output
+- Fallback error messages (keep minimal, single line max)
+
+**Enforcement:** All HTML belongs in `public/templates/` *(Separate your concerns like a good sheriff)*
 
 ## 📋 TODO Items
 - [x] **Refactor EventModal to use HTML templates** - Move event card HTML from `src/ui/EventModal.ts` to template files ✅ **COMPLETED**

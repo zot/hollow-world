@@ -1,0 +1,176 @@
+/**
+ * Global Audio Control Styles
+ * Fixed bottom-right audio controls visible on all pages
+ * Western frontier theme
+ */
+
+.global-audio-control {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(44, 24, 16, 0.95);
+    border: 3px solid #8B4513;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    min-width: 250px;
+}
+
+.audio-control-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Header (clickable to collapse/expand) */
+.audio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.audio-header-title {
+    color: #D4AF37;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.audio-toggle-icon {
+    color: #D4AF37;
+    font-size: 16px;
+}
+
+/* Track Info */
+.audio-track-info {
+    color: #F5DEB3;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.current-track-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.track-position {
+    color: #8B7355;
+}
+
+/* Controls */
+.audio-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.audio-btn {
+    border: 2px solid;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.audio-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.audio-btn:active {
+    transform: translateY(0);
+}
+
+.prev-track-btn,
+.next-track-btn {
+    background: #8B4513;
+    border-color: #654321;
+    color: #F5DEB3;
+}
+
+.prev-track-btn:hover,
+.next-track-btn:hover {
+    background: #654321;
+}
+
+.play-pause-btn {
+    background: #228B22;
+    border-color: #1F7A1F;
+    color: white;
+    padding: 8px 16px;
+    font-size: 16px;
+}
+
+.play-pause-btn:hover {
+    background: #1F7A1F;
+}
+
+.play-pause-btn.paused {
+    background: #8B4513;
+    border-color: #654321;
+}
+
+.play-pause-btn.paused:hover {
+    background: #654321;
+}
+
+/* Cycling Toggle */
+.audio-cycling-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #F5DEB3;
+}
+
+.cycling-toggle-btn {
+    background: #8B4513;
+    border: 2px solid #654321;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 11px;
+    transition: all 0.2s ease;
+}
+
+.cycling-toggle-btn.enabled {
+    background: #228B22;
+    border-color: #1F7A1F;
+}
+
+.cycling-toggle-btn:hover {
+    opacity: 0.9;
+}
+
+/* Collapsed Panel */
+.audio-collapsed-panel {
+    display: none;
+    text-align: center;
+    color: #F5DEB3;
+    font-size: 14px;
+}
+
+.audio-collapsed-panel.visible {
+    display: block;
+}
+
+/* Expanded Panel */
+.audio-expanded-panel.hidden {
+    display: none;
+}
+
+/* Audio Unavailable State */
+.audio-unavailable {
+    color: #8B7355;
+    text-align: center;
+    padding: 5px;
+}

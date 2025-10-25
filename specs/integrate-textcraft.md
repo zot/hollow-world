@@ -2,7 +2,8 @@
 
 **Plan Version:** 2.0
 **Date:** 2025-10-19
-**Status:** Planning
+**Last Updated:** 2025-10-25
+**Status:** Phase 2 Complete - Phase 3 In Progress
 
 ---
 
@@ -132,9 +133,11 @@ flowchart TD
 
 ## Implementation Phases
 
-### Phase 1: Foundation (Week 1)
+### Phase 1: Foundation (Week 1) ✅ **COMPLETED**
 
 **Goal:** Import Textcraft core and implement basic IPeer adapter
+
+**Status:** Complete - See `specs/integration/textcraft-phase1-completion.md` for details
 
 #### Tasks:
 
@@ -171,9 +174,17 @@ flowchart TD
 - ✅ Can create MudConnection instances
 - ✅ All unit tests pass
 
-### Phase 2: Adventure Mode UI (Week 2)
+**Completion Notes:**
+- Implemented in commit: ad6ebf5
+- Files created: `src/textcraft/hollow-peer.ts`, `test/HollowIPeer.test.ts`
+- All 21 unit tests passing
+- Full completion report: `specs/integration/textcraft-phase1-completion.md`
+
+### Phase 2: Adventure Mode UI (Week 2) ✅ **COMPLETED**
 
 **Goal:** Create text-based adventure UI component
+
+**Status:** Complete - AdventureView component implemented with template-based UI
 
 #### Tasks:
 
@@ -207,7 +218,14 @@ flowchart TD
 - ✅ Mode toggle switches views
 - ✅ Western theme consistent
 
-### Phase 3: Network Integration (Week 3)
+**Completion Notes:**
+- Implemented in commit: 3446e38
+- Files created: `src/ui/AdventureView.ts`, template files, `src/styles/AdventureView.css`
+- Integrated with main.ts and view manager
+- Uses HollowIPeer adapter for P2P communication
+- Follows project template principles (HTML templates, no inline strings)
+
+### Phase 3: Network Integration (Week 3) ⏳ **IN PROGRESS**
 
 **Goal:** Wire up HollowIPeer to actually work over LibP2P
 

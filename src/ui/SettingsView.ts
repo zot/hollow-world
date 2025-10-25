@@ -374,7 +374,9 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         // this.renderPendingNewInvitations();
 
         // Render ignored peers
-        this.renderIgnoredPeers();
+        this.renderIgnoredPeers().catch(error => {
+            console.error('Failed to render ignored peers:', error);
+        });
     }
 
     private setupFriendCardHandlers(): void {
@@ -526,7 +528,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         );
     }
 
-    private renderPendingNewInvitations(): void {
+    private async renderPendingNewInvitations(): Promise<void> {
         if (!this.container || !this.hollowPeer) return;
 
         const pendingList = this.container.querySelector('#pending-invitations-list');
@@ -538,22 +540,20 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         countBadge.textContent = pendingInvitations.length.toString();
 
         if (pendingInvitations.length === 0) {
-            pendingList.innerHTML = '<p class="no-pending">No pending invitations</p>';
+            pendingList.innerHTML = await templateEngine.renderTemplateFromFile('no-pending-invitations', {});
             return;
         }
 
         // Render each pending invitation
-        const invitationsHtml = pendingInvitations.map(peerId => {
+        const invitationPromises = pendingInvitations.map(peerId => {
             const truncatedId = peerId.length > 30 ? peerId.substring(0, 30) + '...' : peerId;
-            return `
-<div class="pending-invitation-item" data-peer-id="${peerId}">
-    <div class="pending-invitation-info">
-        <div class="pending-invitation-peerid">${truncatedId}</div>
-        <div class="pending-invitation-status">Waiting for peer discovery...</div>
-    </div>
-    <button class="remove-pending-invitation-btn" data-peer-id="${peerId}" title="Remove">❌</button>
-</div>`;
-        }).join('');
+            return templateEngine.renderTemplateFromFile('pending-invitation-item', {
+                peerId,
+                truncatedId
+            });
+        });
+        const invitationsHtmlArray = await Promise.all(invitationPromises);
+        const invitationsHtml = invitationsHtmlArray.join('');
 
         pendingList.innerHTML = invitationsHtml;
 
@@ -568,13 +568,13 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                     this.hollowPeer.removePendingNewInvitation(peerId);
                     this.logService.log(`Removed ${peerId} from pending new invitations`);
                     // Re-render the list
-                    this.renderPendingNewInvitations();
+                    await this.renderPendingNewInvitations();
                 }
             });
         });
     }
 
-    private renderIgnoredPeers(): void {
+    private async renderIgnoredPeers(): Promise<void> {
         if (!this.container || !this.hollowPeer) return;
 
         const ignoredPeersList = this.container.querySelector('#ignored-peers-list');
@@ -587,22 +587,21 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         countBadge.textContent = ignoredPeersArray.length.toString();
 
         if (ignoredPeersArray.length === 0) {
-            ignoredPeersList.innerHTML = '<p class="no-ignored">No ignored peers</p>';
+            ignoredPeersList.innerHTML = await templateEngine.renderTemplateFromFile('no-ignored-peers', {});
             return;
         }
 
         // Render each ignored peer
-        const ignoredHtml = ignoredPeersArray.map(peer => {
+        const ignoredPromises = ignoredPeersArray.map(peer => {
             const truncatedId = peer.peerId.length > 30 ? peer.peerId.substring(0, 30) + '...' : peer.peerId;
-            return `
-<div class="ignored-peer-item" data-peer-id="${peer.peerId}">
-    <div class="ignored-peer-info">
-        <div class="ignored-peer-name">${peer.peerName}</div>
-        <div class="ignored-peer-peerid">${truncatedId}</div>
-    </div>
-    <button class="remove-ignored-peer-btn" data-peer-id="${peer.peerId}" title="Remove from ignored list">❌</button>
-</div>`;
-        }).join('');
+            return templateEngine.renderTemplateFromFile('ignored-peer-item', {
+                peerId: peer.peerId,
+                peerName: peer.peerName,
+                truncatedId
+            });
+        });
+        const ignoredHtmlArray = await Promise.all(ignoredPromises);
+        const ignoredHtml = ignoredHtmlArray.join('');
 
         ignoredPeersList.innerHTML = ignoredHtml;
 
@@ -616,8 +615,10 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 if (peerId && this.hollowPeer) {
                     this.hollowPeer.removeIgnoredPeer(peerId);
                     this.logService.log(`Removed ${peerId} from ignored peers`);
-                    // Re-render the list
-                    this.renderIgnoredPeers();
+                    // Re-render the list - fire and forget
+                    this.renderIgnoredPeers().catch(error => {
+                        console.error('Failed to re-render ignored peers:', error);
+                    });
                 }
             });
         });

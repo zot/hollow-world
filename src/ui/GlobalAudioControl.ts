@@ -5,6 +5,7 @@
 
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
+import '../styles/GlobalAudioControl.css';
 
 export interface IGlobalAudioControl {
     render(): Promise<HTMLElement>;
@@ -26,18 +27,6 @@ export class GlobalAudioControl implements IGlobalAudioControl {
         this.container = document.createElement('div');
         this.container.id = 'global-audio-control';
         this.container.className = 'global-audio-control';
-        this.container.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-            background: rgba(44, 24, 16, 0.95);
-            border: 3px solid #8B4513;
-            border-radius: 8px;
-            padding: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            min-width: 250px;
-        `;
 
         // Render content
         await this.updateContent();
@@ -57,11 +46,7 @@ export class GlobalAudioControl implements IGlobalAudioControl {
         if (!this.container) return;
 
         if (!this.audioManager) {
-            this.container.innerHTML = `
-                <div style="color: #8B7355; text-align: center; padding: 5px;">
-                    Audio not available
-                </div>
-            `;
+            this.container.innerHTML = await templateEngine.renderTemplateFromFile('global-audio-control-unavailable', {});
             return;
         }
 
@@ -69,64 +54,17 @@ export class GlobalAudioControl implements IGlobalAudioControl {
         const isPlaying = this.audioManager.isMusicPlaying();
         const isCyclingEnabled = this.audioManager.isCyclingEnabled();
 
-        this.container.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <!-- Header (clickable to collapse/expand) -->
-                <div id="audio-header"
-                     style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;"
-                     title="Click to collapse/expand">
-                    <span style="color: #D4AF37; font-weight: bold; font-size: 14px;">🎵 Music</span>
-                    <span id="audio-toggle-icon" style="color: #D4AF37; font-size: 16px;">▼</span>
-                </div>
-
-                <!-- Expanded Content -->
-                <div id="audio-expanded-panel">
-                    <!-- Track Info -->
-                    <div style="color: #F5DEB3; font-size: 12px; margin-bottom: 8px;">
-                        <div id="current-track-name" style="font-weight: bold; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${trackInfo?.name || 'No track'}
-                        </div>
-                        <div id="track-position" style="color: #8B7355;">
-                            Track ${(trackInfo?.index || 0) + 1}/${trackInfo?.total || 0}
-                        </div>
-                    </div>
-
-                    <!-- Controls -->
-                    <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 8px;">
-                        <button id="prev-track-btn"
-                                style="background: #8B4513; border: 2px solid #654321; color: #F5DEB3; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;"
-                                title="Previous Track">
-                            ⏮
-                        </button>
-                        <button id="play-pause-btn"
-                                style="background: #228B22; border: 2px solid #1F7A1F; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;"
-                                title="${isPlaying ? 'Pause' : 'Play'}">
-                            ${isPlaying ? '⏸' : '▶'}
-                        </button>
-                        <button id="next-track-btn"
-                                style="background: #8B4513; border: 2px solid #654321; color: #F5DEB3; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;"
-                                title="Next Track">
-                            ⏭
-                        </button>
-                    </div>
-
-                    <!-- Cycling Toggle -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #F5DEB3;">
-                        <span>Auto-cycle:</span>
-                        <button id="cycling-toggle-btn"
-                                style="background: ${isCyclingEnabled ? '#228B22' : '#8B4513'}; border: 2px solid ${isCyclingEnabled ? '#1F7A1F' : '#654321'}; color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;"
-                                title="Toggle Auto-Cycling">
-                            ${isCyclingEnabled ? 'ON' : 'OFF'}
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Collapsed Content (hidden by default) -->
-                <div id="audio-collapsed-panel" style="display: none; text-align: center; color: #F5DEB3; font-size: 14px;">
-                    ${isPlaying ? '🎵 Playing' : '🔇 Paused'}
-                </div>
-            </div>
-        `;
+        this.container.innerHTML = await templateEngine.renderTemplateFromFile('global-audio-control', {
+            trackName: trackInfo?.name || 'No track',
+            trackIndex: (trackInfo?.index || 0) + 1,
+            trackTotal: trackInfo?.total || 0,
+            playPauseClass: isPlaying ? '' : 'paused',
+            playPauseTitle: isPlaying ? 'Pause' : 'Play',
+            playPauseIcon: isPlaying ? '⏸' : '▶',
+            cyclingClass: isCyclingEnabled ? 'enabled' : '',
+            cyclingText: isCyclingEnabled ? 'ON' : 'OFF',
+            collapsedStatus: isPlaying ? '🎵 Playing' : '🔇 Paused'
+        });
     }
 
     private setupEventListeners(): void {
@@ -218,6 +156,13 @@ export class GlobalAudioControl implements IGlobalAudioControl {
         if (playPauseBtn) {
             playPauseBtn.textContent = isPlaying ? '⏸' : '▶';
             (playPauseBtn as HTMLElement).title = isPlaying ? 'Pause' : 'Play';
+
+            // Toggle paused class
+            if (isPlaying) {
+                playPauseBtn.classList.remove('paused');
+            } else {
+                playPauseBtn.classList.add('paused');
+            }
         }
 
         // Update collapsed panel state
@@ -230,8 +175,13 @@ export class GlobalAudioControl implements IGlobalAudioControl {
         const cyclingBtn = this.container.querySelector('#cycling-toggle-btn') as HTMLElement;
         if (cyclingBtn) {
             cyclingBtn.textContent = isCyclingEnabled ? 'ON' : 'OFF';
-            cyclingBtn.style.background = isCyclingEnabled ? '#228B22' : '#8B4513';
-            cyclingBtn.style.borderColor = isCyclingEnabled ? '#1F7A1F' : '#654321';
+
+            // Toggle enabled class
+            if (isCyclingEnabled) {
+                cyclingBtn.classList.add('enabled');
+            } else {
+                cyclingBtn.classList.remove('enabled');
+            }
         }
     }
 
