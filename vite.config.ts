@@ -4,7 +4,6 @@ import { resolve } from 'path';
 import { WebSocketServer } from 'ws';
 import os from 'os';
 import https from 'https';
-import { goP2PServerDetector } from './vite-plugins/go-p2p-server-detector';
 
 export default defineConfig({
   base: './',
@@ -46,7 +45,6 @@ export default defineConfig({
   },
   publicDir: 'public',
   plugins: [
-    goP2PServerDetector({ autoStart: false }),
     {
       name: 'copy-version-file',
       buildEnd() {
@@ -66,15 +64,6 @@ export default defineConfig({
           next();
         });
       }
-    },
-    // DEPRECATED: Old Node.js P2P test servers
-    // Now using Go server at test/go-p2p-servers/
-    // Start Go server separately with: cd test/go-p2p-servers && ./start.sh
-    // {
-    //   name: 'p2p-test-servers',
-    //   async configureServer(server) {
-    //     // ... old Node.js server code disabled ...
-    //   }
-    // }
+    }
   ]
 });

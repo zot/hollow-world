@@ -1220,3 +1220,153 @@
 .profile-cancel-btn:hover {
     background: linear-gradient(to bottom, #aaa, #777);
 }
+
+/* Pending Badge */
+.pending-badge {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 4px 10px;
+    background: linear-gradient(to bottom, #ffd700, #daa520);
+    color: #2d1810;
+    border: 2px solid #b8860b;
+    border-radius: 12px;
+    font-family: 'Rye', serif;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Pending Invitations Section */
+.pending-invitations-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid rgba(139, 69, 19, 0.3);
+}
+
+.collapsible-header {
+    font-family: 'Sancreek', serif;
+    color: #8b4513;
+    font-size: 1.2rem;
+    margin: 0 0 15px 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.badge {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 4px 10px;
+    background: linear-gradient(to bottom, #cd853f, #8b6914);
+    color: #fff8dc;
+    border: 2px solid #654321;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pending-invitations-list,
+.ignored-peers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.no-pending,
+.no-ignored {
+    text-align: center;
+    color: #8b7355;
+    font-style: italic;
+    padding: 20px;
+}
+
+.pending-invitation-item,
+.ignored-peer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: rgba(244, 164, 96, 0.4);
+    border: 2px solid #cd853f;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.pending-invitation-item:hover,
+.ignored-peer-item:hover {
+    background: rgba(244, 164, 96, 0.6);
+    border-color: #8b4513;
+}
+
+.pending-invitation-info,
+.ignored-peer-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pending-invitation-peerid,
+.ignored-peer-peerid {
+    font-family: 'Courier New', monospace;
+    color: #8b4513;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ignored-peer-name {
+    font-family: 'Rye', serif;
+    font-weight: bold;
+    color: #654321;
+    font-size: 1rem;
+}
+
+.pending-invitation-status {
+    font-family: 'Rye', serif;
+    color: #654321;
+    font-size: 0.9rem;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.remove-pending-invitation-btn,
+.remove-ignored-peer-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.remove-pending-invitation-btn:hover,
+.remove-ignored-peer-btn:hover {
+    transform: scale(1.2) rotate(10deg);
+}
+
+.remove-pending-invitation-btn:active,
+.remove-ignored-peer-btn:active {
+    transform: scale(1.1) rotate(-10deg);
+}
+
+/* Ignored Peers Section */
+.ignored-peers-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid rgba(139, 69, 19, 0.3);
+}

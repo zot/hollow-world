@@ -8,9 +8,31 @@ import { STORAGE_KEY_FRIENDS } from './constants';
 export class FriendsManager implements IFriendsManager {
     private friends: Map<string, IFriend> = new Map(); // peerId -> IFriend
     private storageProvider: IStorageProvider;
+    private updateListeners: Array<(peerId: string, friend: IFriend) => void> = [];
 
     constructor(storageProvider: IStorageProvider) {
         this.storageProvider = storageProvider;
+    }
+
+    onFriendUpdate(callback: (peerId: string, friend: IFriend) => void): void {
+        this.updateListeners.push(callback);
+    }
+
+    removeUpdateListener(callback: (peerId: string, friend: IFriend) => void): void {
+        const index = this.updateListeners.indexOf(callback);
+        if (index > -1) {
+            this.updateListeners.splice(index, 1);
+        }
+    }
+
+    private notifyUpdateListeners(peerId: string, friend: IFriend): void {
+        this.updateListeners.forEach(listener => {
+            try {
+                listener(peerId, friend);
+            } catch (error) {
+                console.error('Error in friend update listener:', error);
+            }
+        });
     }
 
     async loadFriends(): Promise<void> {
@@ -29,6 +51,7 @@ export class FriendsManager implements IFriendsManager {
         if (this.friends.has(peerId)) {
             this.friends.set(peerId, friend);
             this.persistFriends();
+            this.notifyUpdateListeners(peerId, friend);
         }
     }
 

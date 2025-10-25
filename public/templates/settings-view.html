@@ -37,7 +37,12 @@
                 <!-- Collapsed State (default) -->
                 <div class="friend-card-collapsed">
                     <div class="friend-collapsed-content">
-                        <div class="friend-collapsed-name">{{playerName}}</div>
+                        <div class="friend-collapsed-name">
+                            {{playerName}}
+                            {{#if pending}}
+                            <span class="pending-badge" title="Friend request pending acknowledgment">⏳ Pending</span>
+                            {{/if}}
+                        </div>
                         <div class="friend-collapsed-peerid">{{peerId}}</div>
                         {{#if notes}}
                         <div class="friend-collapsed-notes">{{notes}}</div>
@@ -49,7 +54,11 @@
                 <!-- Expanded State -->
                 <div class="friend-card-expanded" style="display: none;">
                     <div class="friend-card-header">
-                        <h3>Friend Details</h3>
+                        <h3>Friend Details
+                            {{#if pending}}
+                            <span class="pending-badge" title="Friend request pending acknowledgment">⏳ Pending</span>
+                            {{/if}}
+                        </h3>
                         <button class="friend-collapse-btn" data-friend-id="{{peerId}}" title="Collapse">⬆️</button>
                     </div>
                     <div class="friend-expanded-content">
@@ -72,65 +81,24 @@
             {{/each}}
         </div>
         <div class="friend-actions">
-            <button class="{{buttonClass}}" id="invite-friend-btn">Invite Friend</button>
-            <button class="{{buttonClass}}" id="accept-invitation-btn">Accept Invitation</button>
             <button class="{{buttonClass}}" id="add-friend-by-peerid-btn">Add Friend by Peer ID</button>
         </div>
 
-        <!-- Pending New Invitations List -->
-        <div id="pending-new-invitations-section" class="pending-invitations-section">
+        <!-- Pending New Invitations List - HIDDEN (backend logic remains for automatic retry) -->
+        <div id="pending-new-invitations-section" class="pending-invitations-section" style="display: none;">
             <h3 class="collapsible-header">Pending Invitations <span class="badge" id="pending-invitations-count">0</span></h3>
             <div id="pending-invitations-list" class="pending-invitations-list"></div>
+        </div>
+
+        <!-- Ignored Peers List -->
+        <div id="ignored-peers-section" class="ignored-peers-section">
+            <h3 class="collapsible-header">Ignored Peers <span class="badge" id="ignored-peers-count">0</span></h3>
+            <div id="ignored-peers-list" class="ignored-peers-list"></div>
         </div>
     </div>
 
     <div class="settings-actions">
         <button class="{{backButtonClass}}">Back to Menu</button>
-    </div>
-
-    <!-- Invite Friend Modal -->
-    <div id="invite-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h2>Invite Friend</h2>
-            <div class="modal-field">
-                <label for="invite-friend-name">Friend Name:</label>
-                <input type="text" id="invite-friend-name" placeholder="Enter friend's name" />
-            </div>
-            <div class="modal-field">
-                <label for="invite-friend-id">Friend ID (optional):</label>
-                <input type="text" id="invite-friend-id" placeholder="Optional peer ID" />
-            </div>
-            <div class="modal-field">
-                <label for="invite-friend-notes">Notes:</label>
-                <div id="invite-friend-notes" class="milkdown-editor"></div>
-            </div>
-            <div class="modal-field">
-                <label for="invitation-code">Invitation:</label>
-                <div class="invitation-display">
-                    <input type="text" id="invitation-code" readonly placeholder="Click Generate to create invitation" />
-                    <button id="copy-invitation-btn" class="icon-btn" disabled title="Copy to clipboard">📋</button>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button id="generate-invite-btn" class="{{buttonClass}}">Generate</button>
-                <button id="close-invite-modal-btn" class="{{buttonClass}}">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Accept Invitation Modal -->
-    <div id="accept-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h2>Accept Invitation</h2>
-            <div class="modal-field">
-                <label for="accepted-invitation">Invitation Code:</label>
-                <input type="text" id="accepted-invitation" placeholder="Paste invitation code here" />
-            </div>
-            <div class="modal-actions">
-                <button id="accept-invite-btn" class="{{buttonClass}}">Accept</button>
-                <button id="close-accept-modal-btn" class="{{buttonClass}}">Cancel</button>
-            </div>
-        </div>
     </div>
 
     <!-- Add Friend by Peer ID Modal -->

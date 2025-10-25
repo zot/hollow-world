@@ -32,6 +32,14 @@
   - don't put padding around the editor content
   - support all available crepe features
 
+### P2P User Experience
+- **NO DIALOGS for P2P operations** - Never use `alert()` or modal dialogs for P2P status updates
+  - Friend requests, peer discovery, connection status should use visual badges and the event system
+  - Errors that require user action can use dialogs, but informational updates must not
+  - Use the EventService to notify users of P2P events (friend requests, connections, etc.)
+  - Use status badges (e.g., "⏳ Pending") in the UI to show current state
+  - Keep P2P operations non-intrusive and seamless
+
 ### Events
 - there is a persisted list of events
 - whenever the event list is not empty

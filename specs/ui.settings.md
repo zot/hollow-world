@@ -58,6 +58,35 @@ Each friend is shown on an expandable card:
 - **Remove button:** allows removing the friend from the list
 - Click card header or collapse button (in header) to collapse back to summary view
 
+**Re-rendering Behavior:**
+- Friend cards MUST fully re-render when collapsing
+- This ensures all UI elements (Milkdown editor, text fields) are properly initialized
+- Prevents stale DOM elements and state inconsistencies
+- Each state transition (collapsed ↔ expanded) should create fresh DOM elements
+- **Friend cards MUST update when friend data changes:**
+  - When `pending` flag changes (set to true or cleared to false), the friend card MUST update to show/remove the pending badge
+  - When `playerName` changes, the friend card MUST update to show the new name
+  - Updates must occur in BOTH collapsed and expanded states
+  - **Implementation options:**
+    1. Full settings view re-render (simple but may lose UI state)
+    2. Targeted DOM updates using `updateFriendCard()` method (preserves Milkdown editor state and expanded/collapsed state)
+  - **Recommended approach:** Targeted updates via `updateFriendCard()` method that:
+    - Finds the friend card by `data-friend-id` attribute
+    - Updates pending badges in both collapsed and expanded sections
+    - Updates player name displays in both sections
+    - Preserves expanded/collapsed state and Milkdown editor content
+  - **Triggering mechanism:** FriendsManager should call `notifyUpdateListeners()` when friend data changes, which triggers UI updates
+
+**Pending Friend Status:**
+- Friends with `pending: true` flag show a "⏳ Pending..." badge
+- Badge appears in both collapsed and expanded states
+- **Purpose:** Indicates that friend request was accepted but not yet acknowledged by original requester
+- **Behavior:**
+  - Badge appears immediately when accepting a friend request or adding a friend by peer ID
+  - Badge disappears when `acceptFriend` ack is received (requires friend card re-render)
+  - Pending friends are fully functional (can view/edit notes, etc.)
+- **Styling:** Use western theme styling (e.g., gold/amber badge with border)
+
 ### `Invite friend` button presents modal dialog
 - `friend` field where user fills in name of friend (used in friend list)
   - empty invitation field with "copy" icon, hover displays "copy to clipboard" stored in `invitation`
@@ -78,7 +107,9 @@ Each friend is shown on an expandable card:
 - `Invitation` field lets user paste copied invitation stored in `acceptedInvitation`
   - on paste it
     - extracts invite code and peerID from invitation
-    - sends a requestFriend message (see p2p.md "P2P Methods")
+    - sends a `requestFriend` resendable message (see p2p.md "Friend Request Flow")
+      - message includes sender's player name from settings
+      - automatically retries until acknowledged
 
 ## `Profiles` button
 - opens the Profile Picker
@@ -98,47 +129,72 @@ Each friend is shown on an expandable card:
     - selects the new profile
 
 ### `Add Friend by Peer ID` button presents modal dialog
-- **Purpose:** Add a friend directly by their peer ID (uses peer discovery-based invitation)
+- **Purpose:** Send a friend request directly to a peer by their peer ID
 - **Fields:**
-  - **Friend Name:** textbox for the friendly name to display in friend list
+  - **Friend Name:** textbox for the friendly name to display in friend list (optional, can use peer ID initially)
   - **Peer ID:** textbox for pasting the peer's ID
   - **Private Notes:** markdown editor for notes about the friend
 - **Actions:**
-  - **Add Friend button:**
+  - **Send Friend Request button:**
     - Validates that Peer ID is not empty
-    - Adds peer ID to `pendingNewInvitations` storage
+    - adds friend to friends list with `pending` set to true
+    - Sends `requestFriend` resendable message to the peer (see p2p.md "Friend Request Flow")
+      - Message includes sender's player name from settings
+      - Automatically retries until acknowledged or timeout
     - Closes the dialog
-    - When the peer is discovered via broadcast, automatically sends `newFriendRequest` message
+    - Shows temporary notification: "Friend request sent to [peer ID]"
   - **Cancel button:** closes dialog without saving
 
-### New Friend Request Event UI
-When a `newFriendRequest` event is received:
+### Friend Request Event UI
+When a `requestFriend` message is received:
 - **Event Card displays:**
-  - **Title:** "New Friend Request"
-  - **Content:** "Peer [peer ID] wants to add you as a friend"
+  - **Title:** "Friend Request"
+  - **Content:** "[Player Name] (Peer ID: [peer ID]) wants to add you as a friend"
   - **Three Action Buttons:**
-    - **Accept button:**
-      - Adds peer to friends list with peer ID as initial name
-      - Removes peer ID from `pendingNewFriendRequests`
-      - Removes the event from event list
-      - Sends acceptance confirmation to peer (if connection still active)
-    - **Decline button:**
-      - Adds peer ID to `declinedFriendRequests` storage
-      - Removes peer ID from `pendingNewFriendRequests`
-      - Removes the event from event list
-      - Does NOT send any message to peer (silent decline)
     - **Ignore button:**
       - Removes the event from event list
-      - Keeps peer ID in `pendingNewFriendRequests` (may reappear)
-      - Does NOT modify `declinedFriendRequests`
+      - Adds sender's peer name and ID to `ignoredPeers` storage (user-editable)
+      - Future `requestFriend` messages from this peer are silently ignored
+      - Does NOT send any message to sender (silent ignore)
+    - **Decline button:**
+      - Removes the event from event list
+      - Sends `declineFriend` resendable message to sender
+      - Sender receives notification: "Friend request declined"
+    - **Accept button:**
+      - Sends `acceptFriend` resendable message to sender
+      - Adds friend to friends list with `pending: true` flag
+      - Friend entry shows "Pending..." badge until acknowledged
+      - Removes the event from event list
+      - When `acceptFriend` ack is received: clears `pending` flag
 
-### Pending New Invitations List
-- **Location:** In Friends section, below friend cards
-- **Display:** Collapsible section "Pending Invitations" with count badge
-- **For each pending invitation:**
-  - Shows peer ID (truncated with ellipsis if too long)
-  - Shows "Waiting for peer discovery..." status
-  - **Remove button:** removes peer ID from `pendingNewInvitations`
+### Ignored Peers List
+- **Location:** In Friends section, collapsible section below friend cards
+- **Display:** "Ignored Peers" heading with count badge (e.g., "Ignored Peers (3)")
+- **Purpose:** User-editable list of peers whose friend requests are automatically ignored
+- **For each ignored peer:**
+  - Shows peer name (if available) and peer ID
+  - **Remove button:** Removes peer from `ignoredPeers` storage
+    - Once removed, future friend requests from this peer will be processed normally
+- **Empty state:** "No ignored peers" message when list is empty
+- **Storage:** `ignoredPeers` object keyed by peer ID, value is `{ peerId: string, peerName: string }`
+
+### Receiving Friend Response Messages
+
+**When `acceptFriend` message is received:**
+- If friend exists in friends list with `pending: true`:
+  - Clear the `pending` flag
+  - Friend card updates to remove "Pending..." badge
+  - No event notification needed (silent acknowledgment)
+- If friend not in list:
+  - Log warning (unexpected acceptFriend)
+
+**When `declineFriend` message is received:**
+- If friend exists in friends list:
+  - Remove friend from friends list
+  - Create event notification: "Friend request declined by [Player Name]"
+  - Event card has single "Dismiss" button to remove the event
+- If friend not in list:
+  - Log warning (unexpected declineFriend)
 
 ## `Log` button (see CLAUDE.md "Log")
 - there is a log button under the Profile button that flips to a log view

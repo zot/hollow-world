@@ -540,6 +540,7 @@ interface Friend {
   peerId: string;       // LibP2P peer ID (unique identifier)
   playerName: string;   // Display name for the friend
   notes: string;        // Private notes (not transmitted in messages)
+  pending?: boolean;    // Optional: true when friend request is sent but not yet acknowledged
 }
 ```
 
@@ -563,6 +564,13 @@ interface Friend {
 - Never transmitted in P2P messages
 - For user's reference only
 - Validation: Any string (including empty)
+
+**`pending`** (optional):
+- When `true`: Friend request has been accepted but not yet acknowledged by original requester
+- When `false` or `undefined`: Friendship is fully established
+- Set to `true` when accepting a `requestFriend` message
+- Cleared to `false` when receiving `acceptFriend` ack
+- UI should display pending status (e.g., "Pending..." badge or icon)
 
 ### Storage Format
 
@@ -600,7 +608,9 @@ this.friends = new Map(Object.entries(friendsObject));
 ### New Invitations (Peer Discovery-Based)
 
 **Storage Items**:
-- **`pendingNewInvitations`** (Array of peer IDs): Peer IDs that user wants to add as friends
+- **`pendingNewInvitations`** (Object): keyed by Peer ID user wants to add as friend with value of [state, friend]
+  - state is "resend" (the starting value) or "sent"
+  - friend is the friend being requested
 - **`pendingNewFriendRequests`** (Object): Incoming new friend requests, keyed by peer ID
 - **`declinedFriendRequests`** (Object): Declined peer IDs, keyed by peer ID with value `true`
 
@@ -610,9 +620,12 @@ this.friends = new Map(Object.entries(friendsObject));
   - Send a `newFriendRequest` message
   - Keep peer ID in `pendingNewInvitations` until accepted
 - When receiving a `newFriendRequest` message:
+  - immediately send a `friendRequestReceived` message back to the sender
   - If sending peer ID is in `declinedFriendRequests`: ignore silently
   - If sending peer ID is already in friends list: ignore
   - If sending peer ID is not in `pendingNewFriendRequests`: add it and create a newFriendRequest event
+- When receiving a `friendRequestReceived` message:
+  - add friend to friend list and remove peer from pendingNewInvitations
 - All storage items are persisted to localStorage
 
 ### Peer connections
@@ -714,41 +727,135 @@ Listen for well-formatted incoming p2p messages on peer connections and execute 
 
 Each p2p message will have a corresponding p2p method implementation in the HollowPeer class
 
+### Resendable Messages
+
+Messages that require reliable delivery with automatic retry until acknowledged.
+
+**Structure** (minimum required fields):
+- `messageId`: UUID for tracking (e.g., `"550e8400-e29b-41d4-a716-446655440000"`)
+- `sender`: Peer ID of sender
+- `target`: Peer ID of recipient
+- `method`: The message type/method name
+- Additional method-specific fields
+
+**Behavior**:
+- Stored in resend storage object indexed by `messageId`
+- Periodically resent (e.g., every 10 seconds) until ack received
+- Maximum retry attempts or timeout should be configurable
+- On receiving ack message:
+  1. Call the ack handler function (if provided)
+  2. Remove from resend storage **only if handler doesn't fail**
+  3. If handler fails, message remains in storage for retry
+
+**Implementation Requirements**:
+- Sender maintains resend queue in memory (not persisted)
+- Retry timer runs in background
+- Ack messages must include the `messageId` from original message
+- Message deduplication on receiver side (ignore duplicates with same `messageId`)
+
+**Storage**:
+- Resend storage is in-memory only (cleared on page reload)
+- Uses `messageId` as key
+- Value includes: original message, retry count, next retry time, ack handler
+
 #### P2P Messages
-- requestFriend(invitation)
-  - add peerId -> invitation to pendingFriendRequests
-  - sends message to peerId and address in invitation
-  - message properties
-    - inviteCode: inviteCode from invitation
-  - behavior on receiving peer
-    - check activeInvitations Object for inviteCode entry (see Invitations, above)
-      - if entry has a friendId, verify that it matches the message's sender
-    - if valid, add a friend request event
-      - the event has the message
-        - the event view has `Accept` and `Ignore` buttons
-        - if the user clicks Accept
-          - add the friend to the friend list
-          - send an approveFriendRequest to the sender
-        - clicking either button will remove the event from the event list
-    - if invalid, log an invalid friend request
-- approveFriendRequest
-  - if peerId is in friends map, ignore it
-  - if peerId is not in pendingFriendRequests, log it as an error
-  - otherwise
-    - remove the entry from pendingFriendRequests
-    - add an entry for the peer to the friends map
-    - add an accepted event to the event list
-      - the event view has a "View Friend" button
-        - removes the event from the event list
-        - jumps to the settings page and selects the friend
-- ping(timestamp, messageId)
+
+**Friend Request Flow** (using resendable messages):
+
+- **requestFriend** (resendable)
+  - Message properties:
+    - `messageId`: UUID for tracking
+    - `sender`: Sender's peer ID
+    - `target`: Target peer ID
+    - `method`: "requestFriend"
+    - `playerName`: Sender's player name from settings
+  - Behavior on sending peer:
+    - **CRITICAL: Prevent duplicate resendable messages**
+      - Before creating new resendable message, check if one already exists for this target peer
+      - Check all existing resendable messages in the resend queue
+      - If a `requestFriend` message for the same target peer already exists, skip creating duplicate
+      - This prevents multiple retry timers and peer discovery handlers from creating duplicate messages
+    - Send requestFriend message to target peer
+    - Add to resend storage for automatic retry
+  - Behavior on receiving peer:
+    1. Check if sender is in ignore list - if yes, silently ignore
+    2. **Check for duplicate events** - if there's already a friend request event for this peer (by peerId, not messageId), silently ignore
+    3. Check for duplicate messageId - if yes, silently ignore
+    4. if the peer is already a friend, continue
+    5. if the peer is not yet a friend and there is not already a friend request event for it, create one with three action buttons:
+       - **Ignore button**: Removes event, adds peer name and ID to user-editable ignore list
+       - **Decline button**: Removes event, sends `declineFriend` message (resendable)
+       - **Accept button**: Sends `acceptFriend` message (resendable), adds friend to list with "pending" flag, removes event
+    6. Send ack message (with `messageId`) **unless step 5 throws exception**
+  - Behavior on receiving ack:
+    1. Call ack handler (if provided)
+    2. Remove from resend storage **only if handler doesn't fail**
+  - **Duplicate Prevention Strategy:**
+    - **Sender-side:** Check resend queue before creating new requestFriend message (prevents root cause)
+    - **Receiver-side:** Check for existing events by peerId (defense in depth)
+    - Together these prevent duplicate events even when multiple discovery mechanisms trigger simultaneously
+
+- **acceptFriend** (resendable)
+  - Message properties:
+    - `messageId`: UUID for tracking
+    - `sender`: Sender's peer ID
+    - `target`: Target peer ID (original requester)
+    - `method`: "acceptFriend"
+  - Behavior on sending peer:
+    - Send acceptFriend message
+    - Add to resend storage for automatic retry
+    - Friend remains marked as "pending" until ack received
+  - Behavior on receiving peer:
+    1. If friend is in list, clear "pending" flag
+    2. Send ack message (with `messageId`) **unless step 1 throws exception**
+  - Behavior on receiving ack:
+    1. Call ack handler (if provided)
+    2. Clear "pending" flag on friend in friends list
+    3. Remove from resend storage **only if handler doesn't fail**
+
+- **declineFriend** (resendable)
+  - Message properties:
+    - `messageId`: UUID for tracking
+    - `sender`: Sender's peer ID
+    - `target`: Target peer ID (original requester)
+    - `method`: "declineFriend"
+  - Behavior on sending peer:
+    - Send declineFriend message
+    - Add to resend storage for automatic retry
+  - Behavior on receiving peer:
+    1. If friend is in friends list: remove friend, add event notification ("Friend declined your request")
+    2. Remove friend from list
+    3. Send ack message (with `messageId`) **unless step 1 throws exception**
+  - Behavior on receiving ack:
+    1. Call ack handler (if provided)
+    2. Remove from resend storage **only if handler doesn't fail**
+
+- **ack** (acknowledgment message)
+  - Message properties:
+    - `messageId`: The messageId from the original resendable message being acknowledged
+    - `method`: "ack"
+  - Behavior on receiving peer:
+    - Look up messageId in resend storage
+    - Call ack handler (if provided)
+    - Remove from resend storage if handler succeeds
+    - If messageId not found, log warning (may be duplicate or late ack)
+
+**Storage Items**:
+- **`ignoredPeers`** (Object): Keyed by peer ID, value is `{ peerId: string, peerName: string }`
+  - User-editable list shown in settings
+  - Can be manually removed by user
+  - Checked when receiving `requestFriend` messages
+
+**Connectivity Testing**:
+
+- **ping** (timestamp, messageId)
   - message properties
     - timestamp: Unix timestamp (milliseconds) when ping was sent
     - messageId: Unique message identifier for request-response correlation
   - behavior on receiving peer
     - immediately respond with pong message containing the same timestamp and messageId
     - log the ping receipt (for debugging)
-- pong(timestamp, messageId)
+- **pong** (timestamp, messageId)
   - message properties
     - timestamp: The original timestamp from the ping message (echo back)
     - messageId: The messageId from the ping request (echo back)
@@ -759,16 +866,6 @@ Each p2p message will have a corresponding p2p method implementation in the Holl
     - if handler not found, log warning (unexpected response)
     - log successful connectivity
     - mark peer as reachable
-- newFriendRequest
-  - message properties: (none, sender's peer ID is implicit)
-  - behavior on sending peer
-    - sent automatically when a peer from `pendingNewInvitations` is discovered
-    - keeps peer ID in `pendingNewInvitations` until friend request is accepted
-  - behavior on receiving peer
-    - if sender peer ID is in `declinedFriendRequests` storage: ignore silently
-    - if sender peer ID is already in friends list: ignore
-    - if sender peer ID is not in `pendingNewFriendRequests`: add it and create a newFriendRequest event
-      - the event view has `Accept`, `Decline`, and `Ignore` buttons (see UI spec for details)
 
 ## 📁 File Organization
 

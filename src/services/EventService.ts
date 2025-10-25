@@ -5,7 +5,7 @@
 
 import { getProfileService } from './ProfileService.js';
 
-export type EventType = 'friendRequest' | 'friendApproved' | 'friendDeclined' | 'newFriendRequest';
+export type EventType = 'friendRequest' | 'friendDeclined';
 
 export interface IEvent {
     id: string;
@@ -14,27 +14,21 @@ export interface IEvent {
     data: any; // Event-specific data
 }
 
+// Removed: INewFriendRequestEvent (replaced by IFriendRequestEvent with playerName)
+
 export interface IFriendRequestEvent extends IEvent {
     type: 'friendRequest';
     data: {
         remotePeerId: string;
-        inviteCode: string;
-        friendName: string; // From the invitation
+        playerName: string;
     };
 }
 
-export interface IFriendApprovedEvent extends IEvent {
-    type: 'friendApproved';
+export interface IFriendDeclinedEvent extends IEvent {
+    type: 'friendDeclined';
     data: {
         remotePeerId: string;
-        friendName: string; // The friend who approved
-    };
-}
-
-export interface INewFriendRequestEvent extends IEvent {
-    type: 'newFriendRequest';
-    data: {
-        remotePeerId: string;
+        playerName: string;
     };
 }
 
@@ -110,7 +104,7 @@ export class EventService {
             if (e.type === 'friendRequest' && (e as IFriendRequestEvent).data.remotePeerId === peerId) {
                 return false;
             }
-            if (e.type === 'friendApproved' && (e as IFriendApprovedEvent).data.remotePeerId === peerId) {
+            if (e.type === 'friendDeclined' && (e as IFriendDeclinedEvent).data.remotePeerId === peerId) {
                 return false;
             }
             return true;
@@ -147,40 +141,27 @@ export class EventService {
     }
 
     // Helper to create friend request event
-    createFriendRequestEvent(remotePeerId: string, inviteCode: string, friendName: string): IFriendRequestEvent {
+    createFriendRequestEvent(remotePeerId: string, playerName: string): IFriendRequestEvent {
         return {
             id: `friend-request-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: 'friendRequest',
             timestamp: new Date(),
             data: {
                 remotePeerId,
-                inviteCode,
-                friendName
+                playerName
             }
         };
     }
 
-    // Helper to create friend approved event
-    createFriendApprovedEvent(remotePeerId: string, friendName: string): IFriendApprovedEvent {
+    // Helper to create friend declined event
+    createFriendDeclinedEvent(remotePeerId: string, playerName: string): IFriendDeclinedEvent {
         return {
-            id: `friend-approved-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: 'friendApproved',
+            id: `friend-declined-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'friendDeclined',
             timestamp: new Date(),
             data: {
                 remotePeerId,
-                friendName
-            }
-        };
-    }
-
-    // Helper to create new friend request event
-    createNewFriendRequestEvent(remotePeerId: string): INewFriendRequestEvent {
-        return {
-            id: `new-friend-request-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: 'newFriendRequest',
-            timestamp: new Date(),
-            data: {
-                remotePeerId
+                playerName
             }
         };
     }

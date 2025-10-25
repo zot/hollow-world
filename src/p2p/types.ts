@@ -11,18 +11,6 @@ export interface IP2PMessage {
     method: string;
 }
 
-export interface IRequestFriendMessage extends IP2PMessage {
-    method: 'requestFriend';
-    inviteCode: string;
-}
-
-export interface IApproveFriendRequestMessage extends IP2PMessage {
-    method: 'approveFriendRequest';
-    peerId: string;
-    nickname: string;
-    approved: boolean;
-}
-
 export interface IPingMessage extends IP2PMessage {
     method: 'ping';
     timestamp: number;
@@ -35,16 +23,49 @@ export interface IPongMessage extends IP2PMessage {
     messageId: string;
 }
 
-export interface INewFriendRequestMessage extends IP2PMessage {
-    method: 'newFriendRequest';
+// Resendable messages with UUID tracking
+export interface IResendableMessage extends IP2PMessage {
+    messageId: string;    // UUID for tracking
+    sender: string;       // Sender's peer ID
+    target: string;       // Target peer ID
+}
+
+export interface IRequestFriendMessage extends IResendableMessage {
+    method: 'requestFriend';
+    playerName: string;   // Sender's player name from settings
+}
+
+export interface IAcceptFriendMessage extends IResendableMessage {
+    method: 'acceptFriend';
+}
+
+export interface IDeclineFriendMessage extends IResendableMessage {
+    method: 'declineFriend';
+}
+
+export interface IAckMessage extends IP2PMessage {
+    method: 'ack';
+    messageId: string;    // The messageId from the original resendable message
+}
+
+export interface IFriendRequestReceivedMessage extends IP2PMessage {
+    method: 'friendRequestReceived';
+}
+
+export interface IMudMessage extends IP2PMessage {
+    method: 'mud';
+    payload: any;  // MudMessage payload from textcraft integration
 }
 
 export type P2PMessage =
-    | IRequestFriendMessage
-    | IApproveFriendRequestMessage
     | IPingMessage
     | IPongMessage
-    | INewFriendRequestMessage;
+    | IRequestFriendMessage
+    | IAcceptFriendMessage
+    | IDeclineFriendMessage
+    | IAckMessage
+    | IFriendRequestReceivedMessage
+    | IMudMessage;
 
 // ==================== Friend Types ====================
 
@@ -52,22 +73,26 @@ export interface IFriend {
     peerId: string;       // LibP2P peer ID (unique identifier)
     playerName: string;   // Display name for the friend
     notes: string;        // Private notes (not transmitted in messages)
+    pending?: boolean;    // Optional: true when friend request is sent but not yet acknowledged
 }
 
-// ==================== Invitation Types ====================
+// ==================== Storage Types ====================
 
-export interface IInvitation {
-    inviteCode: string;
+export interface IIgnoredPeer {
     peerId: string;
-    addresses: {
-        external?: string[];  // External/public IP addresses
-        internal?: string[];  // Internal/LAN IP addresses (excluding localhost)
-    };
+    peerName: string;
 }
 
-export interface IActiveInvitation {
-    friendName: string;
-    friendId: string | null;
+export interface IPendingInvitation {
+    state: 'resend' | 'sent';  // State tracking for retry logic
+    friend: IFriend;           // The friend being requested
+}
+
+export interface IResendableMessageStorage {
+    message: IResendableMessage;
+    retryCount: number;
+    nextRetryTime: number;
+    ackHandler?: () => void;
 }
 
 // ==================== Storage Interface (Dependency Inversion) ====================

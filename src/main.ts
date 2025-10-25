@@ -183,8 +183,8 @@ async function initializeHollowPeer(): Promise<void> {
             }
         }
 
-        // Update settings view with peer ID and hollowPeer reference if it's currently displayed
-        if (currentView === 'settings' && settingsView && hollowPeer) {
+        // Update settings view with hollowPeer reference (always, not just when currently displayed)
+        if (settingsView && hollowPeer) {
             try {
                 const peerId = hollowPeer.getPeerId();
                 console.log('🤝 Updating settings view with peer ID:', peerId);

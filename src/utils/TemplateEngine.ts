@@ -42,19 +42,8 @@ export class TemplateEngine implements ITemplateEngine {
     renderTemplate(template: string, data: Record<string, any>): string {
         let result = template;
 
-        // Handle basic conditional blocks {{#if condition}}...{{/if}} FIRST
-        result = result.replace(/\{\{#if\s+([^}]+)\}\}(.*?)\{\{\/if\}\}/gs, (match, condition, content) => {
-            const trimmedCondition = condition.trim();
-            const value = data[trimmedCondition];
-
-            // Show content if value is truthy
-            if (value && value !== '0' && value !== 'false') {
-                return this.renderTemplate(content, data); // Recursively process the content
-            }
-            return '';
-        });
-
-        // Handle basic loop blocks {{#each array}}...{{/each}} SECOND
+        // Handle basic loop blocks {{#each array}}...{{/each}} FIRST
+        // This must be done BEFORE {{#if}} so that item properties are available in conditionals
         result = result.replace(/\{\{#each\s+([^}]+)\}\}(.*?)\{\{\/each\}\}/gs, (match, arrayKey, itemTemplate) => {
             const trimmedKey = arrayKey.trim();
             const array = data[trimmedKey];
@@ -66,6 +55,19 @@ export class TemplateEngine implements ITemplateEngine {
             return array.map(item => {
                 return this.renderTemplate(itemTemplate, { ...data, ...item });
             }).join('');
+        });
+
+        // Handle basic conditional blocks {{#if condition}}...{{/if}} SECOND
+        // Processed after {{#each}} so item properties are available
+        result = result.replace(/\{\{#if\s+([^}]+)\}\}(.*?)\{\{\/if\}\}/gs, (match, condition, content) => {
+            const trimmedCondition = condition.trim();
+            const value = data[trimmedCondition];
+
+            // Show content if value is truthy
+            if (value && value !== '0' && value !== 'false') {
+                return this.renderTemplate(content, data); // Recursively process the content
+            }
+            return '';
         });
 
         // Replace {{variable}} with data values LAST

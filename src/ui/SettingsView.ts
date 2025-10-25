@@ -33,13 +33,6 @@ export interface ISettingsData {
     peerId: string;
     privateNotes: string;
     friends: IFriend[];
-    activeInvitations: Record<string, IInvitation>;
-}
-
-export interface IInvitation {
-    friendName: string;
-    friendId: string | null;
-    notes: string;
 }
 
 const DEFAULT_CONFIG: ISettingsViewConfig = {
@@ -62,7 +55,6 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     private backButtonElement: HTMLElement | null = null;
     private playerNameInput: HTMLInputElement | null = null;
     private privateNotesEditor: IMilkdownEditor | null = null;
-    private inviteFriendNotesEditor: IMilkdownEditor | null = null;
     private newFriendNotesEditor: IMilkdownEditor | null = null;
     public musicButtonElement: HTMLElement | null = null;
     private logService: LogService;
@@ -181,13 +173,17 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
             this.privateNotesEditor.destroy();
             this.privateNotesEditor = null;
         }
-        if (this.inviteFriendNotesEditor) {
-            this.inviteFriendNotesEditor.destroy();
-            this.inviteFriendNotesEditor = null;
-        }
         if (this.newFriendNotesEditor) {
             this.newFriendNotesEditor.destroy();
             this.newFriendNotesEditor = null;
+        }
+        // Remove friend update listener
+        if (this.friendUpdateCallback && this.hollowPeer) {
+            const friendsManager = this.hollowPeer.getFriendsManager() as any;
+            if (friendsManager && typeof friendsManager.removeUpdateListener === 'function') {
+                friendsManager.removeUpdateListener(this.friendUpdateCallback);
+            }
+            this.friendUpdateCallback = undefined;
         }
         if (this.container) {
             this.container.innerHTML = '';
@@ -204,8 +200,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
             playerName: '',
             peerId: '', // Will be populated from network provider
             privateNotes: '',
-            friends: [],
-            activeInvitations: {}
+            friends: []
         };
 
         try {
@@ -286,138 +281,6 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
         // Private notes are auto-saved via Milkdown onChange callback
 
-        // Invite Friend modal
-        const inviteFriendBtn = this.container?.querySelector('#invite-friend-btn');
-        const inviteModal = this.container?.querySelector('#invite-modal') as HTMLElement;
-        const closeInviteModalBtn = this.container?.querySelector('#close-invite-modal-btn');
-        const generateInviteBtn = this.container?.querySelector('#generate-invite-btn');
-        const copyInvitationBtn = this.container?.querySelector('#copy-invitation-btn') as HTMLButtonElement;
-        const invitationCodeInput = this.container?.querySelector('#invitation-code') as HTMLInputElement;
-        const friendNameInput = this.container?.querySelector('#invite-friend-name') as HTMLInputElement;
-        const friendIdInput = this.container?.querySelector('#invite-friend-id') as HTMLInputElement;
-
-        inviteFriendBtn?.addEventListener('click', async () => {
-            await AudioControlUtils.playButtonSound(this.audioManager);
-            if (inviteModal) inviteModal.style.display = 'flex';
-
-            // Initialize notes editor if not already created
-            const notesContainer = this.container?.querySelector('#invite-friend-notes') as HTMLElement;
-            if (notesContainer && !this.inviteFriendNotesEditor) {
-                this.inviteFriendNotesEditor = await MilkdownUtils.createEditor(notesContainer, '');
-            }
-        });
-
-        closeInviteModalBtn?.addEventListener('click', async () => {
-            await AudioControlUtils.playButtonSound(this.audioManager);
-            if (inviteModal) inviteModal.style.display = 'none';
-            // Clear inputs
-            if (friendNameInput) friendNameInput.value = '';
-            if (friendIdInput) friendIdInput.value = '';
-            if (invitationCodeInput) invitationCodeInput.value = '';
-            if (copyInvitationBtn) copyInvitationBtn.disabled = true;
-
-            // Clear and destroy notes editor
-            if (this.inviteFriendNotesEditor) {
-                this.inviteFriendNotesEditor.destroy();
-                this.inviteFriendNotesEditor = null;
-            }
-        });
-
-        generateInviteBtn?.addEventListener('click', async () => {
-            await AudioControlUtils.playButtonSound(this.audioManager);
-            const friendName = friendNameInput?.value.trim();
-            const friendId = friendIdInput?.value.trim() || null;
-            const notes = this.inviteFriendNotesEditor?.getMarkdown() || '';
-
-            if (!friendName) {
-                alert('Please enter a friend name');
-                return;
-            }
-
-            const invitation = await this.createInvitation(friendName, friendId, notes);
-            if (invitationCodeInput) {
-                invitationCodeInput.value = invitation;
-            }
-            if (copyInvitationBtn) {
-                copyInvitationBtn.disabled = false;
-            }
-        });
-
-        copyInvitationBtn?.addEventListener('click', async () => {
-            const invitation = invitationCodeInput?.value;
-            if (invitation) {
-                // Copy to clipboard first to preserve user gesture
-                const success = await this.copyToClipboard(invitation);
-                // Play sound after clipboard operation
-                await AudioControlUtils.playButtonSound(this.audioManager);
-
-                if (success) {
-                    copyInvitationBtn.textContent = '✓';
-                    setTimeout(() => {
-                        copyInvitationBtn.textContent = '📋';
-                    }, 2000);
-                } else {
-                    alert('Failed to copy to clipboard. Please copy manually.');
-                }
-            }
-        });
-
-        // Accept Invitation modal
-        const acceptInvitationBtn = this.container?.querySelector('#accept-invitation-btn');
-        const acceptModal = this.container?.querySelector('#accept-modal') as HTMLElement;
-        const closeAcceptModalBtn = this.container?.querySelector('#close-accept-modal-btn');
-        const acceptInviteBtn = this.container?.querySelector('#accept-invite-btn');
-        const acceptedInvitationInput = this.container?.querySelector('#accepted-invitation') as HTMLInputElement;
-
-        acceptInvitationBtn?.addEventListener('click', async () => {
-            await AudioControlUtils.playButtonSound(this.audioManager);
-            if (acceptModal) acceptModal.style.display = 'flex';
-        });
-
-        closeAcceptModalBtn?.addEventListener('click', async () => {
-            await AudioControlUtils.playButtonSound(this.audioManager);
-            if (acceptModal) acceptModal.style.display = 'none';
-            if (acceptedInvitationInput) acceptedInvitationInput.value = '';
-        });
-
-        acceptInviteBtn?.addEventListener('click', async () => {
-            await AudioControlUtils.playButtonSound(this.audioManager);
-            const invitation = acceptedInvitationInput?.value.trim();
-            if (!invitation) {
-                alert('Please enter an invitation code');
-                return;
-            }
-
-            const parsed = this.parseInvitation(invitation);
-            if (!parsed) {
-                this.logService.log('Failed to accept invitation: Invalid format');
-                alert('Invalid invitation format');
-                return;
-            }
-
-            // Send requestFriend message via P2P
-            if (!this.hollowPeer) {
-                this.logService.log('Failed to send friend request: P2P not initialized');
-                alert('P2P system not initialized. Please try again later.');
-                return;
-            }
-
-            try {
-                await this.hollowPeer.sendRequestFriend(invitation);
-                this.logService.log(`Friend request sent to peer: ${parsed.peerId} (code: ${parsed.inviteCode})`);
-                console.log('✅ Friend request sent successfully:', parsed);
-                alert('Friend request sent successfully!');
-            } catch (error: any) {
-                this.logService.log(`Failed to send friend request: ${error.message}`);
-                console.error('❌ Failed to send friend request:', error);
-                alert(`Failed to send friend request: ${error.message}`);
-                return;
-            }
-
-            if (acceptModal) acceptModal.style.display = 'none';
-            if (acceptedInvitationInput) acceptedInvitationInput.value = '';
-        });
-
         // Add Friend by Peer ID modal
         const addFriendByPeerIdBtn = this.container?.querySelector('#add-friend-by-peerid-btn');
         const addFriendPeerIdModal = this.container?.querySelector('#add-friend-peerid-modal') as HTMLElement;
@@ -473,15 +336,14 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 return;
             }
 
-            // Add to pending new invitations
-            this.hollowPeer.addPendingNewInvitation(peerId);
-            this.logService.log(`Added ${peerId} to pending new invitations`);
-
-            // Add as friend with notes (will be contacted when discovered)
+            // Add as friend with notes and pending flag (will be contacted when discovered)
             try {
-                this.hollowPeer.addFriend(friendName, peerId, notes);
-                this.logService.log(`Added friend ${friendName} (${peerId}) - will send friend request when discovered`);
-                alert('Friend added! Will send friend request when peer is discovered.');
+                this.hollowPeer.addFriend(friendName, peerId, notes, true);
+                this.logService.log(`Added friend ${friendName} (${peerId}) with pending=true - will send friend request when discovered`);
+
+                // Add to pending new invitations with friend data
+                this.hollowPeer.addPendingNewInvitation(peerId, friendName, notes);
+                this.logService.log(`Added ${peerId} to pending new invitations`);
             } catch (error: any) {
                 this.logService.log(`Failed to add friend: ${error.message}`);
                 alert(`Failed to add friend: ${error.message}`);
@@ -508,8 +370,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         // Friend card expand/collapse handlers
         this.setupFriendCardHandlers();
 
-        // Render pending new invitations
-        this.renderPendingNewInvitations();
+        // Render pending new invitations (hidden in UI, but backend logic remains)
+        // this.renderPendingNewInvitations();
+
+        // Render ignored peers
+        this.renderIgnoredPeers();
     }
 
     private setupFriendCardHandlers(): void {
@@ -629,13 +494,10 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     }
 
     private collapseFriendCard(friendCard: HTMLElement): void {
-        const collapsedSection = friendCard.querySelector('.friend-card-collapsed') as HTMLElement;
-        const expandedSection = friendCard.querySelector('.friend-card-expanded') as HTMLElement;
-
-        if (collapsedSection && expandedSection) {
-            collapsedSection.style.display = 'flex';
-            expandedSection.style.display = 'none';
-            friendCard.setAttribute('data-expanded', 'false');
+        // Re-render the entire settings view to ensure fresh DOM elements
+        // This prevents stale Milkdown editors and ensures proper initialization
+        if (this.container) {
+            this.renderSettings(this.container);
         }
     }
 
@@ -712,150 +574,110 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         });
     }
 
+    private renderIgnoredPeers(): void {
+        if (!this.container || !this.hollowPeer) return;
+
+        const ignoredPeersList = this.container.querySelector('#ignored-peers-list');
+        const countBadge = this.container.querySelector('#ignored-peers-count');
+
+        if (!ignoredPeersList || !countBadge) return;
+
+        const ignoredPeers = this.hollowPeer.getIgnoredPeers();
+        const ignoredPeersArray = Object.values(ignoredPeers);
+        countBadge.textContent = ignoredPeersArray.length.toString();
+
+        if (ignoredPeersArray.length === 0) {
+            ignoredPeersList.innerHTML = '<p class="no-ignored">No ignored peers</p>';
+            return;
+        }
+
+        // Render each ignored peer
+        const ignoredHtml = ignoredPeersArray.map(peer => {
+            const truncatedId = peer.peerId.length > 30 ? peer.peerId.substring(0, 30) + '...' : peer.peerId;
+            return `
+<div class="ignored-peer-item" data-peer-id="${peer.peerId}">
+    <div class="ignored-peer-info">
+        <div class="ignored-peer-name">${peer.peerName}</div>
+        <div class="ignored-peer-peerid">${truncatedId}</div>
+    </div>
+    <button class="remove-ignored-peer-btn" data-peer-id="${peer.peerId}" title="Remove from ignored list">❌</button>
+</div>`;
+        }).join('');
+
+        ignoredPeersList.innerHTML = ignoredHtml;
+
+        // Set up remove button handlers
+        const removeButtons = ignoredPeersList.querySelectorAll('.remove-ignored-peer-btn');
+        removeButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const peerId = btn.getAttribute('data-peer-id');
+                if (peerId && this.hollowPeer) {
+                    this.hollowPeer.removeIgnoredPeer(peerId);
+                    this.logService.log(`Removed ${peerId} from ignored peers`);
+                    // Re-render the list
+                    this.renderIgnoredPeers();
+                }
+            });
+        });
+    }
+
     private setupEventCardHandlers(): void {
         // Use event delegation for dynamically rendered event cards
         document.addEventListener('click', async (e: Event) => {
             const target = e.target as HTMLElement;
 
-            // Handle Accept button in newFriendRequest events
-            if (target.classList.contains('event-action-accept-new')) {
+            // Handle Ignore button in friendRequest events
+            if (target.classList.contains('event-action-ignore-friend')) {
                 await AudioControlUtils.playButtonSound(this.audioManager);
 
                 const peerId = target.getAttribute('data-peer-id');
+                const peerName = target.getAttribute('data-peer-name');
                 const eventId = target.getAttribute('data-event-id');
 
-                if (!peerId) {
-                    this.logService.log('Invalid new friend request event data');
-                    console.error('Missing peer ID on Accept button');
+                if (!peerId || !peerName) {
+                    console.error('Missing peer ID or peer name on Ignore button');
                     return;
                 }
 
                 if (!this.hollowPeer) {
-                    this.logService.log('Failed to accept new friend request: P2P not initialized');
+                    this.logService.log('Failed to ignore friend request: P2P not initialized');
                     alert('P2P system not initialized');
                     return;
                 }
 
                 try {
-                    // Call HollowPeer's acceptNewFriendRequest method
-                    await this.hollowPeer.acceptNewFriendRequest(peerId);
-                    this.logService.log(`Accepted new friend request from ${peerId.substring(0, 20)}...`);
-                    console.log(`✅ Accepted new friend request from ${peerId.substring(0, 20)}...`);
+                    // Add to ignored peers
+                    this.hollowPeer.addIgnoredPeer(peerId, peerName);
+                    this.logService.log(`Added ${peerName} (${peerId.substring(0, 20)}...) to ignored peers`);
 
-                    // Re-render to show the new friend
+                    // Remove the event
+                    const eventService = this.hollowPeer.getEventService();
+                    if (eventId) {
+                        eventService.removeEvent(eventId);
+                    }
+
+                    // Re-render to update UI
                     if (this.container) {
                         this.renderSettings(this.container);
                     }
                 } catch (error: any) {
-                    this.logService.log(`Failed to accept new friend request: ${error.message}`);
-                    console.error('❌ Failed to accept new friend request:', error);
-                    alert(`Failed to accept new friend request: ${error.message}`);
+                    this.logService.log(`Failed to ignore friend request: ${error.message}`);
+                    console.error('❌ Failed to ignore friend request:', error);
+                    alert(`Failed to ignore friend request: ${error.message}`);
                 }
             }
 
-            // Handle Decline button in newFriendRequest events
-            if (target.classList.contains('event-action-decline-new')) {
+            // Handle Decline button in friendRequest events
+            if (target.classList.contains('event-action-decline-friend')) {
                 await AudioControlUtils.playButtonSound(this.audioManager);
 
                 const peerId = target.getAttribute('data-peer-id');
                 const eventId = target.getAttribute('data-event-id');
 
                 if (!peerId) {
-                    this.logService.log('Invalid new friend request event data');
                     console.error('Missing peer ID on Decline button');
-                    return;
-                }
-
-                if (!this.hollowPeer) {
-                    this.logService.log('Failed to decline new friend request: P2P not initialized');
-                    alert('P2P system not initialized');
-                    return;
-                }
-
-                try {
-                    // Call HollowPeer's declineNewFriendRequest method
-                    this.hollowPeer.declineNewFriendRequest(peerId);
-                    this.logService.log(`Declined new friend request from ${peerId.substring(0, 20)}...`);
-                    console.log(`❌ Declined new friend request from ${peerId.substring(0, 20)}...`);
-                } catch (error: any) {
-                    this.logService.log(`Failed to decline new friend request: ${error.message}`);
-                    console.error('❌ Failed to decline new friend request:', error);
-                    alert(`Failed to decline new friend request: ${error.message}`);
-                }
-            }
-
-            // Handle Ignore button in newFriendRequest events
-            if (target.classList.contains('event-action-ignore-new')) {
-                await AudioControlUtils.playButtonSound(this.audioManager);
-
-                const peerId = target.getAttribute('data-peer-id');
-                const eventId = target.getAttribute('data-event-id');
-
-                if (!peerId) {
-                    console.error('Missing peer ID on Ignore button');
-                    return;
-                }
-
-                if (!this.hollowPeer) {
-                    return;
-                }
-
-                // Just remove the event without sending any response
-                this.hollowPeer.ignoreNewFriendRequest(peerId);
-                this.logService.log(`Ignored new friend request from ${peerId.substring(0, 20)}...`);
-            }
-
-            // Handle Accept button in friend request events
-            if (target.classList.contains('event-action-accept')) {
-                await AudioControlUtils.playButtonSound(this.audioManager);
-                
-                const peerId = target.getAttribute('data-peer-id');
-                const friendName = target.getAttribute('data-friend-name');
-                const inviteCode = target.getAttribute('data-invite-code');
-                const eventId = target.getAttribute('data-event-id');
-
-                if (!peerId || !friendName || !inviteCode) {
-                    this.logService.log('Invalid friend request event data');
-                    console.error('Missing data attributes on Accept button');
-                    return;
-                }
-
-                if (!this.hollowPeer) {
-                    this.logService.log('Failed to accept friend request: P2P not initialized');
-                    alert('P2P system not initialized');
-                    return;
-                }
-
-                try {
-                    // Call HollowPeer's approveFriendRequest method
-                    await this.hollowPeer.approveFriendRequest(peerId, friendName, inviteCode, true);
-                    this.logService.log(`Accepted friend request from ${friendName} (${peerId})`);
-                    console.log(`✅ Accepted friend request from ${friendName}`);
-
-                    // Remove the event
-                    if (eventId) {
-                        const eventService = this.hollowPeer.getEventService();
-                        eventService.removeEvent(eventId);
-                    }
-                } catch (error: any) {
-                    this.logService.log(`Failed to accept friend request: ${error.message}`);
-                    console.error('❌ Failed to accept friend request:', error);
-                    alert(`Failed to accept friend request: ${error.message}`);
-                }
-            }
-
-            // Handle Decline button in friend request events
-            if (target.classList.contains('event-action-decline')) {
-                await AudioControlUtils.playButtonSound(this.audioManager);
-
-                const peerId = target.getAttribute('data-peer-id');
-                const friendName = target.getAttribute('data-friend-name');
-                const inviteCode = target.getAttribute('data-invite-code');
-                const eventId = target.getAttribute('data-event-id');
-
-                if (!peerId || !friendName || !inviteCode) {
-                    this.logService.log('Invalid friend request event data');
-                    console.error('Missing data attributes on Decline button');
                     return;
                 }
 
@@ -866,14 +688,13 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 }
 
                 try {
-                    // Call HollowPeer's approveFriendRequest method with approved: false
-                    await this.hollowPeer.approveFriendRequest(peerId, friendName, inviteCode, false);
-                    this.logService.log(`Declined friend request from ${friendName} (${peerId})`);
-                    console.log(`❌ Declined friend request from ${friendName}`);
+                    // Send declineFriend message
+                    await this.hollowPeer.sendDeclineFriend(peerId);
+                    this.logService.log(`Declined friend request from ${peerId.substring(0, 20)}...`);
 
                     // Remove the event
+                    const eventService = this.hollowPeer.getEventService();
                     if (eventId) {
-                        const eventService = this.hollowPeer.getEventService();
                         eventService.removeEvent(eventId);
                     }
                 } catch (error: any) {
@@ -883,13 +704,59 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 }
             }
 
-            // Handle Ignore button in friend request events
-            if (target.classList.contains('event-action-ignore')) {
+            // Handle Accept button in friendRequest events
+            if (target.classList.contains('event-action-accept-friend')) {
                 await AudioControlUtils.playButtonSound(this.audioManager);
-                
+
+                const peerId = target.getAttribute('data-peer-id');
+                const peerName = target.getAttribute('data-peer-name');
                 const eventId = target.getAttribute('data-event-id');
+
+                if (!peerId || !peerName) {
+                    console.error('Missing peer ID or peer name on Accept button');
+                    return;
+                }
+
+                if (!this.hollowPeer) {
+                    this.logService.log('Failed to accept friend request: P2P not initialized');
+                    alert('P2P system not initialized');
+                    return;
+                }
+
+                try {
+                    // Add friend with pending flag
+                    this.hollowPeer.addFriend(peerName, peerId, '', true);
+                    this.logService.log(`Added ${peerName} (${peerId.substring(0, 20)}...) as pending friend`);
+
+                    // Send acceptFriend message (no playerName needed - it's not in the message spec)
+                    await this.hollowPeer.sendAcceptFriend(peerId);
+                    this.logService.log(`Sent acceptFriend to ${peerId.substring(0, 20)}...`);
+
+                    // Remove the event
+                    const eventService = this.hollowPeer.getEventService();
+                    if (eventId) {
+                        eventService.removeEvent(eventId);
+                    }
+
+                    // Re-render to show the new friend
+                    if (this.container) {
+                        this.renderSettings(this.container);
+                    }
+                } catch (error: any) {
+                    this.logService.log(`Failed to accept friend request: ${error.message}`);
+                    console.error('❌ Failed to accept friend request:', error);
+                    alert(`Failed to accept friend request: ${error.message}`);
+                }
+            }
+
+            // Handle Dismiss button in friendDeclined events
+            if (target.classList.contains('event-action-dismiss')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+
+                const eventId = target.getAttribute('data-event-id');
+
                 if (!eventId) {
-                    console.error('Missing event ID on Ignore button');
+                    console.error('Missing event ID on Dismiss button');
                     return;
                 }
 
@@ -897,10 +764,10 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                     return;
                 }
 
-                // Just remove the event without sending approval
+                // Remove the event
                 const eventService = this.hollowPeer.getEventService();
                 eventService.removeEvent(eventId);
-                this.logService.log('Ignored friend request');
+                this.logService.log(`Dismissed friend declined event ${eventId}`);
             }
 
             // Handle View Friend button in friend approved events
@@ -986,14 +853,83 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
+    private friendUpdateCallback?: (peerId: string, friend: IFriend) => void;
+
     updateHollowPeer(hollowPeer: HollowPeer): void {
         this.hollowPeer = hollowPeer;
         this.updatePeerCount();
-        
+
+        // Set up friend update listener to re-render when pending flag changes
+        const friendsManager = hollowPeer.getFriendsManager() as any;
+        if (friendsManager && typeof friendsManager.onFriendUpdate === 'function') {
+            // Remove previous listener if it exists
+            if (this.friendUpdateCallback) {
+                friendsManager.removeUpdateListener(this.friendUpdateCallback);
+            }
+
+            // Add new listener
+            this.friendUpdateCallback = (peerId: string, friend: IFriend) => {
+                console.log(`👥 Friend updated: ${peerId.substring(0, 20)}..., pending: ${friend.pending}`);
+                // Update only the specific friend card without full re-render
+                this.updateFriendCard(peerId, friend);
+            };
+            friendsManager.onFriendUpdate(this.friendUpdateCallback);
+        }
+
         // Re-render the settings view to display friends from HollowPeer
         if (this.container) {
             this.renderSettings(this.container);
         }
+    }
+
+    /**
+     * Updates a single friend card in the UI without full re-render
+     * Preserves expanded/collapsed state and editor content
+     */
+    private updateFriendCard(peerId: string, friend: IFriend): void {
+        const friendCard = this.container?.querySelector(`[data-friend-id="${peerId}"]`) as HTMLElement;
+        if (!friendCard) {
+            console.warn(`Friend card not found for ${peerId.substring(0, 20)}...`);
+            return;
+        }
+
+        // Update pending badges in both collapsed and expanded states
+        const collapsedPendingBadge = friendCard.querySelector('.friend-card-collapsed .pending-badge');
+        const expandedPendingBadge = friendCard.querySelector('.friend-card-expanded .pending-badge');
+
+        if (friend.pending) {
+            // Add pending badge if it doesn't exist
+            if (!collapsedPendingBadge) {
+                const collapsedName = friendCard.querySelector('.friend-collapsed-name');
+                if (collapsedName) {
+                    const badge = document.createElement('span');
+                    badge.className = 'pending-badge';
+                    badge.title = 'Friend request pending acknowledgment';
+                    badge.textContent = '⏳ Pending';
+                    collapsedName.appendChild(badge);
+                }
+            }
+            if (!expandedPendingBadge) {
+                const expandedHeader = friendCard.querySelector('.friend-card-expanded h3');
+                if (expandedHeader) {
+                    const badge = document.createElement('span');
+                    badge.className = 'pending-badge';
+                    badge.title = 'Friend request pending acknowledgment';
+                    badge.textContent = '⏳ Pending';
+                    expandedHeader.appendChild(badge);
+                }
+            }
+        } else {
+            // Remove pending badge if it exists
+            if (collapsedPendingBadge) {
+                collapsedPendingBadge.remove();
+            }
+            if (expandedPendingBadge) {
+                expandedPendingBadge.remove();
+            }
+        }
+
+        console.log(`✅ Updated friend card UI for ${peerId.substring(0, 20)}..., pending: ${friend.pending}`);
     }
 
     private peerCountInterval?: number;
@@ -1035,28 +971,6 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
-    private generateInviteCode(): string {
-        // Generate a random invite code (8 characters)
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 8; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
-    }
-
-    private async createInvitation(friendName: string, friendId: string | null, notes: string): Promise<string> {
-        if (!this.hollowPeer) {
-            this.logService.log('Failed to create invitation: P2P not initialized');
-            throw new Error('P2P system not initialized');
-        }
-
-        // Use HollowPeer's createInvitation method (notes are UI-only, not stored in invitation)
-        const invitation = await this.hollowPeer.createInvitation(friendName, friendId);
-        this.logService.log(`Invitation generated for: ${friendName}`);
-
-        return invitation;
-    }
 
     private async copyToClipboard(text: string): Promise<boolean> {
         // Try modern Clipboard API first
@@ -1097,22 +1011,6 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
-    private parseInvitation(invitation: string): { inviteCode: string; peerId: string } | null {
-        try {
-            // Decode base64-encoded invitation JSON
-            const decodedJson = atob(invitation);
-            const parsed = JSON.parse(decodedJson);
-
-            // Validate invitation structure
-            if (parsed.inviteCode && parsed.peerId) {
-                return { inviteCode: parsed.inviteCode, peerId: parsed.peerId };
-            }
-            return null;
-        } catch (error) {
-            // If base64 decode or JSON parse fails, return null
-            return null;
-        }
-    }
 
     private async showProfilePicker(): Promise<void> {
         const { getProfileService } = await import('../services/ProfileService.js');

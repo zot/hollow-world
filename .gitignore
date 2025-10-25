@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Obsolete files
+/obsolete
+
 # Build output
 dist/
 
@@ -35,3 +38,5 @@ tmp/
 butler.zip
 /.playwright-mcp/
 test-stun-servers.html
+/specs/cache
+/specs/feedback

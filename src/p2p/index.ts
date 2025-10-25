@@ -11,21 +11,21 @@ export { LibP2PNetworkProvider } from './LibP2PNetworkProvider';
 export { DirectMessageService, directMessage } from './DirectMessageService';
 export { FriendsManager } from './FriendsManager';
 export { LocalStorageProvider } from './LocalStorageProvider';
-export { IPAddressDetector } from './IPAddressDetector';
 
 // Types
 export type {
     // Message types
     IP2PMessage,
-    IRequestFriendMessage,
-    IApproveFriendRequestMessage,
     IPingMessage,
     IPongMessage,
+    IRequestFriendMessage,
+    IAcceptFriendMessage,
+    IDeclineFriendMessage,
+    IAckMessage,
+    IFriendRequestReceivedMessage,
     P2PMessage,
     // Friend types
     IFriend,
-    IInvitation,
-    IActiveInvitation,
     // Service interfaces
     IStorageProvider,
     IFriendsManager,
@@ -51,7 +51,8 @@ export {
     STORAGE_KEY_PRIVATE_KEY,
     STORAGE_KEY_FRIENDS,
     STORAGE_KEY_NICKNAME,
-    STORAGE_KEY_ACTIVE_INVITATIONS,
-    STORAGE_KEY_PENDING_REQUESTS,
+    STORAGE_KEY_PENDING_NEW_INVITATIONS,
+    STORAGE_KEY_PENDING_NEW_FRIEND_REQUESTS,
+    STORAGE_KEY_DECLINED_FRIEND_REQUESTS,
     MIME_APPLICATION_JSON
 } from './constants';
