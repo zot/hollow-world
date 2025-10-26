@@ -1,9 +1,9 @@
 # Textcraft Integration Plan for Hollow World
 
-**Plan Version:** 2.0
+**Plan Version:** 2.1
 **Date:** 2025-10-19
-**Last Updated:** 2025-10-25
-**Status:** Phase 2 Complete - Phase 3 In Progress
+**Last Updated:** 2025-10-26
+**Status:** Phase 2 Complete - Phase 2.5 In Progress
 
 ---
 
@@ -225,7 +225,202 @@ flowchart TD
 - Uses HollowIPeer adapter for P2P communication
 - Follows project template principles (HTML templates, no inline strings)
 
-### Phase 3: Network Integration (Week 3) ⏳ **IN PROGRESS**
+### Phase 2.5: Solo Mode (Week 2.5) ⏳ **IN PROGRESS**
+
+**Goal:** Get single-player/local mode working without P2P networking
+
+**Status:** In Progress - Enables testing MUD engine before network complexity
+
+#### Tasks:
+
+1. **Create Local MudConnection**
+   ```typescript
+   // In src/textcraft/local-session.ts
+   export class LocalMudSession {
+     private mudConnection: MudConnection | null = null
+     private world: World | null = null
+
+     async loadWorld(worldData: string): Promise<void> {
+       // Parse YAML world data
+       // Create World instance
+       // Create local MudConnection (non-networked)
+       this.mudConnection = createConnection(
+         this.world,
+         (output: string) => this.handleOutput(output),
+         false // remote = false (local play)
+       )
+     }
+
+     executeCommand(cmd: string): void {
+       if (!this.mudConnection) {
+         throw new Error('No world loaded')
+       }
+       this.mudConnection.toplevelCommand(cmd)
+     }
+
+     private handleOutput(text: string): void {
+       // Send output to AdventureView
+       this.outputCallback(text)
+     }
+   }
+   ```
+
+2. **Wire AdventureView to Local Session**
+   ```typescript
+   // Update src/ui/AdventureView.ts
+   import { LocalMudSession } from '../textcraft/local-session'
+
+   export class AdventureView {
+     private localSession: LocalMudSession
+
+     async initializeSoloMode() {
+       this.localSession = new LocalMudSession(
+         (output) => this.addOutput(output)
+       )
+
+       // Load default world
+       const worldData = await this.loadWorldFile('Dusty Creek.yaml')
+       await this.localSession.loadWorld(worldData)
+     }
+
+     private async handleCommand() {
+       const cmd = this.inputField.value.trim()
+       if (!cmd) return
+
+       this.addOutput(`> ${cmd}`, 'command')
+       this.localSession.executeCommand(cmd)
+
+       this.inputField.value = ''
+     }
+   }
+   ```
+
+3. **Create Simple Test World**
+   ```yaml
+   # worlds/test-room.yaml
+   world:
+     name: "Test Room"
+     version: "1.0"
+
+   things:
+     - id: entrance
+       name: "Dusty Entrance"
+       kind: room
+       description: >
+         You stand at the entrance to a dusty frontier town.
+         A wooden sign creaks in the wind. There's a path leading north.
+       properties:
+         exits:
+           north: main_street
+
+     - id: main_street
+       name: "Main Street"
+       kind: room
+       description: >
+         The main street is quiet. Tumbleweed rolls past.
+         The saloon is to the west, and you can go south back to the entrance.
+       properties:
+         exits:
+           south: entrance
+           west: saloon
+
+     - id: saloon
+       name: "Silver Dollar Saloon"
+       kind: room
+       description: >
+         The saloon is dimly lit. A piano sits silent in the corner.
+         The exit is to the east.
+       properties:
+         exits:
+           east: main_street
+
+     - id: sign
+       name: "Wooden Sign"
+       kind: thing
+       description: "Welcome to Dusty Creek - Population: Dwindling"
+       location: entrance
+   ```
+
+4. **Add World Loading**
+   ```typescript
+   // src/textcraft/world-loader.ts
+   import { World, Thing } from './model'
+   import * as yaml from 'yaml' // or js-yaml
+
+   export class WorldLoader {
+     async loadFromYAML(yamlText: string): Promise<World> {
+       const data = yaml.parse(yamlText)
+
+       const world = new World()
+       world.name = data.world.name
+       world.version = data.world.version
+
+       // Create all Things
+       for (const thingData of data.things) {
+         const thing = new Thing(thingData.id)
+         thing.name = thingData.name
+         thing.kind = thingData.kind
+         thing.properties.description = thingData.description
+
+         // Copy all properties
+         if (thingData.properties) {
+           Object.assign(thing.properties, thingData.properties)
+         }
+
+         world.addThing(thing)
+       }
+
+       // Set up locations
+       for (const thingData of data.things) {
+         if (thingData.location) {
+           const thing = world.getThing(thingData.id)
+           const location = world.getThing(thingData.location)
+           thing.moveTo(location)
+         }
+       }
+
+       return world
+     }
+   }
+   ```
+
+5. **Update Adventure View UI**
+   - Add "Load World" button/menu
+   - Add solo mode indicator
+   - Add world name display
+   - Keep multiplayer UI hidden for now
+
+6. **Testing Solo Mode**
+   - Load test world
+   - Execute basic commands: `look`, `north`, `south`, `examine sign`
+   - Verify output appears correctly
+   - Test command history
+   - Test error handling for invalid commands
+
+**Success Criteria:**
+- ✅ Can load a YAML world file locally
+- ✅ Can execute MUD commands without network
+- ✅ Output appears in AdventureView correctly
+- ✅ Basic navigation works (go north/south/east/west)
+- ✅ Can examine objects
+- ✅ Command history functions properly
+- ✅ UI shows current location and available exits
+- ✅ No dependency on P2P/networking code
+- ✅ Proves MUD engine integration before Phase 3
+
+**Dependencies:**
+- Requires: Phase 2 (AdventureView UI) ✅
+- Blocks: Phase 3 (Network Integration)
+- Optional: YAML parser library (js-yaml or yaml)
+
+**Benefits:**
+- Validates MUD engine integration early
+- Allows UI/UX testing without network complexity
+- Provides immediate playable experience
+- Reduces risk for Phase 3 (network issues separate from engine issues)
+- Enables world design/testing in parallel with network development
+
+### Phase 3: Network Integration (Week 3)
 
 **Goal:** Wire up HollowIPeer to actually work over LibP2P
 
@@ -698,22 +893,23 @@ export class AdventureView {
 
 ## Data Flow
 
-### Solo Mode (Single Player)
+### Solo Mode (Single Player) - Phase 2.5
 
 ```mermaid
 sequenceDiagram
     participant User
     participant AdvView as Adventure View
-    participant MudControl
+    participant LocalSession as LocalMudSession
     participant MudConn as MudConnection
     participant World
 
     User->>AdvView: Type "look"
-    AdvView->>MudControl: executeCommand("look")
-    MudControl->>MudConn: toplevelCommand("look")
+    AdvView->>LocalSession: executeCommand("look")
+    LocalSession->>MudConn: toplevelCommand("look")
     MudConn->>World: Query current room
     World-->>MudConn: Room description
-    MudConn->>AdvView: output(description)
+    MudConn->>LocalSession: output(description)
+    LocalSession->>AdvView: outputCallback(description)
     AdvView->>User: Display text
 ```
 
@@ -827,21 +1023,73 @@ describe('CharacterThingAdapter', () => {
 
 ### Integration Tests
 
-**Solo Mode:**
+**Solo Mode (Phase 2.5):**
 ```typescript
-describe('Adventure Mode - Solo', () => {
-  it('should load example world and display welcome', async () => {
-    const view = new AdventureView(hollowPeer)
-    await view.loadWorld('Dusty Creek')
+describe('Adventure Mode - Solo (Phase 2.5)', () => {
+  it('should load YAML world file', async () => {
+    const session = new LocalMudSession((output) => console.log(output))
+    const worldYaml = await fetch('/worlds/test-room.yaml').then(r => r.text())
 
-    expect(view.outputArea.textContent).toContain('Welcome to Dusty Creek')
+    await session.loadWorld(worldYaml)
+
+    expect(session.world).toBeDefined()
+    expect(session.world.name).toBe('Test Room')
   })
 
-  it('should execute commands and display output', async () => {
-    const view = new AdventureView(hollowPeer)
-    await view.handleCommand('look')
+  it('should execute look command and display room description', async () => {
+    const outputs: string[] = []
+    const session = new LocalMudSession((output) => outputs.push(output))
 
-    expect(view.outputArea.textContent).toContain('You see')
+    await session.loadWorld(testWorldYaml)
+    session.executeCommand('look')
+
+    expect(outputs.join('')).toContain('Dusty Entrance')
+    expect(outputs.join('')).toContain('wooden sign')
+  })
+
+  it('should navigate between rooms', async () => {
+    const outputs: string[] = []
+    const session = new LocalMudSession((output) => outputs.push(output))
+
+    await session.loadWorld(testWorldYaml)
+
+    session.executeCommand('north')
+    expect(outputs.join('')).toContain('Main Street')
+
+    outputs.length = 0 // clear
+    session.executeCommand('south')
+    expect(outputs.join('')).toContain('Dusty Entrance')
+  })
+
+  it('should examine objects', async () => {
+    const outputs: string[] = []
+    const session = new LocalMudSession((output) => outputs.push(output))
+
+    await session.loadWorld(testWorldYaml)
+    session.executeCommand('examine sign')
+
+    expect(outputs.join('')).toContain('Welcome to Dusty Creek')
+  })
+
+  it('should handle invalid commands gracefully', async () => {
+    const outputs: string[] = []
+    const session = new LocalMudSession((output) => outputs.push(output))
+
+    await session.loadWorld(testWorldYaml)
+    session.executeCommand('xyzzy')
+
+    expect(outputs.join('')).toMatch(/don't understand|unknown|invalid/i)
+  })
+
+  it('should integrate with AdventureView UI', async () => {
+    const view = new AdventureView()
+    await view.initializeSoloMode()
+
+    // Simulate command input
+    view.inputField.value = 'look'
+    await view.handleCommand()
+
+    expect(view.outputArea.textContent).toContain('Dusty Entrance')
   })
 })
 ```
