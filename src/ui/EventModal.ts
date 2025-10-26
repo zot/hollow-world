@@ -32,7 +32,7 @@ export class EventModal implements IEventModal {
         // Load template
         const { TemplateEngine } = await import('../utils/TemplateEngine.js');
         const templateEngine = new TemplateEngine();
-        const html = await templateEngine.loadTemplate('event-modal', {});
+        const html = await templateEngine.renderTemplateFromFile('event-modal', {});
 
         // Create container from template
         const temp = document.createElement('div');

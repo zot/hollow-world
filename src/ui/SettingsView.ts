@@ -821,24 +821,8 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
                 privateNotes: this.settingsData.privateNotes
             });
         } catch (error) {
-            console.warn('Settings fallback template failed, using minimal HTML:', error);
-            return `
-<div class="${this.config.containerClass}">
-    <h1 class="${this.config.titleClass}">Settings</h1>
-    <div class="${this.config.sectionClass}">
-        <label for="player-name-input">Player Name:</label>
-        <input type="text" id="player-name-input" value="${this.settingsData.playerName}" />
-    </div>
-    <div class="${this.config.sectionClass}">
-        <label>Peer ID:</label>
-        <span>${this.settingsData.peerId}</span>
-    </div>
-    <div class="${this.config.sectionClass}">
-        <label>Private Notes:</label>
-        <div id="private-notes-editor" class="milkdown-editor"></div>
-    </div>
-    <button class="${this.config.backButtonClass}">Back to Menu</button>
-</div>`;
+            console.error('Settings fallback template failed:', error);
+            throw new Error('Failed to load settings view');
         }
     }
 

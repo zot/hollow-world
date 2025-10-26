@@ -43,7 +43,7 @@ export class AdventureView {
     async render(): Promise<HTMLElement> {
         // Load template
         const templateEngine = new TemplateEngine();
-        const html = await templateEngine.loadTemplate('adventure/adventure-view', {});
+        const html = await templateEngine.renderTemplateFromFile('adventure/adventure-view', {});
 
         // Create container
         const temp = document.createElement('div');

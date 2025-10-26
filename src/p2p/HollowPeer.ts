@@ -230,7 +230,7 @@ export class HollowPeer {
         return this.networkProvider.getPeerId();
     }
 
-    getNetworkProvider(): LibP2PNetworkProvider | undefined {
+    getNetworkProvider(): INetworkProvider | undefined {
         return this.networkProvider;
     }
 

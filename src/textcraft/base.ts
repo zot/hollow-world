@@ -63,8 +63,8 @@ export class StateTracker<E> {
     enumType: any
     value: E
     observers: stateObserver<E>[]
-    constructor(enumObj) {
-        this.names = enumNames(enumObj)
+    constructor(enumObj: any) {
+        this.names = enumNames(enumObj) || []
         this.enumType = enumObj
         this.observers = []
         this.value = enumObj[this.names[0]]
@@ -102,17 +102,17 @@ export class StateTracker<E> {
     }
 }
 
-function enumNames(enumObj) {
+function enumNames(enumObj: any): string[] {
     if (!enumNameMaps.has(enumObj)) {
         const names = Object.keys(enumObj).filter(o => typeof enumObj[o] === 'string').map(o => enumObj[o])
 
         enumNameMaps.set(enumObj, names as string[])
         return names
     }
-    return enumNameMaps.get(enumObj)
+    return enumNameMaps.get(enumObj) || []
 }
 
-export function assertUnreachable(s: never): never {
+export function assertUnreachable(_s: never): never {
     throw new Error("Shouldn't ever get here")
 }
 
