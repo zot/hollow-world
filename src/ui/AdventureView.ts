@@ -8,6 +8,7 @@
 import { TemplateEngine } from '../utils/TemplateEngine';
 import { HollowIPeer } from '../textcraft/hollow-peer';
 import type { HollowPeer } from '../p2p/HollowPeer';
+import type { LibP2PNetworkProvider } from '../p2p/LibP2PNetworkProvider';
 import '../styles/AdventureView.css';
 
 export interface IAdventureViewConfig {
@@ -73,7 +74,7 @@ export class AdventureView {
             console.log('🎮 Initializing MUD peer...');
             
             // Get network provider (may be null for solo mode)
-            const networkProvider = this.hollowPeer?.getNetworkProvider() || null;
+            const networkProvider = this.hollowPeer?.getNetworkProvider() as LibP2PNetworkProvider | null;
 
             if (!networkProvider) {
                 this.addSystemOutput('🎮 Solo Mode');

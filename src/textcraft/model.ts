@@ -67,16 +67,16 @@ export class Extension {
   }
 }
 
-const associationProps = {
-  assoc: true,
-  assocMany: true,
-  assocId: true,
-  assocIdMany: true,
-  refs: true,
-  _thing: true,
-}
-
-type propType = string | number | symbol
+//const associationProps = {
+//  assoc: true,
+//  assocMany: true,
+//  assocId: true,
+//  assocIdMany: true,
+//  refs: true,
+//  _thing: true,
+//}
+//
+//type propType = string | number | symbol
 
 function proxify(accessor: any) {
   return new Proxy<AssociationIdAccessor>(accessor, {
@@ -717,7 +717,7 @@ export class World {
     const con = connection
 
     for (const ext of this.activeExtensions.values()) {
-      ext.onLoggedIn(con.user, con.thing)
+      ext.onLoggedIn(con.user, con.thing!)
     }
   }
   close() {
@@ -1174,7 +1174,7 @@ export class World {
       })
     }
     const txn = this.db().transaction([this.extensionsName], 'readwrite')
-    const key = await txn.objectStore(this.extensionsName).put(ext, ext.id)
+    const key = txn.objectStore(this.extensionsName).put(ext, ext.id)
     return promiseFor(txn).then(() => key)
   }
   async removeExtension(id: number) {
@@ -1211,7 +1211,7 @@ export class World {
   async evalExtension(ext: Extension) {
     const script = document.createElement('script')
 
-    return new Promise((succeed, fail) => {
+    return new Promise((succeed, _fail) => {
       this.activeExtensions.set(ext.id, ext)
       ext.succeed = succeed
       document.head.appendChild(script)
@@ -1238,7 +1238,7 @@ export class World {
   }
   getUser(name: string) {
     return this.doTransaction(
-      async (store, users, txn) => await promiseFor(users.get(name))
+      async (_store, users, _txn) => await promiseFor(users.get(name))
     )
   }
   getUserForThing(ti: thingId | Thing) {
@@ -1247,7 +1247,7 @@ export class World {
     return user && this.userCache.get(user)
   }
   deleteUser(name: string) {
-    return this.doTransaction(async (store, users, txn) => {
+    return this.doTransaction(async (_store, users, _txn) => {
       return new Promise((succeed, fail) => {
         const req = users.openCursor(name)
 
@@ -1271,7 +1271,7 @@ export class World {
     const userList: any[] = []
 
     return new Promise((succeed, fail) => {
-      return this.doTransaction(async (store, users, txn) => {
+      return this.doTransaction(async (_store, users, _txn) => {
         const req = users.openCursor()
         req.onsuccess = (evt) => {
           const cursor = (evt.target as any).result
@@ -1296,7 +1296,7 @@ export class World {
     })
   }
   randomUserName() {
-    return this.doTransaction(async (store, users, txn) => {
+    return this.doTransaction(async (_store, _users, _txn) => {
       for (;;) {
         const name = randomName('user')
 
@@ -1310,7 +1310,7 @@ export class World {
     return this.createUser(name, randomName('password'), false)
   }
   createUser(name: string, password: string, admin: boolean) {
-    return this.doTransaction(async (store, users, txn) => {
+    return this.doTransaction(async (_store, _users, _txn) => {
       const user = { name, password, admin }
 
       await this.putUser(user)
@@ -1338,7 +1338,7 @@ export class World {
     for (const u of newUsers) {
       this.indexUser(u)
     }
-    return this.doTransaction(async (store, users, txn) => {
+    return this.doTransaction(async (_store, users, _txn) => {
       await deleteAll(users)
       return Promise.all(newUsers.map((u) => this.putUser(u)))
     })
@@ -1407,10 +1407,10 @@ export class World {
     const version = info.version
     const needUpgrade = !version || version < codeVersion
 
-    await this.doTransaction(async (store, users, txn) => {
+    await this.doTransaction(async (store, _users, _txn) => {
       return deleteAll(store)
     })
-    return this.doTransaction(async (store, users, txn) => {
+    return this.doTransaction(async (_store, _users, _txn) => {
       const promises: Promise<any>[] = []
 
       if (needUpgrade) this.upgrade(version, info)
@@ -1450,7 +1450,7 @@ export class World {
     thingName: string,
     noauthentication = false
   ) {
-    return this.doTransaction(async (store, users, txn) => {
+    return this.doTransaction(async (_store, users, _txn) => {
       let user: any = await promiseFor(users.get(name))
 
       if (noauthentication && !user) {
@@ -1461,7 +1461,7 @@ export class World {
       } else if (!(user && (noauthentication || user.password === passwd))) {
         throw new Error('Bad user or password')
       }
-      let thing = user.thing && (await this.getThing(user.thing))
+      let thing = user.thing && this.getThing(user.thing)
       if (!thing) {
         thing = this.createThing(name)
         ;(thing as any)._version = currentVersion
@@ -1541,7 +1541,7 @@ export class World {
         for (const guts of await thing.refs.location._thing) {
           guts.assoc.location = this.limbo
         }
-        for (const associated of await this.getAllAssociated(thing)) {
+        for (const associated of this.getAllAssociated(thing)) {
           associated.assoc.dissociateFrom(thing)
         }
       }
@@ -1639,7 +1639,7 @@ export class World {
     for (let i = 0; i < specs.length; i++) {
       const thing = this.thingCache.get(specs[i].id)
 
-      specs[i] = thing || (await this.cacheThing(specs[i]))
+      specs[i] = thing || this.cacheThing(specs[i])
     }
     return specs
   }
@@ -1687,7 +1687,7 @@ export class World {
   async getAncestors(thing: Thing, ancestors = []): Promise<Thing[]> {
     if (thing._prototype) {
       return this.doTransaction(async () => {
-        const prototype = await thing.getPrototype()
+        const prototype = thing.getPrototype()
 
         prototype && (await this.getAncestors(prototype, ancestors))
         return ancestors
@@ -1900,7 +1900,7 @@ export class MudStorage {
     if (index === -1) {
       return Promise.reject(new Error('No world found named ' + name))
     }
-    return new Promise(async (succeed, fail) => {
+    return new Promise(async (succeed, _fail) => {
       const dbs = [mudDbName(name)]
       if (this.db.objectStoreNames.contains(extensionDbName(name))) {
         dbs.push(extensionDbName(name))
@@ -1924,7 +1924,7 @@ export class MudStorage {
     if (index === -1) {
       return Promise.reject(new Error('No world found named ' + name))
     }
-    return new Promise(async (succeed, fail) => {
+    return new Promise(async (succeed, _fail) => {
       const dbs = [mudDbName(name), userDbName(name)]
       if (this.db.objectStoreNames.contains(extensionDbName(name))) {
         dbs.push(extensionDbName(name))
@@ -1964,14 +1964,14 @@ export class MudStorage {
     }
     const world = (await this.openWorld(info.name))!
 
-    await world.doTransaction(async (thingStore, userStore, txn) => {
+    await world.doTransaction(async (_thingStore, _userStore, _txn) => {
       return world.replaceUsers(users)
     })
     return this.uploadStrippedWorld(worldAndUsers, failSilently, world)
   }
   async uploadStrippedWorld(data: any, failSilently: boolean, world: World) {
     if (data.extensions) await world.replaceExtensions(data.extensions)
-    return world.doTransaction(async (thingStore, userStore, txn) => {
+    return world.doTransaction(async (_thingStore, _userStore, _txn) => {
       if (!world) {
         const info = data.objects.find((i: any) => i.id === 'info')
 
@@ -2038,18 +2038,18 @@ function getId(tip: thingId | Thing) {
   }
 }
 
-async function getTipId(tip: thingId | Thing | Promise<Thing>) {
-  if (typeof tip === 'number') {
-    if (isNaN(tip)) return null
-    return tip
-  } else if (tip instanceof Thing) {
-    return tip.id
-  } else if (tip instanceof Promise) {
-    return (await tip).id
-  } else {
-    return null
-  }
-}
+//async function getTipId(tip: thingId | Thing | Promise<Thing>) {
+//  if (typeof tip === 'number') {
+//    if (isNaN(tip)) return null
+//    return tip
+//  } else if (tip instanceof Thing) {
+//    return tip.id
+//  } else if (tip instanceof Promise) {
+//    return (await tip).id
+//  } else {
+//    return null
+//  }
+//}
 
 export function blobForYamlObject(object: any) {
   return new Blob(
@@ -2071,9 +2071,8 @@ export function jsonObjectsForDb(
 ) {
   return new Promise((succeed, fail) => {
     const req = objectStore.openCursor()
-    const first = true
 
-    req.onsuccess = (evt) => {
+    req.onsuccess = (_evt) => {
       const cursor = req.result
 
       if (cursor) {
@@ -2106,7 +2105,7 @@ export async function getStorage() {
   return storage || (await openStorage())
 }
 export function openStorage() {
-  return new Promise((succeed, fail) => {
+  return new Promise((succeed, _fail) => {
     console.log('opening storage')
     const req = indexedDB.open(centralDbName)
 
@@ -2115,12 +2114,11 @@ export function openStorage() {
       const txn = req.transaction!
 
       storage = new MudStorage(db)
-      const objectStore = db.createObjectStore(centralDbName)
       const store = txn.objectStore(centralDbName)
 
       store.put(storage.spec(), infoKey)
     }
-    req.onsuccess = async (evt) => {
+    req.onsuccess = async (_evt) => {
       const db = req.result
       const txn = db.transaction(centralDbName, 'readwrite')
       const store = txn.objectStore(centralDbName)
@@ -2296,7 +2294,7 @@ async function copyAll(srcStore: IDBObjectStore, dstStore: IDBObjectStore) {
       const cursor = (evt.target as any).result
 
       if (cursor) {
-        await dstStore.put(cursor.value)
+        dstStore.put(cursor.value)
         cursor.continue()
       } else {
         succeed(null)
