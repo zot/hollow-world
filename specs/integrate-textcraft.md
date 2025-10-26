@@ -384,13 +384,136 @@ flowchart TD
    }
    ```
 
-5. **Update Adventure View UI**
-   - Add "Load World" button/menu
-   - Add solo mode indicator
-   - Add world name display
-   - Keep multiplayer UI hidden for now
+5. **Update Splash Screen and Adventure View UI**
 
-6. **Testing Solo Mode**
+   **Splash Screen Button Changes:**
+   - Change "Join Game" → "Join"
+   - Remove "Start Game" button (no longer needed for Phase 2.5)
+   - Change "Adventure Mode" → "🤠 Games" (keep cowboy emoji)
+   - Move "🤠 Games" button to appear right after "Join" button
+   - Button order: `[ Characters ] [ Join ] [ 🤠 Games ] [ Settings ]`
+
+   **Adventure View Updates:**
+
+   **Banner Layout** (single-line header):
+   ```
+   [World Name] [flexible space] [➕ New] [World Selector Dropdown] [Mode: Solo] [⬅️ Back]
+   ```
+   - **World Name Display** (left side): Shows current world name without label
+   - **Flexible Space**: Pushes controls to the right
+   - **➕ New Button**: Opens modal to create a new world
+     - Clicking opens a modal to create a new world with a name
+     - Creates a fresh empty world with standard prototypes
+     - Switches to the new world immediately
+   - **World Selector Dropdown**: Load/switch between existing worlds
+     - No "Load World:" label (use title attribute for accessibility)
+     - Shows all available worlds from storage
+   - **Mode Indicator**: Shows current session mode (Solo/Host/Guest)
+     - Visual indicator (● colored dot) + text
+   - **Back Button** (right side): Returns to main menu
+
+   - Keep multiplayer hosting UI hidden for now (Phase 3)
+
+6. **World Management Interface with Routing** ✅ **COMPLETED**
+
+   Implemented comprehensive world management interface with world list view, settings editor, deletion functionality, and URL-based routing.
+
+   **Files Created/Modified:**
+   - `public/templates/adventure/world-list-view.html` - World list overlay view template
+   - `public/templates/adventure/world-list-item.html` - Individual world item template
+   - `public/templates/adventure/world-settings-modal.html` - Main settings modal template
+   - `public/templates/adventure/user-item.html` - User list item template
+   - `public/templates/adventure/delete-world-modal.html` - Delete confirmation modal template
+   - `public/templates/adventure/adventure-view.html` - Updated header (removed gear button and selector)
+   - `src/styles/AdventureView.css` - Added world list view, modal, user management, and delete confirmation styles
+   - `src/ui/AdventureView.ts` - Implemented world list view, modal functionality, world persistence, deletion, and router integration
+   - `src/main.ts` - Added `/adventure/worlds` route and router integration
+
+   **Routing Implementation:**
+   - **`/adventure`** - Main adventure view with current world loaded
+   - **`/adventure/worlds`** - World list view overlay displayed
+   - **Browser history integration** - Back/forward buttons work correctly between routes
+   - **Deep linking support** - Direct navigation to `/adventure/worlds` works on page load
+   - **Router-based navigation** - Clicking world name uses `router.navigate()` instead of direct DOM manipulation
+   - **Fallback support** - Direct toggle still works if router is not available
+
+   **World List View Features:**
+   - **Clickable world name** - Click current world name to navigate to `/adventure/worlds`
+   - Full-screen overlay displays all available worlds
+   - Header: "🌵 Your Worlds" title with "➕ New World" button
+   - **World list items** - Each world shows:
+     - ⭐ **Start button** - Switch to world and navigate back to `/adventure`
+     - **World name** - Displayed prominently in center
+     - ⚙️ **Edit button** - Open world settings modal (navigates to `/adventure` first)
+     - 💀 **Delete button** - Show delete confirmation modal
+   - Automatically navigates to `/adventure` when switching to a world
+   - Western frontier themed with brown/gold color scheme
+   - Responsive layout adapts to mobile screens
+
+   **World Settings Modal Features:**
+   - Edit world name and description
+   - User management:
+     - Add/remove users dynamically
+     - Set username, password, and admin flag for each user
+     - Grid layout (username, password, admin checkbox, remove button)
+   - **Delete world functionality:**
+     - Delete World button (red/warning styled) in settings modal
+     - Confirmation modal prevents accidental deletion
+     - Shows world name in confirmation message
+     - Automatic world switching after deletion:
+       - If other worlds exist, switches to first available world
+       - If no worlds remain, creates new default world automatically
+     - Refreshes world list view if visible after deletion
+   - Transaction-based persistence via `world.doTransaction()`
+   - Form validation (world name required, at least one user)
+   - Success/error feedback messages
+   - Western frontier theme styling consistent with AdventureView
+
+   **Key Methods (AdventureView.ts):**
+   - `toggleWorldListView()` - Navigate between `/adventure` and `/adventure/worlds` using router
+   - `showWorldListViewFromRoute()` - Show world list when navigating to `/adventure/worlds` route
+   - `showWorldListView()` - Display world list with all worlds
+   - `hideWorldListView()` - Close world list overlay
+   - `renderWorldListView()` - Populate world list with all available worlds
+   - `renderWorldListItem()` - Render individual world item with buttons
+   - `startWorld()` - Switch to selected world and navigate to `/adventure`
+   - `editWorld()` - Navigate to `/adventure` and open settings modal for selected world
+   - `deleteWorldFromList()` - Show delete confirmation for selected world
+   - `showWorldSettingsModal()` - Load and display settings modal
+   - `loadWorldSettings()` - Populate modal with current world data
+   - `loadUsers()` - Render users list from world.userCache
+   - `addUser()` - Add new empty user row
+   - `saveWorldSettings()` - Persist changes (name, description, users)
+   - `collectUsersFromForm()` - Extract user data from form inputs
+   - `showDeleteConfirmationModal()` - Display delete confirmation dialog
+   - `hideDeleteConfirmationModal()` - Close delete confirmation dialog
+   - `deleteWorld()` - Delete current world and switch to another/create default
+
+   **Technical Implementation:**
+   - **Router integration** - AdventureView receives router instance via config
+   - **Route handlers** in main.ts:
+     - `/adventure` → `renderAdventureView(false)` - Show adventure view only
+     - `/adventure/worlds` → `renderAdventureView(true)` - Show adventure view + world list
+   - **Navigation flow**:
+     - Click world name → `router.navigate('/adventure/worlds')`
+     - Click start/edit → `router.navigate('/adventure')`
+     - Browser back/forward → Router handles popstate events
+   - World list view is absolute-positioned overlay (z-index: 100)
+   - Toggle state tracked via `isWorldListVisible` boolean
+   - Uses TemplateEngine for dynamic rendering (world list, settings modal, delete confirmation)
+   - Each world list item gets event listeners for start/edit/delete buttons
+   - Leverages `World.replaceUsers()` for atomic user updates
+   - Proper transaction context for `world.store()` operations
+   - `MudStorage.deleteWorld()` for permanent world removal
+   - Automatic fallback: creates new default world if none remain after deletion
+   - Scrollable world list and users list for many items
+   - CSS Grid layout for user fields (2fr 2fr 1fr columns)
+   - Red/warning themed delete button (dark red gradient, crimson border)
+   - Delete confirmation modal with warning messages and world name display
+   - **Removed** gear button and world selector dropdown from header
+   - **Graceful fallback** - Direct DOM toggle if router not available
+
+7. **Testing Solo Mode**
    - Load test world
    - Execute basic commands: `look`, `north`, `south`, `examine sign`
    - Verify output appears correctly
@@ -398,7 +521,42 @@ flowchart TD
    - Test error handling for invalid commands
 
 **Success Criteria:**
+- ✅ Splash screen buttons updated correctly (Join, 🤠 Games, no Start Game)
+- ✅ "🤠 Games" button positioned after "Join" button
 - ✅ Can load a YAML world file locally
+- ✅ Can create a new world using "+" button
+- ✅ New world creation modal works correctly
+- ✅ Can switch between multiple worlds
+- ✅ **World management interface fully functional** ✅
+  - ✅ **Routing implementation working** ✅
+    - ✅ `/adventure` route shows adventure view only
+    - ✅ `/adventure/worlds` route shows adventure view + world list overlay
+    - ✅ Clicking world name navigates to `/adventure/worlds`
+    - ✅ Direct navigation to `/adventure/worlds` works on page load
+    - ✅ Browser back button navigates from `/adventure/worlds` to `/adventure`
+    - ✅ Browser forward button works correctly
+    - ✅ URL updates correctly during navigation
+  - ✅ **World list view working** ✅
+    - ✅ Clicking world name navigates to `/adventure/worlds` route
+    - ✅ World list displays all available worlds
+    - ✅ "➕ New World" button in world list header
+    - ✅ ⭐ Start button switches to selected world and navigates to `/adventure`
+    - ✅ ⚙️ Edit button navigates to `/adventure` and opens settings modal
+    - ✅ 💀 Delete button shows delete confirmation for selected world
+    - ✅ World list closes when navigating to `/adventure`
+  - ✅ **World settings editor working** ✅
+    - ✅ Can edit world name and description
+    - ✅ Can add/remove/edit users
+    - ✅ Changes persist correctly via transactions
+    - ✅ Form validation prevents invalid data
+  - ✅ **Delete world functionality working** ✅
+    - ✅ Delete button opens confirmation modal
+    - ✅ Confirmation modal shows world name
+    - ✅ World deletion removes from storage
+    - ✅ Automatic switching to another world
+    - ✅ Creates default world if none remain
+    - ✅ World list refreshes after deletion if visible
+  - ✅ Gear button and world selector removed from header
 - ✅ Can execute MUD commands without network
 - ✅ Output appears in AdventureView correctly
 - ✅ Basic navigation works (go north/south/east/west)

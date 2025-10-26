@@ -2114,7 +2114,14 @@ export function openStorage() {
       const txn = req.transaction!
 
       storage = new MudStorage(db)
-      const store = txn.objectStore(centralDbName)
+
+      // Create the central object store if it doesn't exist
+      let store: IDBObjectStore
+      if (!db.objectStoreNames.contains(centralDbName)) {
+        store = db.createObjectStore(centralDbName)
+      } else {
+        store = txn.objectStore(centralDbName)
+      }
 
       store.put(storage.spec(), infoKey)
     }

@@ -373,7 +373,13 @@ function setupRoutes(): void {
     router.addRoute({
         path: '/adventure',
         title: "Don't Go Hollow - Adventure Mode",
-        handler: () => renderAdventureView()
+        handler: () => renderAdventureView(false)
+    });
+
+    router.addRoute({
+        path: '/adventure/worlds',
+        title: "Don't Go Hollow - Select World",
+        handler: () => renderAdventureView(true)
     });
 }
 
@@ -384,21 +390,16 @@ function setupComponentCallbacks(): void {
         // TODO: Implement join game functionality
     };
 
-    splashScreen.onStartGame = () => {
-        console.log('Start Game clicked - placeholder functionality');
-        // TODO: Implement start game functionality
-    };
-
     splashScreen.onCharacters = () => {
         router.navigate('/characters');
     };
 
-    splashScreen.onSettings = () => {
-        router.navigate('/settings');
-    };
-
     splashScreen.onAdventure = () => {
         router.navigate('/adventure');
+    };
+
+    splashScreen.onSettings = () => {
+        router.navigate('/settings');
     };
 
     // Character manager callbacks (list only)
@@ -529,15 +530,15 @@ async function renderLogView(): Promise<void> {
     }
 }
 
-async function renderAdventureView(): Promise<void> {
+async function renderAdventureView(showWorldList: boolean = false): Promise<void> {
     currentView = 'adventure';
 
     try {
         // Adventure mode now works in both solo and multiplayer modes
         // Solo mode: No network required, local MUD only
         // Multiplayer mode: Requires hollowPeer for host/guest functionality
-        
-        console.log('🎮 Starting adventure mode (network:', !!hollowPeer, ')');
+
+        console.log('🎮 Starting adventure mode (network:', !!hollowPeer, ', showWorldList:', showWorldList, ')');
 
         // Create or reuse adventure view
         if (!adventureView) {
@@ -545,13 +546,19 @@ async function renderAdventureView(): Promise<void> {
                 hollowPeer: hollowPeer || undefined,
                 onBack: () => {
                     router.navigate('/');
-                }
+                },
+                router: router
             });
         }
 
         const viewElement = await adventureView.render();
         appContainer.innerHTML = '';
         appContainer.appendChild(viewElement);
+
+        // Show world list if requested by route
+        if (showWorldList) {
+            await adventureView.showWorldListViewFromRoute();
+        }
 
         console.log('✅ Adventure view rendered successfully');
     } catch (error) {

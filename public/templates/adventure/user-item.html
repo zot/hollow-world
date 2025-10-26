@@ -1,0 +1,21 @@
+<div class="user-item" data-user-id="{{userId}}">
+    <div class="user-fields">
+        <div class="user-field">
+            <label>Username:</label>
+            <input type="text" class="user-name-input" value="{{userName}}" placeholder="Username" />
+        </div>
+        <div class="user-field">
+            <label>Password:</label>
+            <input type="text" class="user-password-input" value="{{userPassword}}" placeholder="Password" />
+        </div>
+        <div class="user-field user-admin-field">
+            <label>
+                <input type="checkbox" class="user-admin-checkbox" {{userAdminChecked}} />
+                <span>Admin</span>
+            </label>
+        </div>
+    </div>
+    <button class="adventure-btn remove-user-btn" title="Remove user">
+        ❌
+    </button>
+</div>

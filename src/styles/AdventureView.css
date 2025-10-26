@@ -22,6 +22,73 @@
     background: rgba(139, 69, 19, 0.3); /* Saddle brown with transparency */
     border-bottom: 3px solid #8B4513;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    gap: 1rem;
+}
+
+/* World Name Display */
+.adventure-world-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.world-name {
+    color: #D4AF37; /* Gold */
+    font-size: 1.3rem;
+    font-weight: bold;
+    font-family: 'Georgia', serif;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.world-settings-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 1rem;
+}
+
+/* Flexible Spacer */
+.header-spacer {
+    flex: 1;
+}
+
+/* World Management Controls */
+.world-management {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.world-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.world-selector {
+    display: flex;
+    align-items: center;
+}
+
+.world-select {
+    background: linear-gradient(to bottom, #8B4513 0%, #654321 100%);
+    border: 2px solid #D4AF37;
+    border-radius: 6px;
+    color: #F5DEB3;
+    padding: 0.4rem 0.8rem;
+    font-family: 'Georgia', serif;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    outline: none;
+}
+
+.world-select:hover {
+    background: linear-gradient(to bottom, #A0522D 0%, #8B4513 100%);
+    border-color: #FFD700;
+}
+
+.world-select:focus {
+    border-color: #FFD700;
 }
 
 .adventure-title {
@@ -303,9 +370,10 @@
     font-weight: bold;
 }
 
-.modal-field input {
+.modal-field input,
+.modal-field textarea {
     width: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.85);
     border: 2px solid #8B4513;
     border-radius: 6px;
     color: #F5DEB3;
@@ -314,9 +382,33 @@
     font-size: 0.95rem;
 }
 
-.modal-field input:focus {
+.modal-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modal-field input:focus,
+.modal-field textarea:focus {
     outline: none;
     border-color: #D4AF37;
+    background: rgba(0, 0, 0, 0.95);
+}
+
+.modal-field input::placeholder,
+.modal-field textarea::placeholder {
+    color: rgba(245, 222, 179, 0.5);
+}
+
+/* Prevent browser autofill from overriding our styles */
+.modal-field input:-webkit-autofill,
+.modal-field input:-webkit-autofill:hover,
+.modal-field input:-webkit-autofill:focus,
+.modal-field textarea:-webkit-autofill,
+.modal-field textarea:-webkit-autofill:hover,
+.modal-field textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: #F5DEB3;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.95) inset;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 .modal-actions {
@@ -324,6 +416,290 @@
     gap: 1rem;
     justify-content: center;
     margin-top: 2rem;
+}
+
+/* World Settings Modal */
+.world-settings-content {
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.settings-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #8B4513;
+}
+
+.settings-section:last-of-type {
+    border-bottom: none;
+}
+
+.settings-section h3 {
+    color: #D4AF37;
+    margin: 0 0 1rem 0;
+    font-family: 'Georgia', serif;
+}
+
+/* Users List */
+.users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+}
+
+.user-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #8B4513;
+    border-radius: 6px;
+}
+
+.user-fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.user-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.user-field label {
+    color: #F5DEB3;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.user-field input[type="text"] {
+    background: rgba(0, 0, 0, 0.85);
+    border: 2px solid #8B4513;
+    border-radius: 4px;
+    color: #F5DEB3;
+    padding: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.user-field input[type="text"]:focus {
+    outline: none;
+    border-color: #D4AF37;
+    background: rgba(0, 0, 0, 0.95);
+}
+
+.user-admin-field {
+    justify-content: center;
+}
+
+.user-admin-field label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    flex-direction: row;
+}
+
+.user-admin-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.remove-user-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+    min-width: auto;
+}
+
+.add-user-btn {
+    align-self: flex-start;
+}
+
+/* Scrollbar for users list */
+.users-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.users-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+}
+
+.users-list::-webkit-scrollbar-thumb {
+    background: #8B4513;
+    border-radius: 4px;
+}
+
+.users-list::-webkit-scrollbar-thumb:hover {
+    background: #A0522D;
+}
+
+/* Delete World Button */
+.delete-world-btn {
+    background: linear-gradient(to bottom, #8B0000 0%, #5C0000 100%);
+    border-color: #DC143C;
+}
+
+.delete-world-btn:hover {
+    background: linear-gradient(to bottom, #A52A2A 0%, #8B0000 100%);
+    border-color: #FF6347;
+}
+
+/* Delete Confirmation Modal */
+.delete-confirmation-content {
+    max-width: 500px;
+}
+
+.delete-warning {
+    color: #F5DEB3;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+.delete-warning strong {
+    color: #FFD700;
+    font-weight: bold;
+}
+
+.delete-warning-secondary {
+    color: #D4AF37;
+    font-size: 0.9rem;
+    font-style: italic;
+    line-height: 1.5;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+}
+
+.delete-confirm-btn {
+    background: linear-gradient(to bottom, #8B0000 0%, #5C0000 100%);
+    border-color: #DC143C;
+}
+
+.delete-confirm-btn:hover {
+    background: linear-gradient(to bottom, #A52A2A 0%, #8B0000 100%);
+    border-color: #FF6347;
+}
+
+/* World List View */
+.world-list-view {
+    display: none; /* Hidden by default, shown when toggled */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, #2C1810 0%, #1a0f0a 100%);
+    z-index: 100;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.world-list-view.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.world-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid #8B4513;
+}
+
+.world-list-title {
+    margin: 0;
+    color: #D4AF37;
+    font-size: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-family: 'Georgia', serif;
+}
+
+.world-list-create-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+}
+
+.world-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* World List Item */
+.world-list-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.6);
+    border: 3px solid #8B4513;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.world-list-item:hover {
+    background: rgba(0, 0, 0, 0.75);
+    border-color: #D4AF37;
+}
+
+.world-item-start-btn {
+    padding: 0.5rem 1rem;
+    font-size: 1.5rem;
+    min-width: 60px;
+}
+
+.world-item-name {
+    flex: 1;
+    color: #F5DEB3;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'Georgia', serif;
+}
+
+.world-item-edit-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    min-width: 100px;
+}
+
+.world-item-delete-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    min-width: 100px;
+    background: linear-gradient(to bottom, #8B0000 0%, #5C0000 100%);
+    border-color: #DC143C;
+}
+
+.world-item-delete-btn:hover {
+    background: linear-gradient(to bottom, #A52A2A 0%, #8B0000 100%);
+    border-color: #FF6347;
+}
+
+/* Make world name clickable */
+.world-name {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.world-name:hover {
+    color: #FFD700;
 }
 
 /* Responsive */
@@ -343,5 +719,21 @@
 
     .session-btn {
         width: 100%;
+    }
+
+    .world-list-item {
+        flex-wrap: wrap;
+    }
+
+    .world-item-name {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .world-item-start-btn,
+    .world-item-edit-btn,
+    .world-item-delete-btn {
+        flex: 1;
+        min-width: auto;
     }
 }

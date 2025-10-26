@@ -18,7 +18,6 @@ export interface ISplashScreen extends IUIComponent {
     updatePeerId(peerId: string): void;
     onPeerIdClick?: () => void;
     onJoinGame?: () => void;
-    onStartGame?: () => void;
     onCharacters?: () => void;
     onCredits?: () => void;
     onSettings?: () => void;
@@ -34,7 +33,6 @@ export interface ISplashScreenConfig {
     containerClass: string;
     buttonsContainerClass: string;
     joinButtonClass: string;
-    startButtonClass: string;
     charactersButtonClass: string;
     adventureButtonClass: string;
     musicButtonClass: string;
@@ -49,7 +47,6 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
     containerClass: 'splash-container',
     buttonsContainerClass: 'splash-buttons-container',
     joinButtonClass: 'splash-join-button',
-    startButtonClass: 'splash-start-button',
     charactersButtonClass: 'splash-characters-button',
     adventureButtonClass: 'splash-adventure-button',
     musicButtonClass: 'splash-music-button',
@@ -65,13 +62,11 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     private currentPeerId: string = '';
     public onPeerIdClick?: () => void;
     public onJoinGame?: () => void;
-    public onStartGame?: () => void;
     public onCharacters?: () => void;
     public onCredits?: () => void;
     public onSettings?: () => void;
     public onAdventure?: () => void;
     private joinButtonElement: HTMLElement | null = null;
-    private startButtonElement: HTMLElement | null = null;
     private charactersButtonElement: HTMLElement | null = null;
     private adventureButtonElement: HTMLElement | null = null;
     private creditsButtonElement: HTMLElement | null = null;
@@ -118,7 +113,6 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                 currentPeerId: this.currentPeerId,
                 buttonsContainerClass: this.config.buttonsContainerClass,
                 joinButtonClass: this.config.joinButtonClass,
-                startButtonClass: this.config.startButtonClass,
                 charactersButtonClass: this.config.charactersButtonClass,
                 adventureButtonClass: this.config.adventureButtonClass,
                 hasAudioManager: !!this.audioManager,
@@ -157,7 +151,6 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         // Set up element references and interactions
         this.peerIdElement = container.querySelector(`.${this.config.peerIdClass}`);
         this.joinButtonElement = container.querySelector(`.${this.config.joinButtonClass}`);
-        this.startButtonElement = container.querySelector(`.${this.config.startButtonClass}`);
         this.charactersButtonElement = container.querySelector(`.${this.config.charactersButtonClass}`);
         this.adventureButtonElement = container.querySelector(`.${this.config.adventureButtonClass}`);
         this.creditsButtonElement = container.querySelector('.splash-credits-button');
@@ -199,7 +192,6 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         }
         this.peerIdElement = null;
         this.joinButtonElement = null;
-        this.startButtonElement = null;
         this.charactersButtonElement = null;
         this.adventureButtonElement = null;
         this.settingsButtonElement = null;
@@ -222,7 +214,6 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                 currentPeerId: this.currentPeerId,
                 buttonsContainerClass: this.config.buttonsContainerClass,
                 joinButtonClass: this.config.joinButtonClass,
-                startButtonClass: this.config.startButtonClass,
                 charactersButtonClass: this.config.charactersButtonClass,
                 hasAudioManager: !!this.audioManager,
                 musicButtonClass: this.config.musicButtonClass,
@@ -268,15 +259,6 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
                 await AudioControlUtils.playButtonSound(this.audioManager);
                 if (this.onJoinGame) {
                     this.onJoinGame();
-                }
-            });
-        }
-
-        if (this.startButtonElement) {
-            this.startButtonElement.addEventListener('click', async () => {
-                await AudioControlUtils.playButtonSound(this.audioManager);
-                if (this.onStartGame) {
-                    this.onStartGame();
                 }
             });
         }

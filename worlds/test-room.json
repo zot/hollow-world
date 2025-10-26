@@ -1,0 +1,49 @@
+{
+  "world": {
+    "name": "Test Room",
+    "version": "1.0"
+  },
+  "things": [
+    {
+      "id": "entrance",
+      "name": "Dusty Entrance",
+      "kind": "room",
+      "description": "You stand at the entrance to a dusty frontier town. A wooden sign creaks in the wind. There's a path leading north.",
+      "properties": {
+        "exits": {
+          "north": "main_street"
+        }
+      }
+    },
+    {
+      "id": "main_street",
+      "name": "Main Street",
+      "kind": "room",
+      "description": "The main street is quiet. Tumbleweed rolls past. The saloon is to the west, and you can go south back to the entrance.",
+      "properties": {
+        "exits": {
+          "south": "entrance",
+          "west": "saloon"
+        }
+      }
+    },
+    {
+      "id": "saloon",
+      "name": "Silver Dollar Saloon",
+      "kind": "room",
+      "description": "The saloon is dimly lit. A piano sits silent in the corner. The exit is to the east.",
+      "properties": {
+        "exits": {
+          "east": "main_street"
+        }
+      }
+    },
+    {
+      "id": "sign",
+      "name": "Wooden Sign",
+      "kind": "thing",
+      "description": "Welcome to Dusty Creek - Population: Dwindling",
+      "location": "entrance"
+    }
+  ]
+}

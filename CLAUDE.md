@@ -55,6 +55,65 @@ const html = await templateEngine.renderTemplateFromFile('list', {
 
 **Enforcement:** All HTML belongs in `public/templates/` *(Separate your concerns like a good sheriff)*
 
+## 🗄️ MudStorage Access Patterns
+
+**CRITICAL**: MudStorage is the IndexedDB-backed storage system for TextCraft MUD worlds. Follow these patterns:
+
+### Getting MudStorage Instance
+```typescript
+import { getStorage } from '../textcraft/model';
+
+// ✅ CORRECT: Use async getStorage() function
+const storage = await getStorage();
+
+// ❌ WRONG: Don't try to use MudStorage as static class
+MudStorage.deleteWorld('world'); // This will fail!
+```
+
+### Common MudStorage Operations
+```typescript
+const storage = await getStorage();
+
+// Get list of world names (property, not method!)
+const worldNames = storage.worlds; // ✅ Property access
+const worldNames = await storage.worldNames(); // ❌ Not a method
+
+// Delete a world
+await storage.deleteWorld(worldName); // ✅ Instance method
+
+// Open/load a world
+const world = await storage.openWorld(worldName); // ✅ Instance method
+
+// Create new world
+const world = new World();
+await world.initDb();
+world.name = 'My World';
+world.description = 'A new frontier...';
+```
+
+### World Transactions
+All world modifications should use `doTransaction()` for database consistency:
+
+```typescript
+const world = await storage.openWorld('My World');
+
+// Modify world data within transaction
+await world.doTransaction(async (store, users, txn) => {
+    // Make your changes here
+    world.name = 'Updated Name';
+
+    // Persist changes
+    await world.store();
+});
+```
+
+### Rules of Thumb
+- **Always `await`**: Both `getStorage()` and world operations are async
+- **Instance methods**: MudStorage methods are instance methods, not static
+- **Property access**: `storage.worlds` is a property (array), not a method
+- **Transactions**: Use `world.doTransaction()` for atomic database operations
+- **Error handling**: Wrap storage operations in try/catch blocks
+
 ## 📋 TODO Items
 - [x] **Refactor EventModal to use HTML templates** - Move event card HTML from `src/ui/EventModal.ts` to template files ✅ **COMPLETED**
   - [x] Create `public/templates/event-card-friend-request.html` ✅

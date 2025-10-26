@@ -1,0 +1,36 @@
+<div id="world-settings-modal" class="adventure-modal" style="display: none;">
+    <div class="adventure-modal-content world-settings-content">
+        <h2>⚙️ World Settings</h2>
+
+        <!-- World Info Section -->
+        <div class="settings-section">
+            <h3>World Information</h3>
+            <div class="modal-field">
+                <label for="settings-world-name">World Name:</label>
+                <input type="text" id="settings-world-name" placeholder="Enter world name" />
+            </div>
+            <div class="modal-field">
+                <label for="settings-world-desc">Description (optional):</label>
+                <textarea id="settings-world-desc" placeholder="Describe your world..." rows="2"></textarea>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div class="settings-section">
+            <h3>Users</h3>
+            <div class="users-list" id="users-list">
+                <!-- Users will be dynamically populated here -->
+            </div>
+            <button class="adventure-btn add-user-btn" id="add-user-btn">
+                ➕ Add User
+            </button>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="modal-actions">
+            <button class="adventure-btn" id="save-world-settings-btn">Save</button>
+            <button class="adventure-btn" id="cancel-world-settings-btn">Cancel</button>
+            <button class="adventure-btn delete-world-btn" id="delete-world-btn">Delete World</button>
+        </div>
+    </div>
+</div>
