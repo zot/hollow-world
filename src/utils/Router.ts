@@ -48,6 +48,16 @@ export class Router implements IRouter {
         this.handleRoute(path);
     }
 
+    replace(path: string, title?: string): void {
+        const pageTitle = title || document.title;
+
+        this.currentPath = path;
+        window.history.replaceState({ path }, pageTitle, path);
+        document.title = pageTitle;
+
+        this.handleRoute(path);
+    }
+
     getCurrentPath(): string {
         return this.currentPath;
     }

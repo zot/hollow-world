@@ -59,7 +59,7 @@ export class AdventureView {
         this.router = config.router;
     }
 
-    async render(): Promise<HTMLElement> {
+    async render(worldId?: string, skipInitialization: boolean = false): Promise<HTMLElement> {
         // Load template
         const templateEngine = new TemplateEngine();
         const html = await templateEngine.renderTemplateFromFile('adventure/adventure-view', {});
@@ -82,21 +82,27 @@ export class AdventureView {
         this.worldSettingsContainer = this.container.querySelector('#world-settings-modal-container');
         this.worldListViewContainer = this.container.querySelector('#world-list-view-container');
 
+        // Clear world list view references since we have a new container
+        this.worldListView = null;
+        this.worldListContainer = null;
+
         // Setup event listeners
         this.setupEventListeners();
 
-        // Initialize MUD peer
-        await this.initializeMudPeer();
+        // Initialize MUD peer with specific world (unless we're skipping initialization)
+        if (!skipInitialization) {
+            await this.initializeMudPeer(worldId);
+        }
 
         return this.container;
     }
 
-    private async initializeMudPeer(): Promise<void> {
+    private async initializeMudPeer(worldId?: string): Promise<void> {
         try {
             console.log('🎮 Initializing adventure mode...');
 
             // Always start in solo mode (Phase 2.5)
-            await this.initializeSoloMode();
+            await this.initializeSoloMode(worldId);
 
             // Check if multiplayer is available (but don't auto-enable)
             const networkProvider = this.hollowPeer?.getNetworkProvider() as LibP2PNetworkProvider | null;
@@ -127,7 +133,7 @@ export class AdventureView {
         }
     }
 
-    private async initializeSoloMode(): Promise<void> {
+    private async initializeSoloMode(worldId?: string): Promise<void> {
         this.addSystemOutput('🎮 Solo Mode');
         console.log('🎮 Initializing solo mode...');
 
@@ -137,9 +143,19 @@ export class AdventureView {
                 this.addOutput(output);
             });
 
-            // Create a simple test world
+            // Load the specified world or create test world
             const worldLoader = new WorldLoader();
-            const world = await worldLoader.createTestWorld();
+            let world;
+
+            if (worldId) {
+                // Load specific world from storage
+                console.log('🌍 Loading world:', worldId);
+                world = await worldLoader.loadWorld(worldId);
+            } else {
+                // Create default test world
+                console.log('🌍 Creating test world');
+                world = await worldLoader.createTestWorld();
+            }
 
             // Load world into session
             await this.localSession.loadWorld(world);
@@ -500,9 +516,15 @@ export class AdventureView {
         if (this.router) {
             // Use routing to navigate
             if (this.isWorldListVisible) {
-                this.router.navigate('/adventure');
+                // Navigate back to current world
+                if (this.currentWorldName) {
+                    this.router.navigate(`/world/${encodeURIComponent(this.currentWorldName)}`);
+                } else {
+                    // No current world - go to default handler
+                    this.router.navigate('/world');
+                }
             } else {
-                this.router.navigate('/adventure/worlds');
+                this.router.navigate('/worlds');
             }
         } else {
             // Fallback to direct toggle if no router
@@ -517,6 +539,14 @@ export class AdventureView {
     /**
      * Show world list view from route
      * This is called by the router when navigating to /adventure/worlds
+     */
+    /**
+     * Shows the world list view when navigating via router.
+     * This is called by the router when navigating to /worlds
+     */
+    /**
+     * Shows the world list view when navigating via router.
+     * This is called by the router when navigating to /worlds
      */
     public async showWorldListViewFromRoute(): Promise<void> {
         await this.showWorldListView();
@@ -542,6 +572,11 @@ export class AdventureView {
                 });
             }
 
+            // Clear world name display when showing world list (not in any specific world)
+            if (this.worldNameElement) {
+                this.worldNameElement.textContent = '🌵 Select World';
+            }
+
             // Render world list items
             await this.renderWorldListView();
 
@@ -563,6 +598,11 @@ export class AdventureView {
         if (this.worldListView) {
             this.worldListView.classList.remove('active');
             this.isWorldListVisible = false;
+        }
+
+        // Restore current world name display
+        if (this.worldNameElement && this.currentWorldName) {
+            this.worldNameElement.textContent = this.currentWorldName;
         }
     }
 
@@ -630,14 +670,12 @@ export class AdventureView {
      */
     private async startWorld(worldName: string): Promise<void> {
         try {
-            // Switch to the selected world first
-            await this.switchWorld(worldName);
-
-            // Navigate back to adventure view (hides world list)
+            // Navigate to the world using the new URL format
             if (this.router) {
-                this.router.navigate('/adventure');
+                this.router.navigate(`/world/${encodeURIComponent(worldName)}`);
             } else {
-                // Fallback to direct hide if no router
+                // Fallback: switch world and hide world list
+                await this.switchWorld(worldName);
                 await this.hideWorldListView();
             }
         } catch (error) {
@@ -651,16 +689,16 @@ export class AdventureView {
      */
     private async editWorld(worldName: string): Promise<void> {
         try {
-            // Switch to the world first if not already current
-            if (worldName !== this.currentWorldName) {
-                await this.switchWorld(worldName);
-            }
-
-            // Navigate back to adventure view (hides world list)
+            // Navigate to the world using the new URL format
             if (this.router) {
-                this.router.navigate('/adventure');
+                this.router.navigate(`/world/${encodeURIComponent(worldName)}`);
+                // Wait a moment for navigation to complete
+                await new Promise(resolve => setTimeout(resolve, 100));
             } else {
-                // Fallback to direct hide if no router
+                // Fallback: switch world and hide world list
+                if (worldName !== this.currentWorldName) {
+                    await this.switchWorld(worldName);
+                }
                 await this.hideWorldListView();
             }
 
@@ -1038,19 +1076,35 @@ export class AdventureView {
                 });
 
                 this.currentWorldName = 'New World';
-                await this.switchWorld('New World');
                 this.addSystemOutput('Default world created.');
+
+                // Navigate to the new world
+                if (this.router) {
+                    this.router.navigate(`/world/${encodeURIComponent('New World')}`);
+                } else {
+                    await this.switchWorld('New World');
+                }
             } else {
                 // Switch to the first available world
                 const newWorldName = worldNames[0];
                 this.addSystemOutput(`World "${worldToDelete}" deleted. Switching to "${newWorldName}"...`);
                 this.currentWorldName = newWorldName;
-                await this.switchWorld(newWorldName);
-            }
 
-            // Refresh world list view if it's visible
-            if (this.isWorldListVisible) {
-                await this.renderWorldListView();
+                // Navigate to the new world or stay on world list
+                if (this.router) {
+                    if (this.isWorldListVisible) {
+                        // Stay on world list and refresh it
+                        await this.renderWorldListView();
+                    } else {
+                        // Navigate to the first available world
+                        this.router.navigate(`/world/${encodeURIComponent(newWorldName)}`);
+                    }
+                } else {
+                    await this.switchWorld(newWorldName);
+                    if (this.isWorldListVisible) {
+                        await this.renderWorldListView();
+                    }
+                }
             }
 
         } catch (error) {

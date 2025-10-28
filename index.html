@@ -23,7 +23,7 @@
   <!-- Base URL initialization - must be at top of body before main.ts loads -->
   <script>
    // Set Base URL to app root (origin) for SPA routing
-   window.Base = new URL('.', document.location)
+   window.Base = new URL('/', document.location.origin)
   </script>
 
   <div id="app"></div>

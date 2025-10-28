@@ -371,15 +371,21 @@ function setupRoutes(): void {
     });
 
     router.addRoute({
-        path: '/adventure',
-        title: "Don't Go Hollow - Adventure Mode",
-        handler: () => renderAdventureView(false)
+        path: '/worlds',
+        title: "Don't Go Hollow - Select World",
+        handler: () => renderAdventureWorldList()
     });
 
     router.addRoute({
-        path: '/adventure/worlds',
-        title: "Don't Go Hollow - Select World",
-        handler: () => renderAdventureView(true)
+        path: '/world/:worldId',
+        title: "Don't Go Hollow - Adventure Mode",
+        handler: (params) => renderAdventureView(params?.worldId)
+    });
+
+    router.addRoute({
+        path: '/world',
+        title: "Don't Go Hollow - Adventure Mode",
+        handler: () => renderAdventureDefaultWorld()
     });
 }
 
@@ -395,7 +401,7 @@ function setupComponentCallbacks(): void {
     };
 
     splashScreen.onAdventure = () => {
-        router.navigate('/adventure');
+        router.navigate('/world');
     };
 
     splashScreen.onSettings = () => {
@@ -530,15 +536,34 @@ async function renderLogView(): Promise<void> {
     }
 }
 
-async function renderAdventureView(showWorldList: boolean = false): Promise<void> {
+async function renderAdventureDefaultWorld(): Promise<void> {
+    try {
+        // Get list of available worlds
+        const { getStorage } = await import('./textcraft/model.js');
+        const storage = await getStorage();
+        const worldNames = storage.worlds;
+
+        if (worldNames.length === 0) {
+            // No worlds available - redirect to world list (which will show create world UI)
+            console.log('🌍 No worlds available, redirecting to world list');
+            router.replace('/worlds');
+        } else {
+            // Redirect to the first available world
+            const firstWorld = worldNames[0];
+            console.log('🌍 Redirecting to default world:', firstWorld);
+            router.replace(`/world/${encodeURIComponent(firstWorld)}`);
+        }
+    } catch (error) {
+        console.error('Failed to get default world:', error);
+        router.replace('/worlds');
+    }
+}
+
+async function renderAdventureWorldList(): Promise<void> {
     currentView = 'adventure';
 
     try {
-        // Adventure mode now works in both solo and multiplayer modes
-        // Solo mode: No network required, local MUD only
-        // Multiplayer mode: Requires hollowPeer for host/guest functionality
-
-        console.log('🎮 Starting adventure mode (network:', !!hollowPeer, ', showWorldList:', showWorldList, ')');
+        console.log('🌍 Showing world list view');
 
         // Create or reuse adventure view
         if (!adventureView) {
@@ -551,14 +576,69 @@ async function renderAdventureView(showWorldList: boolean = false): Promise<void
             });
         }
 
-        const viewElement = await adventureView.render();
+        const viewElement = await adventureView.render(undefined, true);
         appContainer.innerHTML = '';
         appContainer.appendChild(viewElement);
 
-        // Show world list if requested by route
-        if (showWorldList) {
-            await adventureView.showWorldListViewFromRoute();
+        // Show world list view
+        await adventureView.showWorldListViewFromRoute();
+
+        console.log('✅ World list view rendered successfully');
+    } catch (error) {
+        console.error('Failed to render world list view:', error);
+        appContainer.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #F5DEB3; background: #2C1810; height: 100vh;">
+                <h1 style="color: #D4AF37;">Error</h1>
+                <p>Failed to load world list: ${error}</p>
+                <button onclick="window.location.href='/';" style="padding: 10px 20px; font-size: 1rem;">
+                    Back to Menu
+                </button>
+            </div>
+        `;
+    }
+}
+
+async function renderAdventureView(worldId?: string): Promise<void> {
+    currentView = 'adventure';
+
+    try {
+        // Validate that the world exists
+        const { getStorage } = await import('./textcraft/model.js');
+        const storage = await getStorage();
+
+        if (!worldId) {
+            // No worldId provided - redirect to default world handler
+            console.warn('No worldId provided, redirecting to default');
+            await renderAdventureDefaultWorld();
+            return;
         }
+
+        // Decode the world ID (URL may have encoded spaces, etc.)
+        const decodedWorldId = decodeURIComponent(worldId);
+
+        if (!storage.hasWorld(decodedWorldId)) {
+            // World doesn't exist - redirect to world list
+            console.warn('World not found:', decodedWorldId, '- redirecting to world list');
+            router.navigate('/worlds');
+            return;
+        }
+
+        console.log('🎮 Starting adventure mode with world:', decodedWorldId);
+
+        // Create or reuse adventure view
+        if (!adventureView) {
+            adventureView = new AdventureView({
+                hollowPeer: hollowPeer || undefined,
+                onBack: () => {
+                    router.navigate('/');
+                },
+                router: router
+            });
+        }
+
+        const viewElement = await adventureView.render(decodedWorldId);
+        appContainer.innerHTML = '';
+        appContainer.appendChild(viewElement);
 
         console.log('✅ Adventure view rendered successfully');
     } catch (error) {
