@@ -1913,7 +1913,7 @@ export class MudConnection {
             this.eventCommand(`event_go`, 'thing', this.thing!, evt)
         }
         this.continueMove(cmdInfo, evt)
-      !evt.failed && this.connectionFor(evt.thing).look(cmdInfo, directionStr)
+      !evt.failed && this.connectionFor(evt.thing).look(cmdInfo)
     }
     // COMMAND
     inventory(_cmdInfo: CmdInfo) {
@@ -2112,7 +2112,7 @@ ${protos.join('\n  ')}`)
         const loc2Any = (loc2Str && this.find(loc2Str, this.world.roomProto, 'location')) || this.thing!.assoc.location
         if (!loc1) {
             throw new Error(`No location ${loc1Str}`)
-        } else if (loc2Any instanceof Thing) {
+        } else if (!(loc2Any instanceof Thing)) {
             throw new Error(`No location ${loc2Str}`)
         }
         const loc2 = loc2Any as Thing
