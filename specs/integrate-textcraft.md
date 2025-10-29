@@ -397,17 +397,14 @@ flowchart TD
 
    **Banner Layout** (single-line header):
    ```
-   [World Name] [flexible space] [➕ New] [World Selector Dropdown] [Mode: Solo] [⬅️ Back]
+   [World Name] [🌵 Worlds] [flexible space] [Mode: Solo] [⬅️ Back]
    ```
    - **World Name Display** (left side): Shows current world name without label
+   - **🌵 Worlds Button**: Navigate to world list view
+     - Clicking navigates to `/worlds` route to show world list
+     - Provides access to create, activate, delete, and manage worlds
+     - Visible when a world is active
    - **Flexible Space**: Pushes controls to the right
-   - **➕ New Button**: Opens modal to create a new world
-     - Clicking opens a modal to create a new world with a name
-     - Creates a fresh empty world with standard prototypes
-     - Switches to the new world immediately
-   - **World Selector Dropdown**: Load/switch between existing worlds
-     - No "Load World:" label (use title attribute for accessibility)
-     - Shows all available worlds from storage
    - **Mode Indicator**: Shows current session mode (Solo/Host/Guest)
      - Visual indicator (● colored dot) + text
    - **Back Button** (right side): Returns to main menu
@@ -434,11 +431,11 @@ flowchart TD
    - **`/adventure/worlds`** - World list view overlay displayed
    - **Browser history integration** - Back/forward buttons work correctly between routes
    - **Deep linking support** - Direct navigation to `/adventure/worlds` works on page load
-   - **Router-based navigation** - Clicking world name uses `router.navigate()` instead of direct DOM manipulation
-   - **Fallback support** - Direct toggle still works if router is not available
+   - **Router-based navigation** - Clicking Worlds button uses `router.navigate()` instead of direct DOM manipulation
+   - **Fallback support** - Direct show still works if router is not available
 
    **World List View Features:**
-   - **Clickable world name** - Click current world name to navigate to `/adventure/worlds`
+   - **Worlds Button** - Click Worlds button to navigate to `/worlds` route
    - Full-screen overlay displays all available worlds
    - Header: "🌵 Your Worlds" title with "➕ New World" button
    - **World list items** - Each world shows:
@@ -495,7 +492,7 @@ flowchart TD
      - `/adventure` → `renderAdventureView(false)` - Show adventure view only
      - `/adventure/worlds` → `renderAdventureView(true)` - Show adventure view + world list
    - **Navigation flow**:
-     - Click world name → `router.navigate('/adventure/worlds')`
+     - Click Worlds button → `router.navigate('/worlds')`
      - Click start/edit → `router.navigate('/adventure')`
      - Browser back/forward → Router handles popstate events
    - World list view is absolute-positioned overlay (z-index: 100)
@@ -530,14 +527,14 @@ flowchart TD
 - ✅ **World management interface fully functional** ✅
   - ✅ **Routing implementation working** ✅
     - ✅ `/adventure` route shows adventure view only
-    - ✅ `/adventure/worlds` route shows adventure view + world list overlay
-    - ✅ Clicking world name navigates to `/adventure/worlds`
-    - ✅ Direct navigation to `/adventure/worlds` works on page load
-    - ✅ Browser back button navigates from `/adventure/worlds` to `/adventure`
+    - ✅ `/worlds` route shows world list view
+    - ✅ Clicking Worlds button navigates to `/worlds`
+    - ✅ Direct navigation to `/worlds` works on page load
+    - ✅ Browser back button navigates from `/worlds` to `/world/:id`
     - ✅ Browser forward button works correctly
     - ✅ URL updates correctly during navigation
   - ✅ **World list view working** ✅
-    - ✅ Clicking world name navigates to `/adventure/worlds` route
+    - ✅ Clicking Worlds button navigates to `/worlds` route
     - ✅ World list displays all available worlds
     - ✅ "➕ New World" button in world list header
     - ✅ ⭐ Start button switches to selected world and navigates to `/adventure`

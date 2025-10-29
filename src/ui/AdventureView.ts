@@ -49,6 +49,10 @@ export class AdventureView {
     private onBackCallback: () => void;
     private router: IRouter | undefined;
 
+    // Event handler references for proper cleanup
+    private boundBackClickHandler: (() => void) | null = null;
+    private boundWorldsButtonClickHandler: (() => void) | null = null;
+
     private commandHistory: string[] = [];
     private historyIndex: number = -1;
     private sessionMode: SessionMode = 'solo';
@@ -182,9 +186,31 @@ export class AdventureView {
     private setupEventListeners(): void {
         // Back button
         const backBtn = this.container?.querySelector('#adventure-back-btn');
-        backBtn?.addEventListener('click', () => {
-            this.onBackCallback();
-        });
+        if (backBtn) {
+            // Remove old listener if it exists
+            if (this.boundBackClickHandler) {
+                backBtn.removeEventListener('click', this.boundBackClickHandler);
+            }
+            // Create and store new bound handler
+            this.boundBackClickHandler = () => {
+                this.onBackCallback();
+            };
+            backBtn.addEventListener('click', this.boundBackClickHandler);
+        }
+
+        // Worlds button click (show world list view)
+        const worldsButton = this.container?.querySelector('#worlds-btn');
+        if (worldsButton) {
+            // Remove old listener if it exists
+            if (this.boundWorldsButtonClickHandler) {
+                worldsButton.removeEventListener('click', this.boundWorldsButtonClickHandler);
+            }
+            // Create and store new bound handler
+            this.boundWorldsButtonClickHandler = () => {
+                this.showWorldListViewFromButton();
+            };
+            worldsButton.addEventListener('click', this.boundWorldsButtonClickHandler);
+        }
 
         // Input handling
         this.inputElement?.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -510,29 +536,15 @@ export class AdventureView {
     }
 
     /**
-     * Toggle world list view visibility
+     * Navigate to world list view from button
      */
-    private async toggleWorldListView(): Promise<void> {
+    private async showWorldListViewFromButton(): Promise<void> {
         if (this.router) {
-            // Use routing to navigate
-            if (this.isWorldListVisible) {
-                // Navigate back to current world
-                if (this.currentWorldName) {
-                    this.router.navigate(`/world/${encodeURIComponent(this.currentWorldName)}`);
-                } else {
-                    // No current world - go to default handler
-                    this.router.navigate('/world');
-                }
-            } else {
-                this.router.navigate('/worlds');
-            }
+            // Always navigate to world list
+            this.router.navigate('/worlds');
         } else {
-            // Fallback to direct toggle if no router
-            if (this.isWorldListVisible) {
-                await this.hideWorldListView();
-            } else {
-                await this.showWorldListView();
-            }
+            // Fallback to direct show if no router
+            await this.showWorldListView();
         }
     }
 
@@ -1062,28 +1074,16 @@ export class AdventureView {
             const worldNames = storage.worlds;
 
             if (worldNames.length === 0) {
-                // No worlds left - create a new default world
+                // No worlds left - just refresh the list
                 this.addSystemOutput(`World "${worldToDelete}" deleted.`);
-                this.addSystemOutput('No worlds remaining. Creating new default world...');
+                this.addSystemOutput('No worlds remaining.');
 
-                const defaultWorld = new World();
-                await defaultWorld.initDb();
-                defaultWorld.name = 'New World';
-                defaultWorld.description = 'A fresh frontier awaits...';
-
-                await defaultWorld.doTransaction(async (_store, _users, _txn) => {
-                    await defaultWorld.store();
-                });
-
-                this.currentWorldName = 'New World';
-                this.addSystemOutput('Default world created.');
-
-                // Navigate to the new world
-                if (this.router) {
-                    this.router.navigate(`/world/${encodeURIComponent('New World')}`);
-                } else {
-                    await this.switchWorld('New World');
+                // Refresh world list if visible
+                if (this.isWorldListVisible) {
+                    await this.renderWorldListView();
                 }
+
+                // We're already on the world list view, no navigation needed
             } else {
                 // Switch to the first available world
                 const newWorldName = worldNames[0];
@@ -1152,6 +1152,12 @@ export class AdventureView {
             }
 
             this.addSystemOutput(`✅ World "${worldName}" created successfully!`);
+
+            // Refresh world list if visible
+            if (this.isWorldListVisible) {
+                await this.renderWorldListView();
+            }
+
             this.hideCreateWorldModal();
         } catch (error) {
             console.error('❌ Failed to create world:', error);

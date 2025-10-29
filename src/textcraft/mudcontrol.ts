@@ -509,7 +509,7 @@ export class Descripton {
 
     constructor(source: Thing | null, event: string, args: any[], failed: boolean) {
         this.connection = (connectionMap as Map<any, MudConnection>).get(source) || connection
-        this.tick = connection.tickCount
+        this.tick = this.connection?.tickCount ?? 0
         this.source = source || undefined
         this.event = event
         this.failed = failed
@@ -571,13 +571,13 @@ export class Descripton {
             const con = connectionMap.get(t)
 
             if (con) {
-                con.withResults(connection, () => {
+                con.withResults(this.connection, () => {
                     // run format in each connection so it can deal with admin, names, etc.
                     con.output(prefixStr + con.basicFormat(context, formatString, args))
                 })
             } else {
                 // process reactions in the main MudConnection
-                connection.react(t, this)
+                this.connection?.react(t, this)
             }
         }, [this.actor?._thing])
     }
@@ -590,13 +590,13 @@ export class Descripton {
             this.emit(start._thing, t => {
                 const con2 = connectionMap.get(t)
                 if (con2) {
-                    con2.withResults(connection, () => {
+                    con2.withResults(this.connection, () => {
                         // run format in each connection so it can deal with admin, names, etc.
                         con2.output(prefixStr + con2.basicFormat(context, contexts.others, args))
                     })
                 } else {
                     // process reactions in the main MudConnection
-                    connection.react(t, this)
+                    this.connection?.react(t, this)
                 }
             }, [this.actor?._thing])
         }
@@ -1325,11 +1325,14 @@ export class MudConnection {
                 const newCommands = this.findCommand(words)
 
                 if (newCommands) return this.runCommands(newCommands)
-                const target = this.find(words[0], this.thing.assoc.location)
-                if (target) {
-                    line = `go ${line}`
-                    words.unshift('go')
-                    commandName = 'go'
+                // Check that this.thing still exists and has required properties
+                if (this.thing && this.thing.assoc && this.thing.assoc.location) {
+                    const target = this.find(words[0], this.thing.assoc.location)
+                    if (target) {
+                        line = `go ${line}`
+                        words.unshift('go')
+                        commandName = 'go'
+                    }
                 }
             }
         }
@@ -1350,8 +1353,11 @@ export class MudConnection {
             } finally {
                 if (this.muted === 0) this.muted = muted
                 if (!substituted) this.suppressOutput = false
-                const loc = this.thing!.assoc.location
-                this.output(`<span class='location'>${loc._article + ' '}${loc.fullName}</span>`)
+                // Only output location if this.thing exists and is properly initialized
+                const loc = this.thing?.assoc?.location
+                if (loc) {
+                    this.output(`<span class='location'>${loc._article + ' '}${loc.fullName}</span>`)
+                }
             }
         } else {
             this.error('Unknown command: ' + words[0])
@@ -1607,7 +1613,7 @@ export class MudConnection {
                     })
                 } else {
                     // process reactions in the main MudConnection
-                    connection.react(thing, desc)
+                    this.react(thing, desc)
                 }
             }
 
@@ -1630,7 +1636,7 @@ export class MudConnection {
             }
         }
         if (!reacted && (thing as any)._react) {
-            connection.doReaction(thing, desc, (thing as any)._react)
+            this.doReaction(thing, desc, (thing as any)._react)
         }
     }
     doReaction(thing: Thing, desc: Descripton, reaction: string | (() => void)) {
@@ -2525,14 +2531,14 @@ ${fp('prototype', true)}: ${thing._prototype ? this.dumpName(thing.world.getThin
         let output = false
 
         if (ctx.me) {
-            if (connection.thing === actor) {
-                const forMe = connection.formatMe(context, text, ...formatArgs)
-                connection.output(forMe)
+            if (this.thing === actor) {
+                const forMe = this.formatMe(context, text, ...formatArgs)
+                this.output(forMe)
                 output = true
             } else {
                 for (const [thing, con] of connectionMap) {
                     if (thing === actor) {
-                        const forMe = connection.formatMe(actor, text, ...formatArgs)
+                        const forMe = this.formatMe(actor, text, ...formatArgs)
                         con.output(forMe)
                         output = true
                         break

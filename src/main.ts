@@ -373,7 +373,9 @@ function setupRoutes(): void {
     router.addRoute({
         path: '/worlds',
         title: "Don't Go Hollow - Select World",
-        handler: () => renderAdventureWorldList()
+        handler: () => {
+            return renderAdventureWorldList();
+        }
     });
 
     router.addRoute({
@@ -563,8 +565,6 @@ async function renderAdventureWorldList(): Promise<void> {
     currentView = 'adventure';
 
     try {
-        console.log('🌍 Showing world list view');
-
         // Create or reuse adventure view
         if (!adventureView) {
             adventureView = new AdventureView({
