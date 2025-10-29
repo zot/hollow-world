@@ -361,6 +361,10 @@ export const commands = new Map([
     ['@quiet', new Command({ help: ['', 'disable all output for this command'] })],
     ['@loud', new Command({ help: ['', 'enable all output for this command'] })],
     ['@admin', new Command({ help: ['thing boolean', 'Change a thing\'s admin privileges'] })],
+    ['@adduser', new Command({ help: ['username password [admin]', 'Create a new user account'] })],
+    ['@deluser', new Command({ help: ['username', 'Delete a user account'] })],
+    ['@listusers', new Command({ help: ['', 'List all user accounts'] })],
+    ['@password', new Command({ help: ['username newpassword', 'Change a user\'s password'] })],
     ['@create', new Command({
         help: ['proto name [description words...]', `Create a thing using a prototype.
    You can use a prototype by name if it's in the hall of prototypes or you can specify any other
@@ -2617,6 +2621,101 @@ ${fp('prototype', true)}: ${thing._prototype ? this.dumpName(thing.world.getThin
         this.output(`You just ${toggle ? 'upgraded' : 'downgraded'} ${thingStr} `)
         if (con) {
             con.verboseNames = boolVal
+        }
+    }
+    // COMMAND
+    async atAdduser(cmdInfo: CmdInfo, username: string, password: string, isAdmin?: string) {
+        checkArgs(cmdInfo, arguments)
+
+        // Check if user already exists
+        const existingUser = await this.world.getUser(username)
+        if (existingUser) {
+            throw new Error(`User '${username}' already exists`)
+        }
+
+        // Determine admin status (defaults to false)
+        const admin = isAdmin ? isAdmin.toLowerCase() in { t: true, true: true, admin: true } : false
+
+        // Create the user
+        await this.world.createUser(username, password, admin)
+
+        this.output(`User '${username}' created successfully${admin ? ' (admin)' : ''}`)
+    }
+    // COMMAND
+    async atDeluser(cmdInfo: CmdInfo, username: string) {
+        checkArgs(cmdInfo, arguments)
+
+        // Don't allow deleting yourself
+        if (username === this.user) {
+            throw new Error('You cannot delete yourself')
+        }
+
+        // Check if user exists
+        const user = await this.world.getUser(username)
+        if (!user) {
+            throw new Error(`User '${username}' does not exist`)
+        }
+
+        // Count admin users
+        const allUsers = await this.world.getAllUsers()
+        const adminCount = allUsers.filter((u: any) => u.admin).length
+
+        // Don't allow deleting the last admin
+        if (user.admin && adminCount <= 1) {
+            throw new Error('Cannot delete the last admin user')
+        }
+
+        // Delete the user
+        await this.world.deleteUser(username)
+
+        this.output(`User '${username}' deleted successfully`)
+    }
+    // COMMAND
+    async atListusers(cmdInfo: CmdInfo) {
+        checkArgs(cmdInfo, arguments)
+
+        const users = await this.world.getAllUsers()
+
+        if (users.length === 0) {
+            this.output('No users found')
+            return
+        }
+
+        let output = '<pre>Users:\n'
+        for (const user of users) {
+            const adminBadge = user.admin ? ' [admin]' : ''
+            const currentBadge = user.name === this.user ? ' (current)' : ''
+            output += `  ${user.name}${adminBadge}${currentBadge}\n`
+        }
+        output += '</pre>'
+
+        this.output(output)
+    }
+    // COMMAND
+    async atPassword(cmdInfo: CmdInfo, username: string, newPassword: string) {
+        checkArgs(cmdInfo, arguments)
+
+        // Check if user exists
+        const user = await this.world.getUser(username)
+        if (!user) {
+            throw new Error(`User '${username}' does not exist`)
+        }
+
+        // Non-admins can only change their own password
+        if (!this.admin && username !== this.user) {
+            throw new Error('You can only change your own password')
+        }
+
+        // Update the password within a transaction
+        await this.world.doTransaction(async (_store, _users, _txn) => {
+            user.password = newPassword
+            await this.world.putUser(user)
+        })
+
+        if (username === this.user) {
+            this.output('Your password has been changed successfully')
+        } else {
+            this.output(`Password for user '${username}' has been changed successfully`)
         }
     }
     // COMMAND
