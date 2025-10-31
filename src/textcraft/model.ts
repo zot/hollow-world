@@ -6,6 +6,14 @@ import {
   activeWorld,
   currentVersion,
 } from './mudcontrol'
+import {
+  CONNECTIONS_SUFFIX,
+  CHARACTERS_SUFFIX,
+  PEER_INDEX,
+  CHARACTER_INDEX,
+  connectionsStoreName,
+  charactersStoreName,
+} from './world-types.js'
 
 export let storage: MudStorage
 
@@ -364,6 +372,7 @@ export class Thing {
   world!: World
   originalSpec: any
   toasted!: boolean
+  _character?: string  // Phase 3: Character ID (UUID) for character things
   assocId: any // proxy that simplifies association access, returns ids
   assocIdMany: any // proxy that simplifies association access, returns ids
   assoc: any // proxy that simplifies association access, returns things
@@ -461,6 +470,13 @@ export class Thing {
   }
   set linkFormat(f: string) {
     this._linkFormat = f
+  }
+  // Phase 3: Character property accessor
+  get character() {
+    return this._character
+  }
+  set character(characterId: string | undefined) {
+    this._character = characterId
   }
   getPrototype() {
     return this.world.getThing(this._prototype)
@@ -668,11 +684,14 @@ export class World {
   hallOfPrototypes!: Thing
   thingProto!: Thing // used by createThing()
   personProto!: Thing // used by authenticate()
+  characterProto!: Thing // NEW - Phase 3: used when creating character things
   linkProto!: Thing
   roomProto!: Thing
   generatorProto!: Thing
   containerProto!: Thing
   users!: string
+  connectionsStoreName!: string  // NEW - Phase 2
+  charactersStoreName!: string   // NEW - Phase 2
   nextId!: number
   storage!: MudStorage
   thingCache!: Map<thingId, Thing>
@@ -680,6 +699,8 @@ export class World {
   txn?: IDBTransaction | null
   thingStore!: IDBObjectStore
   userStore!: IDBObjectStore
+  connectionsStore?: IDBObjectStore  // NEW - Phase 2
+  charactersStore?: IDBObjectStore   // NEW - Phase 2
   //extensionStore: IDBObjectStore
   defaultUser!: string
   activeExtensions = new Map<number, Extension>()
@@ -728,6 +749,8 @@ export class World {
     this.storeName = mudDbName(name)
     this.users = userDbName(name)
     this.extensionsName = extensionDbName(name)
+    this.connectionsStoreName = connectionsStoreName(name)  // NEW - Phase 2
+    this.charactersStoreName = charactersStoreName(name)    // NEW - Phase 2
   }
   initDb() {
     return this.checkDbs(async () => {
@@ -740,6 +763,11 @@ export class World {
       this.generatorProto = this.createThing('generator', 'This is a thing')
       this.containerProto = this.createThing('container', 'This is a container')
       this.personProto = this.createThing('person', '$This $is only a dude')
+
+      // NEW - Phase 3: Create character prototype
+      this.characterProto = this.createThing('character', '$This $is a character')
+      this.characterProto.setPrototype(this.personProto)
+
       this.limbo.setPrototype(this.roomProto)
       this.limbo._article = ''
       this.lobby.setPrototype(this.roomProto)
@@ -797,6 +825,14 @@ export class World {
           ? txn.objectStore(this.storeName)
           : db.createObjectStore(this.storeName, { keyPath: 'id' })
 
+        // NEW - Phase 2: Create connections and characters stores
+        const connectionsStore = db.objectStoreNames.contains(this.connectionsStoreName)
+          ? txn.objectStore(this.connectionsStoreName)
+          : db.createObjectStore(this.connectionsStoreName, { autoIncrement: true })
+        const charactersStore = db.objectStoreNames.contains(this.charactersStoreName)
+          ? txn.objectStore(this.charactersStoreName)
+          : db.createObjectStore(this.charactersStoreName, { keyPath: 'characterId' })
+
         checkIndex(userStore, userThingIndex, 'thing', { unique: true })
         checkIndex(thingStore, prototypeIndex, 'prototype', { unique: false })
         checkIndex(thingStore, associationIndex, 'associations', {
@@ -807,6 +843,10 @@ export class World {
           unique: false,
           multiEntry: true,
         })
+
+        // NEW - Phase 2: Create indexes for connections
+        checkIndex(connectionsStore, PEER_INDEX, 'peer', { unique: false })
+        checkIndex(connectionsStore, CHARACTER_INDEX, 'characterId', { unique: false })
 
         // obsolete indexes
         checkIndex(thingStore, locationIndex, 'location', { unique: false })
@@ -860,6 +900,13 @@ export class World {
       this.getThing(info.containerProto) ||
       (await this.findPrototype('containerProto')) ||
       this.createThing('container')
+
+    // NEW - Phase 3: Load character prototype
+    this.characterProto =
+      this.getThing(info.characterProto) ||
+      (await this.findPrototype('character')) ||
+      this.createThing('character')
+
     this.clockRate = info.clockRate || 2
   }
   async findPrototype(name: string): Promise<Thing | undefined> {
@@ -989,6 +1036,7 @@ export class World {
       linkProto: this.linkProto.id,
       roomProto: this.roomProto.id,
       personProto: this.personProto.id,
+      characterProto: this.characterProto.id,  // NEW - Phase 3
       generatorProto: this.generatorProto.id,
       containerProto: this.containerProto.id,
       defaultUser: this.defaultUser,
@@ -1019,10 +1067,20 @@ export class World {
     } else {
       const oldThingStore = this.thingStore
       const oldUserStore = this.userStore
-      const txn = this.db().transaction(
-        [this.storeName, this.users],
-        'readwrite'
-      )
+      const oldConnectionsStore = this.connectionsStore
+      const oldCharactersStore = this.charactersStore
+
+      // NEW - Phase 2: Include connections and characters stores if they exist
+      const storeNames = [this.storeName, this.users]
+      const db = this.db()
+      if (db.objectStoreNames.contains(this.connectionsStoreName)) {
+        storeNames.push(this.connectionsStoreName)
+      }
+      if (db.objectStoreNames.contains(this.charactersStoreName)) {
+        storeNames.push(this.charactersStoreName)
+      }
+
+      const txn = db.transaction(storeNames, 'readwrite')
       const txnPromise = promiseFor(txn)
       const oldId = this.nextId
       const oldThings = this.transactionThings
@@ -1033,6 +1091,15 @@ export class World {
       this.transactionPromise = txnPromise
       this.thingStore = txn.objectStore(this.storeName)
       this.userStore = txn.objectStore(this.users)
+
+      // NEW - Phase 2: Set store references if they exist
+      if (db.objectStoreNames.contains(this.connectionsStoreName)) {
+        this.connectionsStore = txn.objectStore(this.connectionsStoreName)
+      }
+      if (db.objectStoreNames.contains(this.charactersStoreName)) {
+        this.charactersStore = txn.objectStore(this.charactersStoreName)
+      }
+
       this.transactionThings = new Set()
       try {
         result = await this.processTransaction(func)
@@ -1046,6 +1113,8 @@ export class World {
         this.txn = null
         this.thingStore = oldThingStore
         this.userStore = oldUserStore
+        this.connectionsStore = oldConnectionsStore  // NEW - Phase 2
+        this.charactersStore = oldCharactersStore    // NEW - Phase 2
         this.transactionPromise = oldTxnPromise
       }
       return txnPromise.then(() => result)
@@ -1490,6 +1559,17 @@ export class World {
     t.originalSpec = null
     this.stamp(t)
     return t
+  }
+
+  // NEW - Phase 3: Create a thing for a character
+  createCharacterThing(characterId: string, displayName: string): Thing {
+    const thing = this.createThing(displayName, `$This $is ${displayName}`)
+    thing.setPrototype(this.characterProto)
+
+    // Set character property (accessor stores to _character for persistence)
+    thing.character = characterId
+
+    return thing
   }
   getThings(ids: thingId[]): Thing[] {
     const things = []

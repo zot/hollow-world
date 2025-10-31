@@ -21,27 +21,20 @@
 - compute available XP and Attribute Chips dynamically according to "Character structure" below
 
 ### Character structure
-- total XP and total Attribute Chips are based on rank
-- available Attribute Chips is computed dynamically
+**See [`storage.md`](storage.md#-character-storage-localstorage) for complete character storage specifications**
+
+- Total XP and total Attribute Chips are based on rank
+- Available Attribute Chips is computed dynamically
   - rank's attribute chip total - current attribute cost total
-    - this amount is allowed to go higher than the rank's attribute ship total
+    - this amount is allowed to go higher than the rank's attribute chip total
     - make sure there's a test for Dex -2 and all other attrs at 0
       - the attribute chip total should be 8 higher than the rank's attribute chip total
   - doesn't drop below 0 because extra attribute points come from XP
-- available XP is computed dynamically from fields and total attribute costs that exceed total attribute chips
+- Available XP is computed dynamically from fields and total attribute costs that exceed total attribute chips
   - Fields cost their level * the cost of each entry + 1 if it has a check
-- a version field that stores the current app version (from the VERSION file)
+- A version field that stores the current app version (from the VERSION file)
 
-### Character version compatibility module to manage upgrading old stored characters to the latest format
-#### character schemas
-- keep an array of objects, each with the its version (from VERSION file) and schema (based on the storage format)
-- the array is given in sorted order by version number
-#### upgrading
-- when the character structure changes, add the new character schema to the character schemas object
-  - the version number in the VERSION file is increasing so appending to the array will maintain sort order
-- add a function that converts characters for the previous version to the new version, supplying default values for new items
-- there is an upgrade function that upgrades a character based on its version to the current version
-  - use the character schema array to upgrade to the next version until the character reaches the final (most recent) version
+**Character version compatibility**: See [`storage.md`](storage.md#character-version-compatibility) for details on schema versioning and upgrade system
 
 ### 🧭 Navigation *(Trail Blazing Through the UI)*
 - **Browser back button** navigates to previous screen *(Like ridin' back to where you came from)*
@@ -64,6 +57,8 @@
   - Passes UUID in URL path *(Proper paperwork for the sheriff)*
 
 ### 🏗️ Editor Initialization *(Setting Up Camp)*
+**See [`storage.md`](storage.md#loading-characters) for complete character loading specifications**
+
 - **From character manager**: Load character from storage using UUID in URL path *(Find your outlaw in the filing cabinet)*
 - **From browser navigation**: Edit history item live as "current" character *(Pick up where you left off)*
 - **Live editing**: Make changes without persistence until "Yep" button clicked *(Sketch in the dirt before carving in stone)*
@@ -156,6 +151,8 @@
 - **📊 Update displays**: Update available XP and Attribute Chips after a decrement *(Balance the books)*
 
 #### 🚫 **"Nope" Button** *(The Chicken-Out Option)*
+**See [`storage.md`](storage.md#nope-button-revert) for complete revert specifications**
+
 - **Revert changes**: Reload character from storage *(Put everything back the way it was)*
 - **Update fields**: Display original stats in all fields *(Wipe the slate clean)*
 - **History update**: Overwrite history item with retrieved object *(Fix the paperwork)*
@@ -163,6 +160,8 @@
 - test cases for these things
 
 #### ✅ **"Yep" Button** *(Seal the Deal)*
+**See [`storage.md`](storage.md#yep-button-save) for complete save workflow specifications**
+
 - Enable only if there are changes that have not been saved *(Only when you got something worth keeping)*
 - **Save workflow** *(The proper way to file your paperwork)*:
   1. Load original character from storage → temporary variable *(Keep a backup copy)*

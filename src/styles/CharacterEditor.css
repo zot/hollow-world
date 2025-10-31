@@ -181,6 +181,63 @@
     }
 }
 
+/* Validation warning notification (less severe than error, yellow/orange) */
+.validation-warning-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: linear-gradient(45deg, #ffa500, #ff8c00);
+    border: 3px solid #d2691e;
+    border-radius: 8px;
+    box-shadow:
+        0 4px 20px rgba(0,0,0,0.5),
+        inset 0 0 10px rgba(255,255,255,0.1);
+    animation: errorSlideIn 0.3s ease-out;
+    max-width: 400px;
+    font-family: 'Rye', serif;
+}
+
+.validation-warning-content {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    color: white;
+    gap: 10px;
+}
+
+.warning-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.warning-text {
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    white-space: pre-line; /* Preserve line breaks in validation messages */
+}
+
+.warning-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.warning-close:hover {
+    background: rgba(255,255,255,0.2);
+}
+
 @media (max-width: 768px) {
     .editor-actions {
         flex-direction: column;

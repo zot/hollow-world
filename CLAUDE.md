@@ -2,11 +2,34 @@
 
 # written in typescript
 
+**📋 Main Specification**: See [`specs/main.md`](specs/main.md) for comprehensive project specifications
+
+## pending operations on this file
+- move the TODO section into specs/todo.md and remove redundant info from todo.md
+
 ## 🎯 Core Principles
 - Use **SOLID principles** in all implementations
 - **🔒 Strict TypeScript typing** - All function parameters, return values, and object properties must use explicit TypeScript types. Never use `any` type except for truly dynamic content. Interface types like `AttributeType` must be used when indexing typed objects like `IAttributes` *(Type your code tighter than a hangman's noose)*
+- **Hash-based change detection** - Use cryptographic hashes (SHA-256) to detect changes instead of storing object copies
+  - Calculate and store hash of original state
+  - Compare current hash to stored hash to detect changes
+  - Avoids shallow copy issues with nested objects (spread operator only copies references)
+  - More efficient than deep object comparison
+  - Applies to: UI change detection, storage integrity verification, P2P data synchronization
+  - Example: CharacterEditorView stores `originalCharacterHash` instead of `originalCharacter`
+  - See: `src/utils/characterHash.ts` for hash calculation utilities
 - Create comprehensive **unit tests** for all components
 - Follow specifications for consistent western frontier theme
+
+### TextCraft Thing Storage Guidelines
+- **Property Persistence**: Only Thing properties starting with `_` (data) or `!` (functions) are persisted to storage
+- **Accessor Pattern**: Use getter/setter accessors for clean API while storing with underscore prefix
+  - Example: `thing.character` (accessor) → `thing._character` (storage)
+  - Follows same pattern as `thing.name` → `thing._name`, `thing.description` → `thing._description`
+- **Adding New Properties**: When adding persistent properties to Things:
+  1. Add storage property with `_` prefix (e.g., `_character?: string`)
+  2. Add getter/setter accessor without prefix (e.g., `get character()` / `set character()`)
+  3. Use the accessor in all code for clean, consistent API
 
 ### 🚫 NO HTML Strings in TypeScript/JavaScript
 **CRITICAL**: Never use template literals or string concatenation for HTML in `.ts` or `.js` files.
@@ -55,64 +78,27 @@ const html = await templateEngine.renderTemplateFromFile('list', {
 
 **Enforcement:** All HTML belongs in `public/templates/` *(Separate your concerns like a good sheriff)*
 
-## 🗄️ MudStorage Access Patterns
 
-**CRITICAL**: MudStorage is the IndexedDB-backed storage system for TextCraft MUD worlds. Follow these patterns:
+## 🗄️ Storage Systems
 
-### Getting MudStorage Instance
-```typescript
-import { getStorage } from '../textcraft/model';
+**See [`specs/storage.md`](specs/storage.md) for comprehensive storage specifications**
 
-// ✅ CORRECT: Use async getStorage() function
-const storage = await getStorage();
+The application uses multiple storage systems:
+- **MudStorage**: IndexedDB-backed storage for TextCraft MUD worlds
+  - Must use `await getStorage()` to get instance (not static access)
+  - Use `doTransaction()` for atomic database operations
+- **LocalStorage**: Character data, profiles, and application state
+  - Character storage uses UUID-based identification
+  - Character version compatibility system for data migration
+  - Named profiles with storage prefixes (see [`specs/storage.md`](specs/storage.md#-named-profiles-localstorage))
 
-// ❌ WRONG: Don't try to use MudStorage as static class
-MudStorage.deleteWorld('world'); // This will fail!
-```
+Key guidelines:
+- Always validate data before reading/writing
+- Handle storage failures gracefully
+- Use appropriate storage type for data size
+- See [`specs/storage.md`](specs/storage.md) for complete patterns and best practices
 
-### Common MudStorage Operations
-```typescript
-const storage = await getStorage();
-
-// Get list of world names (property, not method!)
-const worldNames = storage.worlds; // ✅ Property access
-const worldNames = await storage.worldNames(); // ❌ Not a method
-
-// Delete a world
-await storage.deleteWorld(worldName); // ✅ Instance method
-
-// Open/load a world
-const world = await storage.openWorld(worldName); // ✅ Instance method
-
-// Create new world
-const world = new World();
-await world.initDb();
-world.name = 'My World';
-world.description = 'A new frontier...';
-```
-
-### World Transactions
-All world modifications should use `doTransaction()` for database consistency:
-
-```typescript
-const world = await storage.openWorld('My World');
-
-// Modify world data within transaction
-await world.doTransaction(async (store, users, txn) => {
-    // Make your changes here
-    world.name = 'Updated Name';
-
-    // Persist changes
-    await world.store();
-});
-```
-
-### Rules of Thumb
-- **Always `await`**: Both `getStorage()` and world operations are async
-- **Instance methods**: MudStorage methods are instance methods, not static
-- **Property access**: `storage.worlds` is a property (array), not a method
-- **Transactions**: Use `world.doTransaction()` for atomic database operations
-- **Error handling**: Wrap storage operations in try/catch blocks
+**Note**: Character storage details (save/load workflow, version compatibility) are also documented in [`specs/storage.md`](specs/storage.md#-character-storage-localstorage)
 
 ## 📋 TODO Items
 - [x] **Refactor EventModal to use HTML templates** - Move event card HTML from `src/ui/EventModal.ts` to template files ✅ **COMPLETED**
@@ -133,11 +119,20 @@ await world.doTransaction(async (store, users, txn) => {
   - Refactor `SettingsView.renderPendingNewInvitations()` to use TemplateEngine
 
 ## UI principles
+- **NEVER block saves due to validation errors** - Users must not lose their work
+  - Always save data, even if invalid
+  - Show validation warnings but allow save to complete
+  - Invalid data can be prevented from being used (e.g., entering worlds) but never from being saved
+  - Example: CharacterEditorView saves invalid characters and shows validation warning notification
+  - Rationale: Preventing saves risks data loss during intermediate work states
 - **REQUIRED**: Audio control **MUST** be visible on all pages at the bottom-right
   - The audio control must be rendered and visible at all times when AudioManager exists
   - Position: fixed at bottom-right corner (z-index high enough to appear above other content)
   - Must include play/pause toggle and be accessible on every view/route
   - Must display current track information and provide next/previous track controls
+- **UI polling threshold**: Use 250ms for human UI interaction polling (e.g., change detection)
+  - This provides responsive feedback without excessive CPU usage
+  - Example: CharacterEditorView uses 250ms intervals to detect character changes for enabling save/cancel buttons
 - use Milkdown crepe for markdown editing
   - use `crepe.on` for events like in the docs about using Crepe
   - don't put padding around the editor content
@@ -192,131 +187,15 @@ await world.doTransaction(async (store, users, txn) => {
 
 ## Testing
 
-### General Principles
-- **Test organization**:
-  - **TypeScript/JavaScript**: Tests should be in a top-level `test` directory
-  - **Go**: Follow normal Go conventions (`*_test.go` files alongside code)
-- use playwright for integration tests
-- each spec should have a corresponding `.tests.md` file with specific test requirements
-- specs are in the `specs` directory
-  - testing specs are named SPEC.tests.md
-- see [`specs/main.tests.md`](specs/main.tests.md) for integration test requirements
-  - main.tests.md is also for global or cross-cut tests
-- unit tests must be accounted for in the SPEC.tests.md file that makes the most sense
+**See [`specs/testing.md`](specs/testing.md) for comprehensive testing specifications**
 
-### SPA Routing Requirements
-**Critical**: All routes must work on both direct navigation AND page refresh
-- **Vite dev server configuration**: Must include SPA fallback middleware
-  ```typescript
-  // In vite.config.ts
-  {
-    name: 'spa-fallback',
-    configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        // Serve index.html for all non-file requests
-        if (req.url && !req.url.includes('.') && !req.url.startsWith('/@')) {
-          req.url = '/index.html';
-        }
-        next();
-      });
-    }
-  }
-  ```
-- **Router implementation**: Must use browser History API
-  - `window.history.pushState()` for navigation
-  - `popstate` event listener for back/forward buttons
-- **Test all routes**: `/`, `/settings`, `/settings/log`, `/characters`, `/character/:id`, `/game`
-  - Navigate to route programmatically
-  - Refresh page (F5 or browser refresh button)
-  - Verify view renders correctly
-
-### Base URL Construction Requirements
-**Critical**: Asset and template paths must resolve from origin, not current route
-- **Correct pattern**: `new URL(window.location.origin + '/')`
-  - ✅ Works on all routes: `/`, `/settings`, `/settings/log`
-  - ✅ Assets load from: `http://localhost:3000/assets/...`
-- **Incorrect pattern**: `new URL(location.toString())`
-  - ❌ Breaks on nested routes like `/settings/log`
-  - ❌ Assets try to load from: `http://localhost:3000/settings/log/assets/...`
-- **Apply to**:
-  - `src/main.ts`: Base URL initialization
-  - `src/utils/TemplateEngine.ts`: Template path resolution
-  - Any component that constructs asset URLs
-- **Test from all routes**:
-  - Verify audio files load correctly
-  - Verify templates load correctly
-  - Verify images/other assets load correctly
-
-### Playwright Testing Guidance
-- Use Playwright MCP for manual integration testing
-- Test patterns:
-  - **Navigation**: Use `browser_navigate` to visit routes
-  - **Verification**: Use `browser_snapshot` to check page state
-  - **Interaction**: Use `browser_click`, `browser_type` for UI interactions
-- **Routing test pattern**:
-  ```typescript
-  // 1. Navigate to route
-  await browser_navigate('/settings/log');
-  // 2. Take snapshot to verify render
-  const snapshot = await browser_snapshot();
-  // 3. Refresh page
-  await browser_navigate('/settings/log'); // or use refresh
-  // 4. Verify still works
-  const afterRefresh = await browser_snapshot();
-  ```
-- **Asset loading test pattern**:
-  ```typescript
-  // 1. Navigate to nested route
-  await browser_navigate('/settings/log');
-  // 2. Check console for 404 errors
-  const messages = await browser_console_messages({ onlyErrors: true });
-  // Should be empty or not contain asset 404s
-  ```
-- **Multi-tab P2P testing**:
-  - Playwright **can handle multiple browser tabs/contexts** for P2P connectivity testing
-  - Use `browser_tabs` action to create, select, and manage tabs
-  - Each tab can have a different profile for testing P2P interactions
-  - Perfect for testing peer-to-peer messaging, friend requests, and connectivity
-  - See `specs/main.tests.md` "Peer Connectivity Tests" for examples
-
-### Test API for Singleton Access
-**Available in dev/test environments only** - Exposes `window.__HOLLOW_WORLD_TEST__`
-
-Provides type-safe access to application singletons for testing:
-- See `src/types/window.d.ts` for TypeScript definitions
-- Exposed in `src/main.ts` only when `import.meta.env.DEV` or `MODE === 'test'`
-
-Example Playwright usage:
-```typescript
-// Access the test API
-const api = await page.evaluate(() => window.__HOLLOW_WORLD_TEST__);
-
-// Access ProfileService
-const profile = await page.evaluate(() => {
-  return window.__HOLLOW_WORLD_TEST__?.profileService.getCurrentProfile();
-});
-
-// Access profile-aware localStorage
-const invitations = await page.evaluate(() => {
-  const json = window.__HOLLOW_WORLD_TEST__?.profileService.getItem('activeInvitations');
-  return json ? JSON.parse(json) : {};
-});
-
-// Access HollowPeer
-const peerId = await page.evaluate(() => {
-  return window.__HOLLOW_WORLD_TEST__?.hollowPeer.getPeerId();
-});
-
-// Access EventService
-const events = await page.evaluate(() => {
-  return window.__HOLLOW_WORLD_TEST__?.eventService.getEvents();
-});
-
-// Access AudioManager (optional, may be undefined)
-const isPlaying = await page.evaluate(() => {
-  return window.__HOLLOW_WORLD_TEST__?.audioManager?.isMusicPlaying();
-});
-```
+Key testing requirements:
+- Use Playwright for integration tests
+- Test organization: `test/` directory for TypeScript/JavaScript tests
+- Each spec should have a corresponding `.tests.md` file
+- All routes must work on both direct navigation AND page refresh
+- Asset URLs must resolve correctly from all routes
+- See [`specs/main.tests.md`](specs/main.tests.md) for integration test requirements
 
 ### 🚀 App Initialization
 - [x] important: this is in a script element at the top of body ✅ **IMPLEMENTED**
@@ -329,87 +208,25 @@ const isPlaying = await page.evaluate(() => {
 - [x] **Pervasively**: use Base as parent URL for all assets, including templates ✅ **IMPLEMENTED**
 - [x] Use `new URL(asset, Base).toString()` for the asset URL ✅ **IMPLEMENTED**
 
-### 🔫 Button Audio Effects
-- [ ] **No Random gunshot sound** on each button click
-- [x] Use [`single-gunshot-54-40780.mp3`](../public/assets/audio/single-gunshot-54-40780.mp3) ✅ **IMPLEMENTED**
-- [x] **Randomly vary** pitch and duration on each click ✅ **IMPLEMENTED**
-- [x] **Interrupt functionality**: New gunshot stops any currently playing ✅ **IMPLEMENTED**
+## 🎵 Audio System
 
-### 🎵 Audio System Initialization
-- [ ] **AudioManager must initialize successfully** - App must create working AudioManager instance
-  - **Required audio files present**: All 8 music tracks + gunshot sound effect must be loadable
-  - **Graceful fallback**: If audio initialization fails, continue without audio (hide music button)
-  - **Error logging**: Clear console messages when audio fails vs succeeds
-  - **Validation**: AudioManager.initialize() must complete without throwing errors
-  - **Music button visibility**: Button only appears when AudioManager exists and is functional
-  - **Button state synchronization**: Music play/mute button must reflect actual audio state after initialization ✅ **IMPLEMENTED**
-  - **Reliable audio state detection**: AudioProvider.isPlaying() must accurately detect playing state even when currentTime is 0 ✅ **IMPLEMENTED**
-- [ ] AudioManager must be created on startup, as early as possible
+**See [`specs/audio.md`](specs/audio.md) for comprehensive audio system specifications**
 
-### 🔧 Audio Asset Requirements
-- [ ] **All audio files must be accessible via HTTP** - Audio files must be properly served by dev server
-  - **File locations**: All audio files must exist in `public/assets/audio/` directory
-  - **URL construction**: Audio URLs must resolve correctly with Base URL
-  - **Network loading**: Audio files must be loadable without CORS or 404 errors
-  - **File format support**: Browser must support MP3 format for all audio files
-  - audio file HTTP requests must return audio content
+The audio system provides western-themed immersive ambiance with:
+- **Background Music**: 8-track cycling system with smooth transitions
+  - Sequential playback with auto-advance
+  - Fade-out transitions (1 second)
+  - Volume set to 0.3 for background ambiance
+  - Music persists across view navigation
+- **Button Sound Effects**: Gunshot sound with pitch/duration variation
+- **Audio Controls**: Fixed bottom-right position, visible on all routes
+  - Western frontier theme styling
+  - Collapse/expand functionality
+  - Track navigation and cycling control
 
-### 🎵 Background Audio
-- [x] **Mysterious western ghosttown music** plays continuously ✅ **IMPLEMENTED** (8-track cycling system)
-
-### 🎵 Enhanced Background Music System
-- [x] **Implement music cycling system** ✅ **IMPLEMENTED** - Now rotates through all 8 available music tracks
-  - **Music files** (8 total, all in cycling rotation):
-    1. `western-adventure-cinematic-spaghetti-loop-385618.mp3` ✅ **In rotation**
-    2. `cinematic-spaghetti-western-music-tales-from-the-west-207360.mp3` ✅ **In rotation**
-    3. `picker_s-grove-folk.mp3` ✅ **In rotation**
-    4. `picker_s-grove-shanty.mp3` ✅ **In rotation**
-    5. `picker_s-grove-western.mp3` ✅ **In rotation**
-    6. `picker_s-grove-western-ballad.mp3` ✅ **In rotation**
-    7. `mining-incident-waltz-hoedown.mp3` ✅ **In rotation**
-    8. `mining-incident-waltz-polka.mp3` ✅ **In rotation**
-
-- [x] **Enhancement tasks** ✅ **ALL COMPLETED**:
-  - [x] Modify AudioManager to support multiple background tracks ✅ **IMPLEMENTED**
-  - [x] Implement random or sequential cycling through music files ✅ **IMPLEMENTED** (sequential with auto-advance)
-  - [x] Add smooth transitions between tracks ✅ **IMPLEMENTED** (1-second fade out)
-  - [x] Ensure cycling works with play/pause/toggle functionality ✅ **IMPLEMENTED**
-  - [x] Set appropriate low volume for background ambiance ✅ **IMPLEMENTED** (0.3 volume)
-  - [x] Test music persistence across view navigation ✅ **IMPLEMENTED**
-
-### 🎛️ **Audio Control UI Requirements**
+Key requirements:
+- [ ] AudioManager must initialize successfully on startup
+- [ ] All audio files must be accessible via HTTP
 - **REQUIRED**: Audio controls **MUST be visible** on all pages/routes
-  - Position: Fixed at bottom-right corner of viewport
-  - z-index: High enough to appear above all page content (9999+)
-  - Persistence: Must remain visible during route navigation
-  - Functionality available on every view: `/`, `/settings`, `/settings/log`, `/characters`, `/character/:id`, `/game`
-- **Western Frontier Theme** (REQUIRED):
-  - Background: Dark brown/wood texture (e.g., `#2C1810` with transparency)
-  - Border: Saddle brown (`#8B4513`) with 2-3px solid border
-  - Text colors: Gold (`#D4AF37`) for headers, Wheat (`#F5DEB3`) for content
-  - Buttons: Western-style with brown/tan color scheme
-  - Font: Western/frontier-appropriate styling where possible
-  - Overall aesthetic must match the "Hollow World" western ghost town theme
-- **Interaction Requirements**:
-  - **Clicking the control header** (title area) **MUST** toggle collapse/expand state
-  - Collapsed state: Shows compact play/pause indicator
-  - Expanded state: Shows full controls (track info, navigation, cycling)
-  - Smooth transition between states
-- **Required Controls**:
-  - Play/Pause toggle button (must reflect current playback state)
-  - Next track button
-  - Previous track button
-  - Current track name display
-  - Track position indicator (e.g., "Track 3 of 8")
-  - Collapse/Expand toggle (clickable header)
-- **Track Navigation**: Skip to next/previous track manually
-- **Cycling Control**: Enable/disable automatic track cycling
-- **Track Information**: Get current track name, index, and total tracks
-- **Smooth Transitions**: Automatic fade-out when switching tracks
-- **Enhanced Console Logging**: Detailed track information and cycling status
-
-**Testing**: AudioManager is accessible via `window.__HOLLOW_WORLD_TEST__.audioManager` in dev/test environments (optional, may be undefined)
-- Check playback state: `audioManager?.isMusicPlaying()`
-- Get track info: `audioManager?.getCurrentTrackInfo()`
-- Control playback: `audioManager?.playBackgroundMusic()`, `audioManager?.pauseBackgroundMusic()`
-- See [Testing section](#test-api-for-singleton-access) for usage examples
+- Audio files located in `public/assets/audio/`
+- See [`specs/audio.md`](specs/audio.md) for complete specifications and testing details

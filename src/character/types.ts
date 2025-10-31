@@ -121,6 +121,7 @@ export interface ICharacter {
     name: string;
     description: string;
     version: string; // Current app version (from VERSION file)
+    worldId?: string; // Phase 3: World ID if character is associated with a world
 
     // Core Stats
     rank: number; // Primary stat - determines XP pools and advancement
