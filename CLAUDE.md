@@ -1,11 +1,59 @@
-# Hollow World project
+# Hollow World project: digital companion for the Hollow TTRPG
 
 # written in typescript
 
 **📋 Main Specification**: See [`specs/main.md`](specs/main.md) for comprehensive project specifications
 
-## pending operations on this file
-- move the TODO section into specs/todo.md and remove redundant info from todo.md
+**🗺️ Application Routes**: See [`specs/routes.md`](specs/routes.md) for centralized route reference
+- All application routes (URLs/paths) are documented in `specs/routes.md`
+- **IMPORTANT**: When documenting features in spec files, use **view names** (e.g., "Friends view", "Settings view") instead of hard-coded routes (e.g., `/friends`, `/settings`)
+- To find the route for a view, refer to the route table in `specs/routes.md`
+- Only `specs/routes.md` should contain hard-coded route paths
+- When adding routes, referencing routes in docs, or working with navigation, refer to this file
+- Ensures consistency across codebase and documentation
+
+## 📚 Specification Files Quick Reference
+
+### Core Specifications
+- **[`main.md`](specs/main.md)** - Main project specification, architecture, and features
+- **[`routes.md`](specs/routes.md)** - Centralized route reference for all application URLs
+- **[`storage.md`](specs/storage.md)** - Storage systems (IndexedDB, LocalStorage), data patterns
+- **[`testing.md`](specs/testing.md)** - Testing strategy, Playwright setup, test organization
+- **[`audio.md`](specs/audio.md)** - Audio system (background music, sound effects, controls)
+- **[`dependencies.md`](specs/dependencies.md)** - Project dependencies and version management
+
+### UI Specifications
+- **[`ui.md`](specs/ui.md)** - General UI principles (save behavior, audio controls, navigation, western theme)
+- **[`ui.splash.md`](specs/ui.splash.md)** - Splash Screen (main menu)
+- **[`ui.characters.md`](specs/ui.characters.md)** - Character Manager and Character Editor views
+- **[`ui.friends.md`](specs/ui.friends.md)** - Friends view (P2P friend management)
+- **[`ui.settings.md`](specs/ui.settings.md)** - Settings view (peer ID, profiles, log)
+
+### UI Testing Specifications
+- **[`main.tests.md`](specs/main.tests.md)** - Integration testing (routes, P2P, events, cross-view)
+- **[`ui.splash.tests.md`](specs/ui.splash.tests.md)** - Splash Screen testing
+- **[`ui.characters.tests.md`](specs/ui.characters.tests.md)** - Character management testing
+- **[`ui.settings.tests.md`](specs/ui.settings.tests.md)** - Settings view testing
+
+### P2P & Networking
+- **[`p2p.md`](specs/p2p.md)** - P2P system architecture (libp2p, connections, discovery)
+- **[`p2p-messages.md`](specs/p2p-messages.md)** - P2P message types and protocols
+- **[`friends.md`](specs/friends.md)** - Friends system data structures and flows
+- **[`coms.md`](specs/coms.md)** - Communication protocols and message handling
+
+### Feature Specifications
+- **[`characters.md`](specs/characters.md)** - Character system (attributes, skills, equipment)
+- **[`integrate-textcraft.md`](specs/integrate-textcraft.md)** - TextCraft MUD integration
+
+### Planning & Historical
+- **[`todo.md`](specs/todo.md)** - Task tracking and pending work
+
+### Other
+- **[`itch-io.md`](specs/itch-io.md)** - Itch.io deployment and distribution
+- **[`Hollow-summary.md`](specs/Hollow-summary.md)** - Summary of parts of the pencil & paper role playing game, Hollow
+- **[`notes.md`](specs/notes.md)** - Development notes and scratchpad
+
+**📝 Note**: CLAUDE.md should remain lean and focused on guidelines. Never add TODO items, scratch work, or temporary notes here. Use `specs/todo.md` for task tracking and `specs/notes.md` for development scratchpad.
 
 ## 🎯 Core Principles
 - Use **SOLID principles** in all implementations
@@ -81,8 +129,6 @@ const html = await templateEngine.renderTemplateFromFile('list', {
 
 ## 🗄️ Storage Systems
 
-**See [`specs/storage.md`](specs/storage.md) for comprehensive storage specifications**
-
 The application uses multiple storage systems:
 - **MudStorage**: IndexedDB-backed storage for TextCraft MUD worlds
   - Must use `await getStorage()` to get instance (not static access)
@@ -96,84 +142,16 @@ Key guidelines:
 - Always validate data before reading/writing
 - Handle storage failures gracefully
 - Use appropriate storage type for data size
-- See [`specs/storage.md`](specs/storage.md) for complete patterns and best practices
-
-**Note**: Character storage details (save/load workflow, version compatibility) are also documented in [`specs/storage.md`](specs/storage.md#-character-storage-localstorage)
-
-## 📋 TODO Items
-- [x] **Refactor EventModal to use HTML templates** - Move event card HTML from `src/ui/EventModal.ts` to template files ✅ **COMPLETED**
-  - [x] Create `public/templates/event-card-friend-request.html` ✅
-  - [x] Create `public/templates/event-card-friend-declined.html` ✅
-  - [x] Move inline styles to CSS files ✅
-  - [x] Refactor `EventModal.renderEventCard()` to use TemplateEngine ✅
-- [x] **Refactor CharacterSheet to use HTML templates** - Move all HTML strings from `src/character/CharacterSheet.ts` to template files ✅ **COMPLETED**
-  - [x] Fixed `character-sheet.html` template ✅
-  - [x] Removed inline styles from `attribute-box.html` and added styles to CharacterSheet.css ✅
-  - [x] Fixed all template conditionals to work with TemplateEngine (removed `{{else}}` clauses) ✅
-  - [x] Refactored `createCharacterSheetHTML()` to use TemplateEngine ✅
-  - [x] Refactored `initializePlaceholderContent()` to use templates ✅
-  - [x] Created helper methods: `renderAttributes()`, `renderSkills()`, `renderBenefits()`, `renderEquipment()` ✅
-  - [x] All sections now use templates: attributes, hollow tracker, skills, benefits, equipment ✅
-- [ ] **Refactor SettingsView pending invitations to use HTML template** - Move pending invitation item HTML from `src/ui/SettingsView.ts` (lines 686-693) to template file
-  - Create `public/templates/pending-invitation-item.html`
-  - Refactor `SettingsView.renderPendingNewInvitations()` to use TemplateEngine
 
 ## UI principles
-- **NEVER block saves due to validation errors** - Users must not lose their work
-  - Always save data, even if invalid
-  - Show validation warnings but allow save to complete
-  - Invalid data can be prevented from being used (e.g., entering worlds) but never from being saved
-  - Example: CharacterEditorView saves invalid characters and shows validation warning notification
-  - Rationale: Preventing saves risks data loss during intermediate work states
-- **REQUIRED**: Audio control **MUST** be visible on all pages at the bottom-right
-  - The audio control must be rendered and visible at all times when AudioManager exists
-  - Position: fixed at bottom-right corner (z-index high enough to appear above other content)
-  - Must include play/pause toggle and be accessible on every view/route
-  - Must display current track information and provide next/previous track controls
-- **UI polling threshold**: Use 250ms for human UI interaction polling (e.g., change detection)
-  - This provides responsive feedback without excessive CPU usage
-  - Example: CharacterEditorView uses 250ms intervals to detect character changes for enabling save/cancel buttons
-- use Milkdown crepe for markdown editing
-  - use `crepe.on` for events like in the docs about using Crepe
-  - don't put padding around the editor content
-  - support all available crepe features
 
-### P2P User Experience
-- **NO DIALOGS for P2P operations** - Never use `alert()` or modal dialogs for P2P status updates
-  - Friend requests, peer discovery, connection status should use visual badges and the event system
-  - Errors that require user action can use dialogs, but informational updates must not
-  - Use the EventService to notify users of P2P events (friend requests, connections, etc.)
-  - Use status badges (e.g., "⏳ Pending") in the UI to show current state
-  - Keep P2P operations non-intrusive and seamless
-
-### Events
-- there is a persisted list of events
-- whenever the event list is not empty
-  - there is an event notification button with a bugle on it and a red count of pending events
-  - it appears at the screen's upper right
-  - clicking it opens a modal dialog with the event view
-    - a list shows cards for the events with skull buttons at the right to remove them
-      - each event is presented according to its type
-- **Testing**: EventService is accessible via `window.__HOLLOW_WORLD_TEST__.eventService` in dev/test environments
-  - Get events: `eventService.getEvents()`
-  - Add/remove events for testing
-  - See [Testing section](#test-api-for-singleton-access) for usage examples
-
-### URL-Based Navigation
-- **Single-page app location** represented by browser URL
-- **Each view** gets its own URL path
-
-### Browser History Integration
-- **History array of objects** for browser back/forward navigation
-- **Forward/back buttons** enabled only when history objects are available
-- **Self-rendering objects**: Each history object knows what view to display
-
-### Navigation Behavior
-- **Going back**: User can navigate backward through history
-  - **Forward navigation**: Can advance through existing history
-  - **New navigation**: Can navigate to different object
-    - **Future deletion**: Removes "future" history objects
-    - **New object**: Pushes new object to history array
+Key UI requirements:
+- HTML open and close elements MUST be balanced -- verify after every change
+- NEVER block saves due to validation errors
+- Audio controls MUST be visible on all pages
+- Use 250ms polling for UI change detection
+- NO DIALOGS for P2P operations (use badges and events)
+- Western frontier theme throughout
 
 ## Log
 - keep a persistent log in local storage
@@ -185,9 +163,16 @@ Key guidelines:
     - continue until it is below 256K characters
       - however, if there is only one message left, if is allowed to be larger than 256K characters
 
-## Testing
+## Development Server
 
-**See [`specs/testing.md`](specs/testing.md) for comprehensive testing specifications**
+The development server runs on **https://localhost:3000** (NOT port 5173)
+- Started with `npm run dev`
+- Uses HTTPS with self-signed certificates
+- Available on local network at `https://192.168.1.103:3000` and `https://10.10.10.2:3000`
+- Always use `https://localhost:3000` when navigating to the application during development
+- The dev server uses Vite and supports HMR (Hot Module Replacement)
+
+## Testing
 
 Key testing requirements:
 - Use Playwright for integration tests
@@ -195,7 +180,6 @@ Key testing requirements:
 - Each spec should have a corresponding `.tests.md` file
 - All routes must work on both direct navigation AND page refresh
 - Asset URLs must resolve correctly from all routes
-- See [`specs/main.tests.md`](specs/main.tests.md) for integration test requirements
 
 ### 🚀 App Initialization
 - [x] important: this is in a script element at the top of body ✅ **IMPLEMENTED**
@@ -209,8 +193,6 @@ Key testing requirements:
 - [x] Use `new URL(asset, Base).toString()` for the asset URL ✅ **IMPLEMENTED**
 
 ## 🎵 Audio System
-
-**See [`specs/audio.md`](specs/audio.md) for comprehensive audio system specifications**
 
 The audio system provides western-themed immersive ambiance with:
 - **Background Music**: 8-track cycling system with smooth transitions
@@ -229,4 +211,3 @@ Key requirements:
 - [ ] All audio files must be accessible via HTTP
 - **REQUIRED**: Audio controls **MUST be visible** on all pages/routes
 - Audio files located in `public/assets/audio/`
-- See [`specs/audio.md`](specs/audio.md) for complete specifications and testing details

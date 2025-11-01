@@ -11,6 +11,7 @@ const Base = window.Base;
 import { SplashScreen } from './ui/SplashScreen.js';
 import { CharacterManagerView } from './ui/CharacterManagerView.js';
 import { CharacterEditorView } from './ui/CharacterEditorView.js';
+import { FriendsView } from './ui/FriendsView.js';
 import { SettingsView } from './ui/SettingsView.js';
 import { EventNotificationButton } from './ui/EventNotificationButton.js';
 import { EventModal } from './ui/EventModal.js';
@@ -36,6 +37,7 @@ let globalAudioControl: GlobalAudioControl | undefined;
 let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
 let characterEditor: CharacterEditorView;
+let friendsView: FriendsView;
 let settingsView: SettingsView;
 let adventureView: AdventureView | undefined;
 let eventNotificationButton: EventNotificationButton | undefined;
@@ -43,7 +45,7 @@ let eventModal: EventModal | undefined;
 let appContainer: HTMLElement;
 
 // Current view components
-let currentView: 'splash' | 'characters' | 'editor' | 'game' | 'settings' | 'adventure' = 'splash';
+let currentView: 'splash' | 'characters' | 'editor' | 'friends' | 'game' | 'settings' | 'adventure' = 'splash';
 
 // Initialize audio manager in background (non-blocking)
 async function initializeAudio(): Promise<void> {
@@ -279,6 +281,7 @@ async function createApp(): Promise<void> {
 
         characterManager = new CharacterManagerView(undefined, audioManager);
         characterEditor = new CharacterEditorView(undefined, audioManager);
+        friendsView = new FriendsView(undefined, audioManager, hollowPeer);
         settingsView = new SettingsView(undefined, audioManager, hollowPeer);
 
         // Set up route-based navigation
@@ -359,6 +362,12 @@ function setupRoutes(): void {
     });
 
     router.addRoute({
+        path: '/friends',
+        title: "Don't Go Hollow - Friends",
+        handler: () => renderFriendsView()
+    });
+
+    router.addRoute({
         path: '/settings',
         title: "Don't Go Hollow - Settings",
         handler: () => renderSettingsView()
@@ -402,6 +411,10 @@ function setupComponentCallbacks(): void {
         router.navigate('/characters');
     };
 
+    splashScreen.onFriends = () => {
+        router.navigate('/friends');
+    };
+
     splashScreen.onAdventure = () => {
         router.navigate('/world');
     };
@@ -437,6 +450,11 @@ function setupComponentCallbacks(): void {
         } catch (error) {
             console.error('Failed to save character:', error);
         }
+    };
+
+    // Friends view callbacks
+    friendsView.onBackToMenu = () => {
+        router.navigate('/');
     };
 
     // Settings view callbacks
@@ -498,6 +516,18 @@ async function renderGameView(): Promise<void> {
             console.error('Even fallback template failed:', templateError);
             appContainer.innerHTML = '<div><h1>Game View</h1><p>Failed to load template</p></div>';
         }
+    }
+}
+
+async function renderFriendsView(): Promise<void> {
+    currentView = 'friends';
+
+    try {
+        await friendsView.render(appContainer);
+    } catch (error) {
+        console.error('Failed to render friends view:', error);
+        // Fallback: navigate back to splash on error
+        router.navigate('/');
     }
 }
 

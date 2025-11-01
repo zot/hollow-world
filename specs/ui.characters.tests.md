@@ -2,23 +2,27 @@
 
 *Testing specifications for [`ui.characters.md`](ui.characters.md)*
 
+**Routes**: See [`routes.md`](routes.md) for all application routes
+
 ## Routing Tests
 
-### Character Manager Route: `/characters`
-- [ ] **Direct navigation**: Navigate directly to `/characters` URL
+### Character Manager Route
+See [`routes.md`](routes.md) for the Character Manager view route.
+
+- [ ] **Direct navigation**: Navigate directly to Character Manager view
   - Verify character manager view renders
   - Verify character list displays
   - Verify "Add Character" button visible
-- [ ] **Page refresh**: Refresh browser on `/characters`
+- [ ] **Page refresh**: Refresh browser on Character Manager view
   - Verify view remains on character manager
   - Verify no asset loading errors (404s)
   - Verify character list persists
-- [ ] **Navigation from splash**: Click Characters button from splash
-  - Verify URL changes to `/characters`
-  - Verify browser back returns to `/`
+- [ ] **Navigation from splash**: Click Characters button from Splash Screen
+  - Verify URL changes to Character Manager view
+  - Verify browser back returns to Splash Screen
 - [ ] **Back to menu button**
   - Click back button
-  - Verify navigates to `/` (splash screen)
+  - Verify navigates to Splash Screen
   - Verify URL updates
 
 ### Character Editor Route: `/character/:id`
@@ -35,14 +39,14 @@
 - [ ] **Navigation from character manager**
   - Click character in list
   - Verify URL changes to `/character/{uuid}`
-  - Verify browser back returns to `/characters`
+  - Verify browser back returns to Character Manager view
 - [ ] **Invalid character ID**
   - Navigate to `/character/{invalid-uuid}`
-  - Verify redirects to `/characters`
+  - Verify redirects to Character Manager view
   - Verify error logged to console
 - [ ] **Non-existent character ID**
   - Navigate to `/character/{valid-but-nonexistent-uuid}`
-  - Verify redirects to `/characters`
+  - Verify redirects to Character Manager view
   - Verify "Character not found" error
 
 ## Character Manager Tests
@@ -162,33 +166,33 @@
   - Verify checks cleared
 
 ## Asset Loading Tests
-- [ ] **Audio from character manager**
-  - Navigate to `/characters`
+- [ ] **Audio from Character Manager view**
+  - Navigate to Character Manager view
   - Verify background music continues
   - Verify no audio 404 errors
-- [ ] **Audio from character editor**
+- [ ] **Audio from Character Editor view**
   - Navigate to `/character/{uuid}`
   - Verify background music continues
   - Verify no audio 404 errors
 - [ ] **Templates load correctly**
-  - Verify character manager templates load
-  - Verify character editor templates load
+  - Verify Character Manager templates load
+  - Verify Character Editor templates load
   - Verify no 404 errors for template files
 
 ## Browser History Tests
 - [ ] **Back button from editor**
-  - Open editor
+  - Open Character Editor
   - Click browser back
-  - Verify returns to character manager
+  - Verify returns to Character Manager view
   - Verify character list displays
 - [ ] **Forward button**
-  - Navigate back from editor
+  - Navigate back from Character Editor
   - Click browser forward
-  - Verify returns to editor
+  - Verify returns to Character Editor
   - Verify character data intact
 - [ ] **History truncation on new navigation**
-  - Navigate to editor
-  - Go back to manager
+  - Navigate to Character Editor
+  - Go back to Character Manager
   - Select different character
   - Verify future history cleared
   - Verify can't forward to previous character
@@ -198,7 +202,7 @@
   - Create/edit character
   - Save character
   - Refresh browser
-  - Navigate to character editor
+  - Navigate to Character Editor view
   - Verify character data unchanged
 - [ ] **Character version compatibility**
   - Verify character schema versioning works

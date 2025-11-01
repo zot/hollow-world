@@ -42,33 +42,116 @@ export class TemplateEngine implements ITemplateEngine {
     renderTemplate(template: string, data: Record<string, any>): string {
         let result = template;
 
-        // Handle basic loop blocks {{#each array}}...{{/each}} FIRST
-        // This must be done BEFORE {{#if}} so that item properties are available in conditionals
-        result = result.replace(/\{\{#each\s+([^}]+)\}\}(.*?)\{\{\/each\}\}/gs, (match, arrayKey, itemTemplate) => {
-            const trimmedKey = arrayKey.trim();
-            const array = data[trimmedKey];
+        // Handle {{#each}} blocks with proper nesting support
+        // Process all {{#each}} blocks by finding matching closing tags via depth counting
+        while (true) {
+            const eachMatch = result.match(/\{\{#each\s+([^}]+)\}\}/);
+            if (!eachMatch) break;
 
-            if (!Array.isArray(array)) {
-                return '';
+            const startIndex = eachMatch.index!;
+            const arrayKey = eachMatch[1].trim();
+            const openTag = eachMatch[0];
+            
+            // Find the matching {{/each}} by counting nesting depth
+            let depth = 1;
+            let pos = startIndex + openTag.length;
+            let endIndex = -1;
+
+            while (pos < result.length && depth > 0) {
+                const nextOpen = result.indexOf('{{#each', pos);
+                const nextClose = result.indexOf('{{/each}}', pos);
+
+                if (nextClose === -1) {
+                    throw new Error(`Unclosed {{#each}} block for "${arrayKey}"`);
+                }
+
+                if (nextOpen !== -1 && nextOpen < nextClose) {
+                    // Found nested {{#each}} before next {{/each}}
+                    depth++;
+                    pos = nextOpen + 7; // length of '{{#each'
+                } else {
+                    // Found {{/each}}
+                    depth--;
+                    if (depth === 0) {
+                        endIndex = nextClose;
+                    }
+                    pos = nextClose + 9; // length of '{{/each}}'
+                }
             }
 
-            return array.map(item => {
-                return this.renderTemplate(itemTemplate, { ...data, ...item });
-            }).join('');
-        });
+            if (endIndex === -1) {
+                throw new Error(`Unclosed {{#each}} block for "${arrayKey}"`);
+            }
 
-        // Handle basic conditional blocks {{#if condition}}...{{/if}} SECOND
-        // Processed after {{#each}} so item properties are available
-        result = result.replace(/\{\{#if\s+([^}]+)\}\}(.*?)\{\{\/if\}\}/gs, (match, condition, content) => {
-            const trimmedCondition = condition.trim();
-            const value = data[trimmedCondition];
+            // Extract the content between opening and closing tags
+            const itemTemplate = result.substring(startIndex + openTag.length, endIndex);
+            const array = data[arrayKey];
 
+            let replacement = '';
+            if (Array.isArray(array)) {
+                replacement = array.map(item => {
+                    return this.renderTemplate(itemTemplate, { ...data, ...item });
+                }).join('');
+            }
+
+            // Replace the entire {{#each}}...{{/each}} block with the rendered content
+            result = result.substring(0, startIndex) + replacement + result.substring(endIndex + 9);
+        }
+
+        // Handle basic conditional blocks {{#if condition}}...{{/if}}
+        // Use the same depth-counting approach for proper nesting
+        while (true) {
+            const ifMatch = result.match(/\{\{#if\s+([^}]+)\}\}/);
+            if (!ifMatch) break;
+
+            const startIndex = ifMatch.index!;
+            const conditionKey = ifMatch[1].trim();
+            const openTag = ifMatch[0];
+            
+            // Find the matching {{/if}} by counting nesting depth
+            let depth = 1;
+            let pos = startIndex + openTag.length;
+            let endIndex = -1;
+
+            while (pos < result.length && depth > 0) {
+                const nextOpen = result.indexOf('{{#if', pos);
+                const nextClose = result.indexOf('{{/if}}', pos);
+
+                if (nextClose === -1) {
+                    throw new Error(`Unclosed {{#if}} block for "${conditionKey}"`);
+                }
+
+                if (nextOpen !== -1 && nextOpen < nextClose) {
+                    // Found nested {{#if}} before next {{/if}}
+                    depth++;
+                    pos = nextOpen + 5; // length of '{{#if'
+                } else {
+                    // Found {{/if}}
+                    depth--;
+                    if (depth === 0) {
+                        endIndex = nextClose;
+                    }
+                    pos = nextClose + 7; // length of '{{/if}}'
+                }
+            }
+
+            if (endIndex === -1) {
+                throw new Error(`Unclosed {{#if}} block for "${conditionKey}"`);
+            }
+
+            // Extract the content between opening and closing tags
+            const content = result.substring(startIndex + openTag.length, endIndex);
+            const value = data[conditionKey];
+
+            let replacement = '';
             // Show content if value is truthy
             if (value && value !== '0' && value !== 'false') {
-                return this.renderTemplate(content, data); // Recursively process the content
+                replacement = this.renderTemplate(content, data);
             }
-            return '';
-        });
+
+            // Replace the entire {{#if}}...{{/if}} block with the rendered content
+            result = result.substring(0, startIndex) + replacement + result.substring(endIndex + 7);
+        }
 
         // Replace {{variable}} with data values LAST
         result = result.replace(/\{\{([^}]+)\}\}/g, (match, key) => {

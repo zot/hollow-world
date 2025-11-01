@@ -262,6 +262,7 @@ html, body {
 .splash-join-button,
 .splash-start-button,
 .splash-characters-button,
+.splash-friends-button,
 .splash-adventure-button,
 .splash-credits-button,
 .splash-settings-button {
@@ -295,6 +296,7 @@ html, body {
 .splash-join-button::before,
 .splash-start-button::before,
 .splash-characters-button::before,
+.splash-friends-button::before,
 .splash-adventure-button::before,
 .splash-credits-button::before,
 .splash-settings-button::before {
@@ -311,6 +313,7 @@ html, body {
 .splash-join-button::after,
 .splash-start-button::after,
 .splash-characters-button::after,
+.splash-friends-button::after,
 .splash-adventure-button::after,
 .splash-credits-button::after,
 .splash-settings-button::after {
@@ -326,6 +329,7 @@ html, body {
 .splash-join-button:hover,
 .splash-start-button:hover,
 .splash-characters-button:hover,
+.splash-friends-button:hover,
 .splash-adventure-button:hover,
 .splash-credits-button:hover,
 .splash-settings-button:hover {

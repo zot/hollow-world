@@ -2,9 +2,11 @@
 
 *Testing specifications for [`ui.splash.md`](ui.splash.md)*
 
+**Routes**: See [`routes.md`](routes.md) for all application routes
+
 ## Routing Tests
 
-### Root Route: `/`
+### Root Route: `/` (see [`routes.md`](routes.md))
 - [ ] **Direct navigation**: Navigate directly to `/` URL
   - Verify splash screen renders correctly
   - Verify all buttons visible (Join Game, Start Game, Characters, Settings)

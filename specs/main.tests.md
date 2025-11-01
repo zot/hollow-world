@@ -2,8 +2,11 @@
 
 *Cross-view testing specifications for Hollow World application*
 
+**🗺️ Routes Reference**: See [`routes.md`](routes.md) for complete list of application routes
+
 See also:
 - [`CLAUDE.md`](../CLAUDE.md#testing) for testing principles
+- [`routes.md`](routes.md) for application routes
 - [`ui.splash.tests.md`](ui.splash.tests.md) for splash screen tests
 - [`ui.characters.tests.md`](ui.characters.tests.md) for character management tests
 - [`ui.settings.tests.md`](ui.settings.tests.md) for settings view tests
@@ -11,36 +14,43 @@ See also:
 ## SPA Routing Integration Tests
 
 ### Complete Route Test Suite
-Test ALL routes work with both direct navigation and page refresh:
+Test ALL routes work with both direct navigation and page refresh.
 
-- [ ] **`/` (splash screen)**
-  - Direct: `browser_navigate('http://localhost:3000/')`
+**Note:** Route paths below should match [`routes.md`](routes.md). If routes change, update both files.
+
+- [ ] **Splash Screen**
+  - Direct: `browser_navigate('http://localhost:3000' + SPLASH_SCREEN_ROUTE)`
   - Refresh: F5 or `location.reload()`
   - Verify: Splash screen renders, buttons visible
 
-- [ ] **`/characters` (character manager)**
-  - Direct: `browser_navigate('http://localhost:3000/characters')`
-  - Refresh: F5 on `/characters`
+- [ ] **Character Manager view**
+  - Direct: `browser_navigate('http://localhost:3000' + CHARACTER_MANAGER_ROUTE)`
+  - Refresh: F5 on Character Manager view
   - Verify: Character list renders, Add Character button visible
 
-- [ ] **`/character/:id` (character editor with UUID)**
-  - Direct: `browser_navigate('http://localhost:3000/character/{uuid}')`
-  - Refresh: F5 on `/character/{uuid}`
+- [ ] **Character Editor view** (`/character/:id` with UUID parameter)
+  - Direct: `browser_navigate('http://localhost:3000' + CHARACTER_EDITOR_ROUTE + '/{uuid}')`
+  - Refresh: F5 on Character Editor view
   - Verify: Editor renders, character data loads correctly
 
-- [ ] **`/settings` (settings view)**
-  - Direct: `browser_navigate('http://localhost:3000/settings')`
-  - Refresh: F5 on `/settings`
+- [ ] **Settings view**
+  - Direct: `browser_navigate('http://localhost:3000' + SETTINGS_VIEW_ROUTE)`
+  - Refresh: F5 on Settings view
   - Verify: Settings view renders, peer ID displays
 
-- [ ] **`/settings/log` (log view)**
-  - Direct: `browser_navigate('http://localhost:3000/settings/log')`
-  - Refresh: F5 on `/settings/log`
+- [ ] **Log view**
+  - Direct: `browser_navigate('http://localhost:3000' + LOG_VIEW_ROUTE)`
+  - Refresh: F5 on Log view
   - Verify: Log table renders, filter field present
 
-- [ ] **`/game` (game view)**
-  - Direct: `browser_navigate('http://localhost:3000/game')`
-  - Refresh: F5 on `/game`
+- [ ] **Friends view**
+  - Direct: `browser_navigate('http://localhost:3000' + FRIENDS_VIEW_ROUTE)`
+  - Refresh: F5 on Friends view
+  - Verify: Friends view renders, Add Friend button visible
+
+- [ ] **Game view**
+  - Direct: `browser_navigate('http://localhost:3000' + GAME_VIEW_ROUTE)`
+  - Refresh: F5 on Game view
   - Verify: Game view renders (or fallback)
 
 ### Vite Dev Server Configuration Test
@@ -54,20 +64,20 @@ Test ALL routes work with both direct navigation and page refresh:
 
 ### Navigation Flow Testing
 - [ ] **Splash → Characters → Editor → Characters → Splash**
-  - Start at `/`
-  - Navigate to `/characters`
-  - Click character → `/character/{uuid}`
-  - Back to `/characters`
-  - Back to `/`
+  - Start at Splash Screen
+  - Navigate to Character Manager view
+  - Click character → `{Character Editor Route}/{uuid}`
+  - Back to Character Manager view
+  - Back to Splash Screen
   - Verify each transition works
   - Verify browser URL updates correctly
 
 - [ ] **Splash → Settings → Log → Settings → Splash**
-  - Start at `/`
-  - Navigate to `/settings`
-  - Click Log button → `/settings/log`
-  - Back to `/settings`
-  - Back to `/`
+  - Start at Splash Screen
+  - Navigate to Settings view
+  - Click Log button → Log view
+  - Back to Settings view
+  - Back to Splash Screen
   - Verify each transition works
 
 ### Browser History Integration
@@ -95,44 +105,44 @@ Test ALL routes work with both direct navigation and page refresh:
 Critical: Assets must load from origin on ALL routes
 
 - [ ] **Audio assets from root `/`**
-  - Navigate to `/`
+  - Navigate to Splash Screen
   - Check console for audio 404s
   - Verify loads from: `http://localhost:3000/assets/audio/...`
 
-- [ ] **Audio assets from `/characters`**
-  - Navigate to `/characters`
+- [ ] **Audio assets from Character Manager view**
+  - Navigate to Character Manager view
   - Verify loads from: `http://localhost:3000/assets/audio/...`
-  - NOT from: `http://localhost:3000/characters/assets/...`
+  - NOT from: `http://localhost:3000{Character Manager Route}/assets/...`
 
-- [ ] **Audio assets from `/character/{uuid}`**
-  - Navigate to `/character/{uuid}`
+- [ ] **Audio assets from Character Editor view**
+  - Navigate to Character Editor view (`{Character Editor Route}/{uuid}`)
   - Verify loads from: `http://localhost:3000/assets/audio/...`
-  - NOT from: `http://localhost:3000/character/{uuid}/assets/...`
+  - NOT from: `http://localhost:3000{Character Editor Route}/{uuid}/assets/...`
 
-- [ ] **Audio assets from `/settings`**
-  - Navigate to `/settings`
+- [ ] **Audio assets from Settings view**
+  - Navigate to Settings view
   - Verify loads from: `http://localhost:3000/assets/audio/...`
 
-- [ ] **Audio assets from `/settings/log`** ⚠️ CRITICAL
-  - Navigate to `/settings/log`
+- [ ] **Audio assets from Log view** ⚠️ CRITICAL
+  - Navigate to Log view
   - Verify loads from: `http://localhost:3000/assets/audio/...`
-  - NOT from: `http://localhost:3000/settings/log/assets/...`
+  - NOT from: `http://localhost:3000{Log View Route}/assets/...`
   - This was the bug that required Base URL fix
 
 ### Template Loading Across All Routes
 
-- [ ] **Templates from root `/`**
-  - Navigate to `/`
+- [ ] **Templates from Splash Screen**
+  - Navigate to Splash Screen
   - Verify template loads from: `http://localhost:3000/templates/...`
 
-- [ ] **Templates from `/settings/log`** ⚠️ CRITICAL
-  - Navigate to `/settings/log`
+- [ ] **Templates from Log view** ⚠️ CRITICAL
+  - Navigate to Log view
   - Verify template loads from: `http://localhost:3000/templates/...`
-  - NOT from: `http://localhost:3000/settings/log/templates/...`
+  - NOT from: `http://localhost:3000{Log View Route}/templates/...`
   - This was the bug that required TemplateEngine.ts fix
 
 - [ ] **Templates from all other nested routes**
-  - Test `/characters`, `/character/{uuid}`, `/settings`, `/game`
+  - Test Character Manager, Character Editor (`{Character Editor Route}/{uuid}`), Settings, Game views
   - Verify all templates load from origin
 
 ### Console Error Monitoring
@@ -145,22 +155,22 @@ Critical: Assets must load from origin on ALL routes
 
 ### Music Persistence Across Views
 - [ ] **Music continues playing across navigation**
-  - Start music on splash screen
-  - Navigate to `/characters` → verify still playing
-  - Navigate to `/character/{uuid}` → verify still playing
-  - Navigate to `/settings` → verify still playing
-  - Navigate to `/settings/log` → verify still playing
-  - Return to `/` → verify still playing
+  - Start music on Splash Screen
+  - Navigate to Character Manager view → verify still playing
+  - Navigate to Character Editor view (`{Character Editor Route}/{uuid}`) → verify still playing
+  - Navigate to Settings view → verify still playing
+  - Navigate to Log view → verify still playing
+  - Return to Splash Screen → verify still playing
 
 - [ ] **Music state persists across refresh**
-  - Start music on splash
-  - Navigate to `/settings/log`
+  - Start music on Splash Screen
+  - Navigate to Log view
   - Refresh page
   - Verify music state maintained (playing/paused)
 
 ### Music Cycling Across Views
 - [ ] **Track cycling works across views**
-  - Start music on splash
+  - Start music on Splash Screen
   - Wait for track to end or skip to next
   - Navigate to different view
   - Verify track cycling continues
@@ -169,12 +179,13 @@ Critical: Assets must load from origin on ALL routes
 ### Audio Control Visibility
 - [ ] **Audio control appears on all views**
   - Verify music button visible at bottom-right on:
-    - `/` (splash)
-    - `/characters` (manager)
-    - `/character/{uuid}` (editor)
-    - `/settings` (settings)
-    - `/settings/log` (log)
-    - `/game` (game view)
+    - Splash Screen
+    - Character Manager view
+    - Character Editor view (`{Character Editor Route}/{uuid}`)
+    - Friends view
+    - Settings view
+    - Log view
+    - Game view
 
 ## Data Persistence Integration Tests
 
@@ -183,21 +194,21 @@ Critical: Assets must load from origin on ALL routes
   - Create characters
   - Close browser/tab
   - Reopen application
-  - Navigate to `/characters`
+  - Navigate to Character Manager view
   - Verify characters still present
 
 - [ ] **Log entries persist**
   - Add log entries
   - Close browser/tab
   - Reopen application
-  - Navigate to `/settings/log`
+  - Navigate to Log view
   - Verify log entries present
 
 - [ ] **Settings persist**
   - Modify settings
   - Close browser/tab
   - Reopen application
-  - Navigate to `/settings`
+  - Navigate to Settings view
   - Verify settings unchanged
 
 ## Error Handling Integration Tests
@@ -256,7 +267,7 @@ Critical: Assets must load from origin on ALL routes
 **Note**: These tests verify profile isolation in a single tab (no P2P communication needed)
 
 - [ ] **Different profiles have different peer IDs**
-  - In single tab: Navigate to `/settings`
+  - In single tab: Navigate to Settings view
   - Note current peer ID (Profile "Default")
   - Click Profiles button, create "Test Profile"
   - Select "Test Profile"
@@ -277,23 +288,23 @@ Critical: Assets must load from origin on ALL routes
 - [ ] **Profile selection is session-based (not persisted)**
   - Select "Test Profile"
   - Close tab, reopen application
-  - Navigate to `/settings`
+  - Navigate to Settings view
   - Verify profile is "Default" (or first profile)
   - Profile selection does NOT persist across browser sessions
 
 ### Peer Identity Tests
 - [ ] **Two instances have different peer IDs**
   - Use Profiles feature
-    - Tab A: Navigate to `/settings`, click Profiles button, create/select "Profile A"
-    - Tab B: Navigate to `/settings`, click Profiles button, create/select "Profile B"
+    - Tab A: Navigate to Settings view, click Profiles button, create/select "Profile A"
+    - Tab B: Navigate to Settings view, click Profiles button, create/select "Profile B"
     - Extract peer IDs from both tabs
   - Verify peer IDs are different and non-empty
   - Verify peer ID format is valid libp2p peer ID (starts with `12D3Koo`)
 
 - [ ] **Peer ID persists across sessions within same profile**
-  - Navigate to `/settings`, note peer ID
+  - Navigate to Settings view, note peer ID
   - Close tab and reopen application
-  - Navigate to `/settings`
+  - Navigate to Settings view
   - Verify peer ID is identical to previous session
   - Verify private key data exists in localStorage
 
@@ -306,7 +317,7 @@ Critical: Assets must load from origin on ALL routes
 4. Recipient receives event notification and can Ignore/Decline/Accept
 
 - [ ] **Add friend by peer ID - UI and storage only (single tab)**
-  - Navigate to `/settings`
+  - Navigate to Settings view
   - Click "Add Friend by Peer ID" button
   - Verify modal appears with fields: Friend Name, Peer ID, Notes
   - Enter friend name "Alice"
@@ -323,9 +334,9 @@ Critical: Assets must load from origin on ALL routes
 
 - [ ] **Add multiple friends - different profiles (multiple tabs)**
   - **Setup**: Open two separate browser tabs
-  - Tab A: Navigate to `/settings`, click Profiles button, create/select "Profile A"
+  - Tab A: Navigate to Settings view, click Profiles button, create/select "Profile A"
   - Tab A: Wait for P2P initialization, note peer ID (Peer A)
-  - Tab B: Navigate to `/settings`, click Profiles button, create/select "Profile B"
+  - Tab B: Navigate to Settings view, click Profiles button, create/select "Profile B"
   - Tab B: Wait for P2P initialization, note peer ID (Peer B)
   - **CRITICAL**: Verify Peer A ≠ Peer B (different profiles = different peer IDs)
   - Tab A: Use "Add Friend by Peer ID" modal to add "Bob" with Peer B's ID
@@ -339,7 +350,7 @@ Critical: Assets must load from origin on ALL routes
 
 - [ ] **Pending invitations backend logic (no UI)**
   - **Note**: "Pending New Invitations" section is hidden from UI but backend logic remains
-  - Navigate to `/settings`
+  - Navigate to Settings view
   - Add friend by peer ID
   - Use test API: `hollowPeer.getPendingNewInvitations()` - verify peer ID is queued
   - Verify no "Pending New Invitations" section visible in UI
@@ -352,8 +363,8 @@ See [`specs/coms.md`](coms.md#-testing-findings--limitations) for detailed expla
 
 - [ ] **Peer address resolution via DHT and relay**
   - **Setup**: Open Tab A with Profile A, open Tab B with Profile B (keep both open!)
-  - Tab A: Navigate to `/settings`, note peer ID (Peer A)
-  - Tab B: Navigate to `/settings`, note peer ID (Peer B)
+  - Tab A: Navigate to Settings view, note peer ID (Peer A)
+  - Tab B: Navigate to Settings view, note peer ID (Peer B)
   - Tab A: Use test API to send ping message to Peer B: `window.__HOLLOW_WORLD_TEST__.hollowPeer.sendMessage(peerBId, {method: 'ping', timestamp: Date.now()})`
   - Tab B: Wait for ping to arrive (check console logs)
   - Tab B: Verify pong automatically sent in response
@@ -403,9 +414,9 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
 
 - [ ] **Send friend request with peer ID - automatic delivery**
   - **Setup**: Open two separate browser tabs
-  - Tab A: Navigate to `/settings`, click Profiles button, create/select "Profile A"
+  - Tab A: Navigate to Settings view, click Profiles button, create/select "Profile A"
   - Tab A: Wait for P2P initialization, note peer ID (Peer A)
-  - Tab B: Navigate to `/settings`, click Profiles button, create/select "Profile B"
+  - Tab B: Navigate to Settings view, click Profiles button, create/select "Profile B"
   - Tab B: Wait for P2P initialization, note peer ID (Peer B)
   - **CRITICAL**: Verify Peer A ≠ Peer B (different profiles required)
   - Tab B: Set player name to "Bob"
@@ -469,9 +480,9 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
 
 - [ ] **Accept friend request - both peers become friends**
   - **Setup**: Open two separate browser tabs
-  - Tab A: Navigate to `/settings`, click Profiles button, create/select "Profile A"
+  - Tab A: Navigate to Settings view, click Profiles button, create/select "Profile A"
   - Tab A: Wait for P2P initialization, set player name to "Alice"
-  - Tab B: Navigate to `/settings`, click Profiles button, create/select the profile for Tab B
+  - Tab B: Navigate to Settings view, click Profiles button, create/select the profile for Tab B
   - Tab B: Wait for P2P initialization, set player name to "Bob"
   - Tab B: Add friend via "Add Friend by Peer ID": name="Alice", peerID=(Peer A)
   - Wait for peer discovery (~30-120 seconds)
@@ -515,7 +526,7 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
 - [ ] **Friends persist across sessions**
   - **Setup**: Complete friend approval flow with Tab A and Tab B both open (using different profiles)
   - Tab A: Close and reopen (Tab B can close too)
-  - Tab A: Navigate to `/settings`, select same profile as before (Profile A)
+  - Tab A: Navigate to Settings view, select same profile as before (Profile A)
   - Tab A: Wait for P2P initialization
   - Tab A: Verify friend still in friends list
   - Tab A: Verify friend data intact (name, peer ID, notes)
@@ -541,7 +552,7 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Add friend via "Add Friend by Peer ID" with made-up peer ID
   - Verify appears in pending new invitations list
   - Close and reopen application
-  - Navigate to `/settings`, select same profile
+  - Navigate to Settings view, select same profile
   - Wait for P2P initialization
   - Verify peer ID still in pending new invitations list
   - Use test API: `hollowPeer.getPendingNewInvitations()` - verify contains peer ID
@@ -592,13 +603,13 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
     - Skull button to remove
   - **Failure mode**: If event shows "undefined" or "Anonymous" = player name not transmitted in approveFriendRequest message
 
-- [ ] **View Friend button navigates to settings**
+- [ ] **View Friend button navigates to friends view**
   - **Setup**: Keep Tab A and Tab B open with different profiles
   - Tab B: Get friend approved event (requires both tabs open for approval)
   - Tab B: Click "View Friend" button
   - Verify event removed from list
-  - Verify navigates to `/settings#friend={peerId}`
-  - Verify friend selected in UI
+  - Verify navigates to Friends view
+  - Verify friend visible in friends list
 
 - [ ] **Event count badge updates correctly**
   - Start with 0 events, verify no badge
@@ -609,13 +620,13 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
 
 ### Settings View P2P Integration
 - [ ] **Peer ID displays in settings**
-  - Navigate to `/settings`
+  - Navigate to Settings view
   - Verify peer ID field shows valid peer ID
   - Verify peer ID is selectable/copyable
 
-- [ ] **Friends list displays in settings**
+- [ ] **Friends list displays in friends view**
   - Add friends via P2P flow
-  - Navigate to `/settings`
+  - Navigate to Friends view
   - Verify friends list shows all friends
   - Verify each friend shows: name, peer ID, notes field
 
@@ -623,45 +634,38 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - **Purpose**: Detect when friends are stored but UI doesn't render them
   - **Critical**: This test must verify BOTH immediate rendering (without refresh) AND after page refresh
 
-  - **Part 1: Immediate Rendering Test (catches SettingsView not loading from HollowPeer)**
-    - **Setup**: Complete friend approval flow between Tab A and Tab B (both tabs already on `/settings`)
+  - **Part 1: Immediate Rendering Test (catches FriendsView not loading from HollowPeer)**
+    - **Setup**: Complete friend approval flow between Tab A and Tab B (both tabs already on Friends view)
     - Tab A: Use test API to verify friend stored: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
-    - Tab A: **CRITICAL**: WITHOUT navigating away or refreshing, scroll to "Friends List" section
+    - Tab A: **CRITICAL**: WITHOUT navigating away or refreshing, check friends list
     - Tab A: **Bug Check**: Verify friend card is visible in UI RIGHT NOW (NOT empty list)
-    - Tab A: **Bug Check**: Friend card must show: playerName textbox, peerId text, notes textbox
-    - Tab A: **Failure mode**: If localStorage has friend but UI shows empty list = `SettingsView.renderSettings()` not loading from `HollowPeer.getAllFriends()`
+    - Tab A: **Bug Check**: Friend card must show: playerName, peerId, notes
+    - Tab A: **Failure mode**: If localStorage has friend but UI shows empty list = `FriendsView.render()` not loading from `HollowPeer.getAllFriends()`
     - Tab B: Use test API to verify friend stored: `JSON.parse(profileService.getItem('hollowPeerFriends'))`
-    - Tab B: **CRITICAL**: WITHOUT navigating away or refreshing, scroll to "Friends List" section
+    - Tab B: **CRITICAL**: WITHOUT navigating away or refreshing, check friends list
     - Tab B: **Bug Check**: Verify friend card is visible in UI RIGHT NOW (NOT empty list)
-    - Tab B: **Bug Check**: Friend card must show: playerName textbox, peerId text, notes textbox
-    - Tab B: **Failure mode**: If localStorage has friend but UI shows empty list = `SettingsView.renderSettings()` not loading from `HollowPeer.getAllFriends()`
+    - Tab B: **Bug Check**: Friend card must show: playerName, peerId, notes
+    - Tab B: **Failure mode**: If localStorage has friend but UI shows empty list = `FriendsView.render()` not loading from `HollowPeer.getAllFriends()`
 
   - **Part 2: After Page Refresh Test (catches persistence/loading bugs)**
-    - Tab A: Refresh page (F5 or navigate to `/settings`)
-    - Tab A: Wait for P2P initialization to complete (peer ID appears)
-    - Tab A: Scroll to "Friends List" section
+    - Tab A: Refresh page (F5 or navigate to Friends view)
+    - Tab A: Wait for friends view to render
     - Tab A: **Bug Check**: Verify friend card is visible in UI after refresh
     - Tab A: **Bug Check**: Friend data must be correct after refresh
-    - Tab B: Refresh page (F5 or navigate to `/settings`)
-    - Tab B: Wait for P2P initialization to complete (peer ID appears)
-    - Tab B: Scroll to "Friends List" section
+    - Tab B: Refresh page (F5 or navigate to Friends view)
+    - Tab B: Wait for friends view to render
     - Tab B: **Bug Check**: Verify friend card is visible in UI after refresh
     - Tab B: **Bug Check**: Friend data must be correct after refresh
 
-- [ ] **Create invitation UI works**
-  - Navigate to `/settings`
+- [ ] **Add friend by Peer ID UI works**
+  - Navigate to Friends view
+  - Click "Add Friend by Peer ID" button
   - Enter friend name "Alice"
-  - Click "Create Invitation"
-  - Verify invitation string appears
-  - Verify copyable/selectable
-  - Verify format is correct
-
-- [ ] **Send friend request UI works**
-  - Navigate to `/settings`
-  - Paste invitation string
-  - Click "Send Request"
+  - Enter peer ID
+  - Enter notes (optional)
+  - Click "Add Friend"
   - Verify confirmation message
-  - Verify request added to pending list
+  - Verify friend added to list
 
 ### Error Handling Tests
 - [ ] **Invalid invitation format handled gracefully**
@@ -777,12 +781,12 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - **Setup**: Tab A and Tab B connected with different profiles
   - Tab A: Accept friend request from Tab B
   - Tab A: Add friend with pending=true
-  - Tab A: Navigate to `/settings`
+  - Tab A: Navigate to Settings view
   - Tab A: Verify friend card shows "⏳ Pending" badge
   - Tab A: Verify badge appears in both collapsed and expanded views
   - Tab B: Send acceptFriend message back to Tab A
   - Tab A: Receive acceptFriend, pending flag cleared
-  - Tab A: Navigate to `/settings` (or refresh)
+  - Tab A: Navigate to Settings view (or refresh)
   - Tab A: Verify "⏳ Pending" badge removed
   - Tab A: Verify friend card shows normal state
 
@@ -795,14 +799,14 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Click "Ignore" button on friendRequest event
   - Tab A: Use test API: `hollowPeer.getIgnoredPeers()` - verify contains {peerId: peerBId, peerName: "Bob"}
   - Tab A: Verify event removed from event list
-  - Tab A: Navigate to `/settings`
+  - Tab A: Navigate to Settings view
   - Tab A: Scroll to "Ignored Peers" section
   - Tab A: Verify count badge shows "1"
   - Tab A: Verify "Bob" appears in ignored peers list with peer ID
 
 - [ ] **Ignored peers list UI**
   - **Setup**: Tab A with ignored peer from previous test
-  - Tab A: Navigate to `/settings`
+  - Tab A: Navigate to Settings view
   - Tab A: Scroll to "Ignored Peers" section
   - Tab A: Verify section shows count badge
   - Tab A: Verify ignored peer item shows:
@@ -810,19 +814,19 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
     - Truncated peer ID
     - Remove button (❌)
   - Tab A: Add another ignored peer
-  - Tab A: Refresh `/settings`
+  - Tab A: Refresh Settings view
   - Tab A: Verify count badge shows "2"
   - Tab A: Verify both ignored peers displayed
 
 - [ ] **Remove ignored peer**
   - **Setup**: Tab A with ignored peer "Bob"
-  - Tab A: Navigate to `/settings`
+  - Tab A: Navigate to Settings view
   - Tab A: Scroll to "Ignored Peers" section
   - Tab A: Click remove button (❌) on "Bob"
   - Tab A: Verify "Bob" removed from ignored peers list
   - Tab A: Verify count badge decrements
   - Tab A: Use test API: `hollowPeer.getIgnoredPeers()` - verify Bob's peer ID not present
-  - Tab A: Close and reopen, navigate to `/settings`
+  - Tab A: Close and reopen, navigate to Settings view
   - Tab A: Verify Bob still not in ignored peers list (removal persisted)
 
 - [ ] **Ignored peers prevent request processing**
@@ -838,7 +842,7 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - **Setup**: Tab A with ignored peer "Bob"
   - Tab A: Use test API: `hollowPeer.getIgnoredPeers()` - note Bob's peer ID
   - Tab A: Close and reopen application
-  - Tab A: Navigate to `/settings`, select same profile
+  - Tab A: Navigate to Settings view, select same profile
   - Tab A: Wait for P2P initialization
   - Tab A: Use test API: `hollowPeer.getIgnoredPeers()` - verify contains Bob's peer ID
   - Tab A: Scroll to "Ignored Peers" section

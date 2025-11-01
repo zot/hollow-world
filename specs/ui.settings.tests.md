@@ -2,33 +2,39 @@
 
 *Testing specifications for [`ui.settings.md`](ui.settings.md)*
 
+**Routes**: See [`routes.md`](routes.md) for all application routes
+
 ## Routing Tests
 
-### Settings Main View Route: `/settings`
-- [ ] **Direct navigation**: Navigate directly to `/settings` URL
+### Settings View Route
+See [`routes.md`](routes.md) for the Settings view route.
+
+- [ ] **Direct navigation**: Navigate directly to Settings view
   - Verify settings view renders correctly
   - Verify peer ID displays
   - Verify all sections are present
-- [ ] **Page refresh**: Refresh browser on `/settings`
+- [ ] **Page refresh**: Refresh browser on Settings view
   - Verify view remains on settings
   - Verify no asset loading errors (404s)
   - Verify templates load correctly
 - [ ] **Navigation from splash**: Click settings button from splash screen
-  - Verify URL changes to `/settings`
+  - Verify URL changes to Settings view
   - Verify browser back button works
 
-### Log View Route: `/settings/log`
-- [ ] **Direct navigation**: Navigate directly to `/settings/log` URL
+### Log View Route
+See [`routes.md`](routes.md) for the Log view route.
+
+- [ ] **Direct navigation**: Navigate directly to Log view
   - Verify log view renders correctly
   - Verify log table displays
   - Verify filter field present
-- [ ] **Page refresh**: Refresh browser on `/settings/log`
+- [ ] **Page refresh**: Refresh browser on Log view
   - Verify view remains on log page
   - Verify no asset loading errors
   - Verify log entries still display
-- [ ] **Navigation from settings**: Click Log button from settings view
-  - Verify URL changes to `/settings/log`
-  - Verify browser back button returns to `/settings`
+- [ ] **Navigation from settings**: Click Log button from Settings view
+  - Verify URL changes to Log view
+  - Verify browser back button returns to Settings view
 
 ## Log View Functionality Tests
 
@@ -77,20 +83,20 @@
 - [ ] **Log entries persist across page refresh**
   - Add log entries
   - Refresh browser
-  - Navigate to `/settings/log`
+  - Navigate to Log view
   - Verify entries still present (localStorage)
 
 ## Asset Loading Tests
-- [ ] **Audio files load from settings view**
-  - Navigate to `/settings`
+- [ ] **Audio files load from Settings view**
+  - Navigate to Settings view
   - Check browser console for audio 404 errors
   - Verify background music continues playing
-- [ ] **Audio files load from log view**
-  - Navigate to `/settings/log`
+- [ ] **Audio files load from Log view**
+  - Navigate to Log view
   - Check browser console for audio 404 errors
   - Verify background music continues playing
 - [ ] **Templates load correctly**
-  - Navigate to `/settings` and `/settings/log`
+  - Navigate to Settings view and Log view
   - Verify no template 404 errors
   - Verify views render with correct HTML structure
 
@@ -179,13 +185,13 @@
 
 ### Friend Card Persistence
 - [ ] **Friend card state persists across navigation**
-  - Add/edit friends in settings
-  - Navigate away from settings
-  - Return to settings
+  - Add/edit friends in Settings view
+  - Navigate away from Settings view
+  - Return to Settings view
   - Verify friends still present with correct data
 - [ ] **Friend cards load on page refresh**
   - Add/edit friends
-  - Refresh browser on `/settings`
+  - Refresh browser on Settings view
   - Verify friends load with correct data
 
 ## Unit Tests

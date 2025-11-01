@@ -1,0 +1,134 @@
+<div class="{{containerClass}}">
+    <div class="friends-header">
+        <h1 class="{{titleClass}}">👥 Friends</h1>
+    </div>
+
+    <div class="{{sectionClass}}">
+        {{#if friends.length}}
+        <div id="friends-list">
+            {{#each friends}}
+            <div class="friend-card" data-friend-id="{{peerId}}" data-expanded="false">
+                <!-- Collapsed State (default) -->
+                <div class="friend-card-collapsed">
+                    <div class="friend-collapsed-content">
+                        <div class="friend-collapsed-name">
+                            {{playerName}}
+                            {{#if pending}}
+                            <span class="pending-badge" title="Friend request pending acknowledgment">⏳ Pending</span>
+                            {{/if}}
+                        </div>
+                        <div class="friend-collapsed-peerid">{{peerId}}</div>
+                        {{#if notes}}
+                        <div class="friend-collapsed-notes">{{notes}}</div>
+                        {{/if}}
+                        {{#if hasWorlds}}
+                        <div class="friend-worlds-preview">
+                            🗺️ Active in {{worldCount}} world(s)
+                        </div>
+                        {{/if}}
+                    </div>
+                    <button class="friend-kill-btn" data-friend-id="{{peerId}}" title="Remove friend">💀</button>
+                </div>
+
+                <!-- Expanded State -->
+                <div class="friend-card-expanded" style="display: none;">
+                    <div class="friend-card-header">
+                        <h3>Friend Details
+                            {{#if pending}}
+                            <span class="pending-badge" title="Friend request pending acknowledgment">⏳ Pending</span>
+                            {{/if}}
+                        </h3>
+                        <button class="friend-collapse-btn" data-friend-id="{{peerId}}" title="Collapse">⬆️</button>
+                    </div>
+                    <div class="friend-expanded-content">
+                        <div class="friend-field">
+                            <label for="friend-name-{{peerId}}">Player Name:</label>
+                            <input type="text" id="friend-name-{{peerId}}" class="friend-name-input" data-friend-id="{{peerId}}" value="{{playerName}}" />
+                        </div>
+                        <div class="friend-field">
+                            <label for="friend-peerid-{{peerId}}">Peer ID:</label>
+                            <span id="friend-peerid-{{peerId}}" class="friend-peer-id">{{peerId}}</span>
+                        </div>
+                        <div class="friend-notes-section">
+                            <label for="friend-notes-{{peerId}}">Private Notes:</label>
+                            <div class="milkdown-editor" id="friend-notes-{{peerId}}"></div>
+                        </div>
+
+                        <!-- Worlds Section -->
+                        {{#if hasWorlds}}
+                        <div class="friend-worlds-section">
+                            <h4>Worlds</h4>
+                            <div id="friend-worlds-{{peerId}}" class="friend-worlds-list">
+                                {{#each worlds}}
+                                <div class="friend-world-card">
+                                    <div class="world-info">
+                                        <span class="world-name">🗺️ {{worldName}}</span>
+                                        <span class="world-host">{{#if isHostedByFriend}}(Hosted by friend){{else}}(Your world){{/if}}</span>
+                                    </div>
+                                    {{#if hasCharacters}}
+                                    <div class="world-characters">
+                                        <strong>Characters:</strong>
+                                        {{#each characters}}
+                                        <div class="character-preview">
+                                            <span class="character-name">{{name}}</span>
+                                            {{#if isDefault}}
+                                            <span class="default-badge" title="Default character for this world">⭐</span>
+                                            {{/if}}
+                                        </div>
+                                        {{/each}}
+                                    </div>
+                                    {{/if}}
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                        {{/if}}
+
+                        {{#if peerId}}
+                        <button class="remove-friend-btn" data-friend-id="{{peerId}}">Remove</button>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        {{/if}}
+
+        {{#if noFriends}}
+        <div class="no-friends-message">
+            <p>No friends yet. Add a friend to get started!</p>
+        </div>
+        {{/if}}
+
+        <div class="friend-actions">
+            <button class="{{buttonClass}}" id="add-friend-by-peerid-btn">Add Friend by Peer ID</button>
+        </div>
+    </div> <!-- closes friends-section -->
+
+    <div class="friends-actions">
+        <button class="{{backButtonClass}}">Back to Menu</button>
+    </div>
+
+    <!-- Add Friend by Peer ID Modal -->
+    <div id="add-friend-peerid-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Add Friend by Peer ID</h2>
+            <div class="modal-field">
+                <label for="new-friend-name">Friend Name:</label>
+                <input type="text" id="new-friend-name" placeholder="Enter a friendly name" />
+            </div>
+            <div class="modal-field">
+                <label for="new-friend-peerid">Peer ID:</label>
+                <input type="text" id="new-friend-peerid" placeholder="Paste peer ID here" />
+            </div>
+            <div class="modal-field">
+                <label for="new-friend-notes">Notes:</label>
+                <div id="new-friend-notes" class="milkdown-editor"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="add-friend-peerid-submit-btn" class="{{buttonClass}}">Add Friend</button>
+                <button id="close-add-friend-peerid-modal-btn" class="{{buttonClass}}">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div> <!-- closes friends-container -->
