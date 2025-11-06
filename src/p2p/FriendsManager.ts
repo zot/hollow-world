@@ -2,12 +2,13 @@
  * Friends Manager - Friends management (Single Responsibility Principle)
  */
 
-import type { IFriend, IFriendsManager, IStorageProvider, IFriendWorld, IFriendCharacter, ICharacter } from './types';
-import { STORAGE_KEY_FRIENDS } from './constants';
+import type { IFriend, IFriendsManager, IStorageProvider, IFriendWorld, IFriendCharacter, ICharacter, BanList, IBannedPeerEntry } from './types.js';
+import { STORAGE_KEY_FRIENDS, STORAGE_KEY_BAN_LIST } from './constants.js';
 import { calculateCharacterHash } from '../utils/characterHash.js';
 
 export class FriendsManager implements IFriendsManager {
     private friends: Map<string, IFriend> = new Map(); // peerId -> IFriend
+    private banList: BanList = {}; // peerId -> IBannedPeerEntry
     private storageProvider: IStorageProvider;
     private updateListeners: Array<(peerId: string, friend: IFriend) => void> = [];
     private networkProvider: any; // Will be injected for getting myPeerId
@@ -49,6 +50,12 @@ export class FriendsManager implements IFriendsManager {
             });
             this.friends = new Map(Object.entries(friendsData));
         }
+
+        // Load ban list
+        const banListData = await this.storageProvider.load<BanList>(STORAGE_KEY_BAN_LIST);
+        if (banListData) {
+            this.banList = banListData;
+        }
     }
 
     addFriend(friend: IFriend): void {
@@ -84,6 +91,12 @@ export class FriendsManager implements IFriendsManager {
         const friendsObject = Object.fromEntries(this.friends);
         this.storageProvider.save(STORAGE_KEY_FRIENDS, friendsObject).catch(error => {
             console.warn('Failed to persist friends:', error);
+        });
+    }
+
+    private persistBanList(): void {
+        this.storageProvider.save(STORAGE_KEY_BAN_LIST, this.banList).catch(error => {
+            console.warn('Failed to persist ban list:', error);
         });
     }
 
@@ -205,5 +218,52 @@ export class FriendsManager implements IFriendsManager {
         }
         // Return only worlds where I am the host
         return friend.worlds.filter(w => w.hostPeerId === myPeerId);
+    }
+
+    // ==================== Ban List Methods ====================
+
+    banPeer(peerId: string, friend: IFriend): void {
+        // Add to ban list with full friend data
+        this.banList[peerId] = {
+            friend: { ...friend, worlds: friend.worlds || [] },
+            bannedAt: new Date().toISOString()
+        };
+
+        // Remove from friends list
+        this.friends.delete(peerId);
+
+        // Persist both changes
+        this.persistBanList();
+        this.persistFriends();
+
+        console.log(`Banned peer: ${friend.playerName} (${peerId})`);
+    }
+
+    unbanPeer(peerId: string): void {
+        if (this.banList[peerId]) {
+            delete this.banList[peerId];
+            this.persistBanList();
+            console.log(`Unbanned peer: ${peerId}`);
+        }
+    }
+
+    isBanned(peerId: string): boolean {
+        return peerId in this.banList;
+    }
+
+    getBannedPeer(peerId: string): IBannedPeerEntry | undefined {
+        return this.banList[peerId];
+    }
+
+    getAllBannedPeers(): BanList {
+        return { ...this.banList }; // Return copy to prevent external mutation
+    }
+
+    updateBannedPeer(peerId: string, friend: IFriend): void {
+        const entry = this.banList[peerId];
+        if (entry) {
+            entry.friend = { ...friend, worlds: friend.worlds || [] };
+            this.persistBanList();
+        }
     }
 }

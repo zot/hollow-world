@@ -3,10 +3,10 @@ import {
     HollowPeer,
     LocalStorageProvider,
     FriendsManager,
-    LibP2PNetworkProvider,
+    P2PWebAppNetworkProvider,
     IStorageProvider,
     INetworkProvider
-} from './p2p';
+} from './p2p.js';
 
 // Mock implementations for testing
 class MockStorageProvider implements IStorageProvider {

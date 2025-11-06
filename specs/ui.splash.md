@@ -28,9 +28,11 @@
 - [x] Display the version number at the bottom of the splash screen ✅ **IMPLEMENTED**
 - [x] Print the current version number to the console ✅ **IMPLEMENTED**
 
-### 📡 Peer ID Display
+### 📡 Peer ID Display ("Outlaw Code")
 - [x] **Display the peer ID** prominently ✅ **IMPLEMENTED**
-- [x] **User-selectable** text (click to select all) ✅ **IMPLEMENTED**
+- [x] Display shows just the value, without "Peer:" label ✅ **IMPLEMENTED**
+- [x] **Clickable to copy** - Click peer ID to copy to clipboard ✅ **IMPLEMENTED**
+- [x] Visual feedback on copy (e.g., brief color change or message) ✅ **IMPLEMENTED**
 
 ### 🔘 Interactive Buttons
 - [x] **Join Game** - Connect to existing game session ✅ **IMPLEMENTED** (placeholder)

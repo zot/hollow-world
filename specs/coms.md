@@ -202,13 +202,13 @@ Handled by `HollowPeer.ts:307-327`:
 - **RTT Calculation**: `now - timestamp`
 - **Tracking**: Pending responses stored in Map with messageId
 
-### 2. **requestFriend** (Friend Invitation)
-- **Sender**: Includes `inviteCode` from invitation
-- **Receiver**: Validates invite code, creates friend request event
-
-### 3. **approveFriendRequest** (Friend Approval)
-- **Sender**: Includes `approved` boolean and `nickname`
-- **Receiver**: Adds to friends list or discards request
+### 2. **requestFriend** (Friend Request & Acceptance)
+- **Sender**: Includes `playerName`
+- **Receiver**:
+  - If already pending: clears `pending` flag (mutual acceptance)
+  - If not in list: creates friend request event
+- **On Accept**: Receiver sends `requestFriend` back (mutual acceptance pattern)
+- **On Ignore**: No message sent, requester's friend stays pending (they can remove manually)
 
 ### Request-Response Pattern
 - **messageId**: Random 8-char prefix + counter (e.g., `AbC12XyZ-42`)
@@ -285,15 +285,14 @@ Handled by `HollowPeer.ts:307-327`:
 **Application Layer:**
 - Custom DirectMessage protocol
 - Request-response pattern with messageId tracking
-- Friend invitation system with invite codes
+- Friend request system (direct peer ID exchange)
 - Peer quarantine for unknown connections
 - Background peer resolution with exponential backoff
 - Session persistence (private keys, friend lists, pending requests)
 
 **Message Types:**
 - ping/pong (connectivity testing with RTT)
-- requestFriend (invitation acceptance)
-- approveFriendRequest (friend approval/rejection)
+- requestFriend (friend request & mutual acceptance)
 
 ### ❌ Not Implemented (Browser Limitations)
 

@@ -15,7 +15,7 @@ export {
     UserInfo,
     current as currentPeer,
     setCurrent as setCurrentPeer
-} from './peer';
+} from './peer.js';
 
 // Model exports (Thing/World model)
 export {
@@ -25,7 +25,7 @@ export {
     Extension,
     thingId,
     storage as mudStorage
-} from './model';
+} from './model.js';
 
 // MudControl exports (Command system)
 export {
@@ -34,7 +34,7 @@ export {
     connection as mudConnection,
     activeWorld,
     currentVersion
-} from './mudcontrol';
+} from './mudcontrol.js';
 
 // Hollow-specific adapter
-export { HollowIPeer } from './hollow-peer';
+export { HollowIPeer } from './hollow-peer.js';

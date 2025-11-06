@@ -2,9 +2,8 @@
  * Event Modal - Displays event cards with actions
  */
 
-import type { EventService, IEvent, IFriendRequestEvent, IFriendDeclinedEvent } from '../services/EventService';
-import type { HollowPeer } from '../p2p/HollowPeer';
-import '../styles/EventModal.css';
+import type { EventService, IEvent, IFriendRequestEvent, IFriendDeclinedEvent, IFriendAcceptedEvent } from '../services/EventService.js';
+import type { HollowPeer } from '../p2p/HollowPeer.js';
 
 export interface IEventModal {
     render(): Promise<HTMLElement>;
@@ -104,10 +103,20 @@ export class EventModal implements IEventModal {
 
         if (event.type === 'friendDeclined') {
             const friendDeclinedEvent = event as IFriendDeclinedEvent;
-            
+
             return await templateEngine.renderTemplateFromFile('event-card-friend-declined', {
                 eventId: event.id,
                 playerName: friendDeclinedEvent.data.playerName,
+                timestamp: timestamp
+            });
+        }
+
+        if (event.type === 'friendAccepted') {
+            const friendAcceptedEvent = event as IFriendAcceptedEvent;
+
+            return await templateEngine.renderTemplateFromFile('event-card-friend-accepted', {
+                eventId: event.id,
+                playerName: friendAcceptedEvent.data.playerName,
                 timestamp: timestamp
             });
         }

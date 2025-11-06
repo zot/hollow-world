@@ -138,6 +138,68 @@ await world.doTransaction(async (store, users, txn) => {
   - If storage exists but does not use profiles, remove it
   - If storage is empty (including if it was just removed), create the Default profile
 
+### Ban List Storage
+**Key:** `hollow-banned-peers` (per profile)
+
+**Purpose**: Persisted map of banned peer IDs to friend data to prevent unwanted friend requests
+
+**Structure**:
+```json
+{
+  "12D3KooW...": {
+    "friend": {
+      "peerId": "12D3KooW...",
+      "playerName": "Troublemaker",
+      "notes": "Was spamming requests and being annoying",
+      "worlds": []
+    },
+    "bannedAt": "2025-01-15T10:30:00.000Z"
+  }
+}
+```
+
+**Key Points**:
+- Map structure: `peerId -> { friend: IFriend, bannedAt: string }`
+- Preserves full friend data including notes (important for context about why banned)
+- `bannedAt` is ISO 8601 timestamp
+- When banning, copy complete friend data from friends list
+- Notes remain editable in banned peers section (UI in Friends view)
+
+**Behavior**:
+- Friend requests from banned peers are silently ignored (no events created)
+- Banning a peer removes them from friends list but preserves their data
+- Ban list persists across sessions
+- Ban can be reversed via UI in Friends view
+- Sending friend request to banned peer automatically unbans and adds to friends (preserving notes)
+
+**Access Pattern**:
+```typescript
+// Read ban list
+const banListJson = profileService.getItem('hollow-banned-peers');
+const banList = banListJson ? JSON.parse(banListJson) : {};
+
+// Add banned peer (map structure)
+banList[peerId] = {
+  friend: {
+    peerId: '12D3KooW...',
+    playerName: 'Troublemaker',
+    notes: 'Spam and harassment',
+    worlds: []
+  },
+  bannedAt: new Date().toISOString()
+};
+profileService.setItem('hollow-banned-peers', JSON.stringify(banList));
+
+// Remove banned peer
+delete banList[targetPeerId];
+profileService.setItem('hollow-banned-peers', JSON.stringify(banList));
+
+// Check if peer is banned
+const isBanned = targetPeerId in banList;
+```
+
+**Related Specs**: See [`friends.md`](friends.md#ban-list-storage-localstorage) for ban system details
+
 ### Testing
 - **Testing**: ProfileService is exposed via `window.__HOLLOW_WORLD_TEST__.profileService` in dev/test environments
   - Access profile-aware storage: `profileService.getItem(key)`

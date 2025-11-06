@@ -1,7 +1,7 @@
 import {
     MudState, RoleState, PeerState,
     mudTracker, roleTracker, peerTracker,
-} from './base'
+} from './base.js'
 import {
     World,
     Thing,
@@ -10,8 +10,8 @@ import {
     escape,
     idFor,
     identity,
-} from './model'
-import {current as peer} from './peer'
+} from './model.js'
+import {current as peer} from './peer.js'
 
 export const currentVersion = 2
 export let connection: MudConnection

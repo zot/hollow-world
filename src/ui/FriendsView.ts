@@ -6,12 +6,12 @@ import { MilkdownUtils, IMilkdownEditor } from '../utils/MilkdownUtils.js';
 import { LogService } from '../services/LogService.js';
 import { HollowPeer } from '../p2p/index.js';
 import type { IFriend } from '../p2p/types.js';
-import '../styles/FriendsView.css';
 
 export interface IFriendsView extends IUIComponent {
     onBackToMenu?: () => void;
     container: HTMLElement | null;
     render(container: HTMLElement): Promise<void>;
+    refreshView(): Promise<void>;
     destroy(): void;
 }
 
@@ -38,7 +38,11 @@ interface IFriendViewData {
     peerId: string;
     playerName: string;
     notes: string;
-    pending?: boolean;
+    pending?: 'unsent' | 'pending';
+    pendingUnsent?: boolean;  // For template: true if pending === 'unsent'
+    pendingDelivered?: boolean;  // For template: true if pending === 'pending'
+    presenceOnline?: boolean;  // For template: true if presence === true
+    presenceOffline?: boolean;  // For template: true if presence === false
     hasWorlds: boolean;
     worldCount: number;
     worlds?: IWorldViewData[];
@@ -72,6 +76,7 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
     private hollowPeer?: HollowPeer;
     private backButtonElement: HTMLElement | null = null;
     private friendsEditors: Map<string, IMilkdownEditor> = new Map();
+    private bannedPeerEditors: Map<string, IMilkdownEditor> = new Map();
     private newFriendNotesEditor: IMilkdownEditor | null = null;
     public musicButtonElement: HTMLElement | null = null;
     private logService: LogService;
@@ -99,6 +104,9 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
             // Get friends data
             const friendsData = this.getFriendsData();
 
+            // Get banned peers data
+            const bannedPeersData = this.getBannedPeersData();
+
             // Prepare template data
             const templateData = {
                 containerClass: this.config.containerClass,
@@ -107,7 +115,11 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
                 buttonClass: this.config.buttonClass,
                 backButtonClass: this.config.backButtonClass,
                 friends: friendsData,
-                noFriends: friendsData.length === 0
+                hasFriends: friendsData.length > 0,
+                noFriends: friendsData.length === 0,
+                bannedPeers: bannedPeersData,
+                bannedPeerCount: bannedPeersData.length,
+                hasBannedPeers: bannedPeersData.length > 0
             };
 
             // Render template
@@ -118,14 +130,48 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
             this.setupElementReferences();
             this.setupEventHandlers();
             this.setupFriendCardHandlers();
+            this.setupBannedPeersHandlers();
 
-            // Initialize Milkdown editors for friend notes
+            // Initialize Milkdown editors for friend notes and banned peer notes
             await this.initializeMilkdownEditors();
 
         } catch (error) {
             console.error('Error rendering FriendsView:', error);
             container.innerHTML = await this.createFriendsFallback();
         }
+    }
+
+    /**
+     * Refresh the friends view if it's currently visible
+     * Preserves collapsed/expanded state of friend cards
+     */
+    async refreshView(): Promise<void> {
+        if (!this.container) {
+            return; // View not currently rendered
+        }
+
+        // Save expanded state of all friend cards
+        const expandedStates = new Map<string, boolean>();
+        this.container.querySelectorAll('[data-peer-id]').forEach(card => {
+            const peerId = (card as HTMLElement).dataset.peerId;
+            const isExpanded = card.classList.contains('friend-card-expanded');
+            if (peerId) {
+                expandedStates.set(peerId, isExpanded);
+            }
+        });
+
+        // Re-render the view
+        await this.render(this.container);
+
+        // Restore expanded state
+        expandedStates.forEach((isExpanded, peerId) => {
+            if (isExpanded) {
+                const card = this.container?.querySelector(`[data-peer-id="${peerId}"]`);
+                if (card) {
+                    card.classList.add('friend-card-expanded');
+                }
+            }
+        });
     }
 
     private getFriendsData(): IFriendViewData[] {
@@ -171,6 +217,10 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
 
             friendsArray.push({
                 ...friend,
+                pendingUnsent: friend.pending === 'unsent',
+                pendingDelivered: friend.pending === 'pending',
+                presenceOnline: friend.presence === true,
+                presenceOffline: friend.presence === false,
                 hasWorlds: worlds.length > 0,
                 worldCount: worlds.length,
                 worlds
@@ -178,6 +228,27 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
         });
 
         return friendsArray;
+    }
+
+    private getBannedPeersData(): any[] {
+        if (!this.hollowPeer) {
+            return [];
+        }
+
+        const friendsManager = this.hollowPeer.getFriendsManager();
+        const banList = friendsManager.getAllBannedPeers();
+
+        return Object.keys(banList).map(peerId => {
+            const entry = banList[peerId];
+            const bannedDate = new Date(entry.bannedAt).toLocaleDateString();
+            return {
+                peerId: entry.friend.peerId,
+                playerName: entry.friend.playerName,
+                notes: entry.friend.notes || '',
+                bannedAt: entry.bannedAt,
+                bannedDate: bannedDate
+            };
+        });
     }
 
     private setupElementReferences(): void {
@@ -302,6 +373,29 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
                 }
                 return;
             }
+
+            // Handle ban button in expanded state
+            if (target.classList.contains('ban-friend-btn')) {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const peerId = target.getAttribute('data-friend-id');
+                const friendName = target.getAttribute('data-friend-name');
+                if (peerId && friendName && this.hollowPeer) {
+                    const confirmMessage = `Are you sure you want to ban ${friendName}? This will remove them from your friends list and prevent future friend requests.`;
+                    if (confirm(confirmMessage)) {
+                        const friendsManager = this.hollowPeer.getFriendsManager();
+                        const friend = friendsManager.getFriend(peerId);
+                        if (friend) {
+                            friendsManager.banPeer(peerId, friend);
+                            this.logService.log(`Banned ${friendName} (${peerId.substring(0, 20)}...)`);
+                            // Re-render to update the list
+                            if (this.container) {
+                                await this.render(this.container);
+                            }
+                        }
+                    }
+                }
+                return;
+            }
         });
 
         // Handle friend name input changes (blur event for auto-save)
@@ -324,6 +418,112 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
                 }
             }
         }, true); // Use capture phase for blur events
+    }
+
+    private setupBannedPeersHandlers(): void {
+        if (!this.container) return;
+
+        // Toggle button for expanding/collapsing banned peers section
+        const toggleBtn = this.container.querySelector('#banned-peers-toggle-btn');
+        const bannedPeersList = this.container.querySelector('#banned-peers-list');
+
+        if (toggleBtn && bannedPeersList) {
+            toggleBtn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const isExpanded = toggleBtn.getAttribute('data-expanded') === 'true';
+
+                if (isExpanded) {
+                    // Collapse - save notes first
+                    await this.saveBannedPeerNotes();
+                    bannedPeersList.setAttribute('style', 'display: none;');
+                    toggleBtn.setAttribute('data-expanded', 'false');
+                    toggleBtn.textContent = '▼';
+                } else {
+                    // Expand
+                    bannedPeersList.setAttribute('style', 'display: block;');
+                    toggleBtn.setAttribute('data-expanded', 'true');
+                    toggleBtn.textContent = '▲';
+                }
+            });
+        }
+
+        // Handle unban button
+        const unbanButtons = this.container.querySelectorAll('.unban-peer-btn');
+        unbanButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const peerId = btn.getAttribute('data-peer-id');
+                const peerName = btn.getAttribute('data-peer-name');
+
+                if (peerId && peerName && this.hollowPeer) {
+                    const confirmMessage = `Unban ${peerName}? They will be able to send you friend requests again.`;
+                    if (confirm(confirmMessage)) {
+                        const friendsManager = this.hollowPeer.getFriendsManager();
+                        friendsManager.unbanPeer(peerId);
+                        this.logService.log(`Unbanned ${peerName} (${peerId.substring(0, 20)}...)`);
+
+                        // Re-render to update the list
+                        if (this.container) {
+                            await this.render(this.container);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Handle send friend request button
+        const sendRequestButtons = this.container.querySelectorAll('.send-friend-request-btn');
+        sendRequestButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                const peerId = btn.getAttribute('data-peer-id');
+                const peerName = btn.getAttribute('data-peer-name');
+
+                if (peerId && peerName && this.hollowPeer) {
+                    const friendsManager = this.hollowPeer.getFriendsManager();
+                    const bannedEntry = friendsManager.getBannedPeer(peerId);
+
+                    if (bannedEntry) {
+                        // Unban and add as friend with pending flag, preserving notes
+                        const friend = { ...bannedEntry.friend, pending: 'unsent' as const };
+                        friendsManager.unbanPeer(peerId);
+                        friendsManager.addFriend(friend);
+
+                        // Send friend request
+                        const myPlayerName = this.hollowPeer.getPlayerName();
+                        await this.hollowPeer.sendRequestFriend(peerId, myPlayerName);
+
+                        this.logService.log(`Friend request sent to ${peerName} (${peerId.substring(0, 20)}...)`);
+
+                        // Re-render to update the list
+                        if (this.container) {
+                            await this.render(this.container);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Handle banned peer name input changes (blur event for auto-save)
+        const nameInputs = this.container.querySelectorAll('.banned-peer-name-input');
+        nameInputs.forEach(input => {
+            input.addEventListener('blur', () => {
+                const inputEl = input as HTMLInputElement;
+                const peerId = inputEl.getAttribute('data-peer-id');
+                const newName = inputEl.value.trim();
+
+                if (peerId && newName && this.hollowPeer) {
+                    const friendsManager = this.hollowPeer.getFriendsManager();
+                    const bannedEntry = friendsManager.getBannedPeer(peerId);
+
+                    if (bannedEntry) {
+                        bannedEntry.friend.playerName = newName;
+                        friendsManager.updateBannedPeer(peerId, bannedEntry.friend);
+                        this.logService.log(`Updated banned peer name: ${newName}`);
+                    }
+                }
+            });
+        });
     }
 
     private expandFriendCard(friendCard: HTMLElement): void {
@@ -369,6 +569,24 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
             }
         }
 
+        // Initialize editor for each banned peer's notes
+        const banList = friendsManager.getAllBannedPeers();
+        for (const peerId in banList) {
+            const entry = banList[peerId];
+            const editorContainer = this.container.querySelector(`#banned-peer-notes-${peerId}`) as HTMLElement;
+            if (editorContainer) {
+                try {
+                    const editor = await MilkdownUtils.createEditor(editorContainer, entry.friend.notes || '');
+                    this.bannedPeerEditors.set(peerId, editor);
+
+                    // Auto-save banned peer notes on content change
+                    // Note: We'll save when the section is collapsed or on navigation
+                } catch (error) {
+                    console.error(`Failed to initialize editor for banned peer ${peerId}:`, error);
+                }
+            }
+        }
+
         // Initialize editor for new friend modal
         const newFriendNotesContainer = this.container.querySelector('#new-friend-notes') as HTMLElement;
         if (newFriendNotesContainer) {
@@ -376,6 +594,26 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
                 this.newFriendNotesEditor = await MilkdownUtils.createEditor(newFriendNotesContainer, '');
             } catch (error) {
                 console.error('Failed to initialize new friend notes editor:', error);
+            }
+        }
+    }
+
+    private async saveBannedPeerNotes(): Promise<void> {
+        if (!this.hollowPeer) return;
+
+        const friendsManager = this.hollowPeer.getFriendsManager();
+
+        // Save notes from all banned peer editors
+        for (const [peerId, editor] of this.bannedPeerEditors) {
+            try {
+                const markdown = await MilkdownUtils.getMarkdown(editor);
+                const bannedEntry = friendsManager.getBannedPeer(peerId);
+                if (bannedEntry) {
+                    bannedEntry.friend.notes = markdown;
+                    friendsManager.updateBannedPeer(peerId, bannedEntry.friend);
+                }
+            } catch (error) {
+                console.error(`Failed to save notes for banned peer ${peerId}:`, error);
             }
         }
     }
@@ -404,6 +642,18 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
         }
     }
 
+    /**
+     * Validate peer ID format
+     * Peer IDs should be base58-encoded strings containing only alphanumeric characters
+     */
+    private isValidPeerId(peerId: string): boolean {
+        // Peer IDs are base58-encoded multihashes
+        // They should only contain alphanumeric characters (a-z, A-Z, 0-9)
+        // No spaces, colons, or other special characters
+        const peerIdRegex = /^[A-Za-z0-9]+$/;
+        return peerIdRegex.test(peerId);
+    }
+
     private async handleAddFriend(): Promise<void> {
         if (!this.container || !this.hollowPeer) return;
 
@@ -418,14 +668,20 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
             return;
         }
 
+        // Validate peer ID format
+        if (!this.isValidPeerId(friendPeerId)) {
+            alert('Invalid peer ID format. Peer IDs must contain only alphanumeric characters (no spaces or special characters).');
+            return;
+        }
+
         // Get notes from editor
         const notes = this.newFriendNotesEditor
             ? this.newFriendNotesEditor.getMarkdown()
             : '';
 
-        // Add friend
+        // Add friend (sends requestFriend message)
         try {
-            this.hollowPeer.addFriend(friendPeerId, friendName, notes);
+            await this.hollowPeer.addFriend(friendName, friendPeerId, notes);
             this.logService.log(`Added friend: ${friendName} (${friendPeerId})`);
 
             // Hide modal and re-render
@@ -445,6 +701,15 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
         });
     }
 
+    async updateHollowPeer(hollowPeer: HollowPeer): Promise<void> {
+        this.hollowPeer = hollowPeer;
+
+        // Re-render the view if it's already rendered
+        if (this.container) {
+            await this.render(this.container);
+        }
+    }
+
     destroy(): void {
         // Destroy all Milkdown editors
         this.friendsEditors.forEach(editor => {
@@ -455,6 +720,15 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
             }
         });
         this.friendsEditors.clear();
+
+        this.bannedPeerEditors.forEach(editor => {
+            try {
+                editor.destroy();
+            } catch (error) {
+                console.error('Error destroying banned peer editor:', error);
+            }
+        });
+        this.bannedPeerEditors.clear();
 
         if (this.newFriendNotesEditor) {
             try {

@@ -5,15 +5,14 @@
  * supporting both solo and multiplayer (host/guest) modes.
  */
 
-import { TemplateEngine } from '../utils/TemplateEngine';
-import { HollowIPeer } from '../textcraft/hollow-peer';
-import { LocalMudSession } from '../textcraft/local-session';
-import { WorldLoader } from '../textcraft/world-loader';
-import { getStorage, World } from '../textcraft/model';
-import type { HollowPeer } from '../p2p/HollowPeer';
-import type { LibP2PNetworkProvider } from '../p2p/LibP2PNetworkProvider';
-import type { IRouter } from '../utils/Router';
-import '../styles/AdventureView.css';
+import { TemplateEngine } from '../utils/TemplateEngine.js';
+import { HollowIPeer } from '../textcraft/hollow-peer.js';
+import { LocalMudSession } from '../textcraft/local-session.js';
+import { WorldLoader } from '../textcraft/world-loader.js';
+import { getStorage, World } from '../textcraft/model.js';
+import type { HollowPeer } from '../p2p/HollowPeer.js';
+import type { INetworkProvider } from '../p2p/types.js';
+import type { IRouter } from '../utils/Router.js';
 
 export interface IAdventureViewConfig {
     hollowPeer?: HollowPeer;
@@ -109,7 +108,7 @@ export class AdventureView {
             await this.initializeSoloMode(worldId);
 
             // Check if multiplayer is available (but don't auto-enable)
-            const networkProvider = this.hollowPeer?.getNetworkProvider() as LibP2PNetworkProvider | null;
+            const networkProvider = this.hollowPeer?.getNetworkProvider() as INetworkProvider | null;
 
             if (networkProvider) {
                 // Network available - prepare multiplayer capability
@@ -261,9 +260,10 @@ export class AdventureView {
         });
 
         // World name click - toggle world list view
-        this.worldNameElement?.addEventListener('click', () => {
-            this.toggleWorldListView();
-        });
+        // TODO: Implement toggleWorldListView method
+        // this.worldNameElement?.addEventListener('click', () => {
+        //     this.toggleWorldListView();
+        // });
 
         // Create world modal buttons
         const createWorldConfirmBtn = this.container?.querySelector('#create-world-confirm-btn');
@@ -827,7 +827,8 @@ export class AdventureView {
             const worldDescInput = this.worldSettingsModal.querySelector('#settings-world-desc') as HTMLTextAreaElement;
 
             if (worldNameInput) worldNameInput.value = world.name || '';
-            if (worldDescInput) worldDescInput.value = world.description || '';
+            // TODO: World description not yet supported
+            // if (worldDescInput) worldDescInput.value = world.description || '';
 
             // Load users
             await this.loadUsers(world);
@@ -953,9 +954,10 @@ export class AdventureView {
                 throw new Error('World not found');
             }
 
-            // Update world name and description
+            // Update world name
             world.name = newWorldName;
-            world.description = newWorldDesc;
+            // TODO: World description not yet supported
+            // world.description = newWorldDesc;
 
             // Update users
             await world.replaceUsers(users);

@@ -1,5 +1,5 @@
-import proto from './protocol-shim'
-import { Thing, MudStorage } from './model'
+import proto from './protocol-shim.js'
+import { Thing, MudStorage } from './model.js'
 
 /**
  * Type alias for peer identifiers used in the P2P network.

@@ -4,7 +4,7 @@
     </div>
 
     <div class="{{sectionClass}}">
-        {{#if friends.length}}
+        {{#if hasFriends}}
         <div id="friends-list">
             {{#each friends}}
             <div class="friend-card" data-friend-id="{{peerId}}" data-expanded="false">
@@ -12,9 +12,12 @@
                 <div class="friend-card-collapsed">
                     <div class="friend-collapsed-content">
                         <div class="friend-collapsed-name">
-                            {{playerName}}
-                            {{#if pending}}
-                            <span class="pending-badge" title="Friend request pending acknowledgment">⏳ Pending</span>
+                            {{#if presenceOnline}}<span class="presence-indicator-online" title="Online">🟢</span>{{/if}}{{#if presenceOffline}}<span class="presence-indicator-offline" title="Offline">⚫</span>{{/if}} {{playerName}}
+                            {{#if pendingUnsent}}
+                            <span class="pending-badge-unsent" title="Friend request not yet delivered (peer offline or unreachable)">📤 Unsent</span>
+                            {{/if}}
+                            {{#if pendingDelivered}}
+                            <span class="pending-badge-delivered" title="Friend request delivered, awaiting mutual acceptance">⏳ Pending</span>
                             {{/if}}
                         </div>
                         <div class="friend-collapsed-peerid">{{peerId}}</div>
@@ -33,9 +36,12 @@
                 <!-- Expanded State -->
                 <div class="friend-card-expanded" style="display: none;">
                     <div class="friend-card-header">
-                        <h3>Friend Details
-                            {{#if pending}}
-                            <span class="pending-badge" title="Friend request pending acknowledgment">⏳ Pending</span>
+                        <h3>{{#if presenceOnline}}<span class="presence-indicator-online" title="Online">🟢</span>{{/if}}{{#if presenceOffline}}<span class="presence-indicator-offline" title="Offline">⚫</span>{{/if}} Friend Details
+                            {{#if pendingUnsent}}
+                            <span class="pending-badge-unsent" title="Friend request not yet delivered (peer offline or unreachable)">📤 Unsent</span>
+                            {{/if}}
+                            {{#if pendingDelivered}}
+                            <span class="pending-badge-delivered" title="Friend request delivered, awaiting mutual acceptance">⏳ Pending</span>
                             {{/if}}
                         </h3>
                         <button class="friend-collapse-btn" data-friend-id="{{peerId}}" title="Collapse">⬆️</button>
@@ -85,7 +91,10 @@
                         {{/if}}
 
                         {{#if peerId}}
-                        <button class="remove-friend-btn" data-friend-id="{{peerId}}">Remove</button>
+                        <div class="friend-card-actions">
+                            <button class="remove-friend-btn" data-friend-id="{{peerId}}">Remove</button>
+                            <button class="ban-friend-btn" data-friend-id="{{peerId}}" data-friend-name="{{playerName}}">Ban</button>
+                        </div>
                         {{/if}}
                     </div>
                 </div>
@@ -102,6 +111,46 @@
 
         <div class="friend-actions">
             <button class="{{buttonClass}}" id="add-friend-by-peerid-btn">Add Friend by Peer ID</button>
+        </div>
+
+        <!-- Banned Peers Section -->
+        <div class="banned-peers-section">
+            <div class="banned-peers-header" id="banned-peers-header">
+                <h2>🚫 Banned Peers ({{bannedPeerCount}})</h2>
+                <button class="banned-peers-toggle-btn" id="banned-peers-toggle-btn" data-expanded="false">▼</button>
+            </div>
+            <div class="banned-peers-list" id="banned-peers-list" style="display: none;">
+                {{#if hasBannedPeers}}
+                {{#each bannedPeers}}
+                <div class="banned-peer-card" data-peer-id="{{peerId}}">
+                    <div class="banned-peer-info">
+                        <div class="banned-peer-field">
+                            <label>Player Name:</label>
+                            <input type="text" class="banned-peer-name-input" data-peer-id="{{peerId}}" value="{{playerName}}" />
+                        </div>
+                        <div class="banned-peer-field">
+                            <label>Peer ID:</label>
+                            <span class="banned-peer-id">{{peerId}}</span>
+                        </div>
+                        <div class="banned-peer-field">
+                            <label>Banned Date:</label>
+                            <span class="banned-peer-date">{{bannedDate}}</span>
+                        </div>
+                        <div class="banned-peer-notes-section">
+                            <label>Private Notes:</label>
+                            <div class="milkdown-editor banned-peer-notes" id="banned-peer-notes-{{peerId}}"></div>
+                        </div>
+                        <div class="banned-peer-actions">
+                            <button class="send-friend-request-btn" data-peer-id="{{peerId}}" data-peer-name="{{playerName}}">📨 Send Friend Request</button>
+                            <button class="unban-peer-btn" data-peer-id="{{peerId}}" data-peer-name="{{playerName}}">❌ Unban</button>
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+                {{else}}
+                <div class="no-banned-peers">No banned peers</div>
+                {{/if}}
+            </div>
         </div>
     </div> <!-- closes friends-section -->
 

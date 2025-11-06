@@ -3,7 +3,7 @@
  * Supports profile-aware storage keys
  */
 
-import type { IStorageProvider } from './types';
+import type { IStorageProvider } from './types.js';
 
 export class LocalStorageProvider implements IStorageProvider {
     private profileService?: any; // IProfileService - avoiding circular dependency

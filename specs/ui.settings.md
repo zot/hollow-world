@@ -19,6 +19,28 @@ if the profile is not Default, display it in curly braces under the settings tit
 ## peer id
 - make sure the "Peer ID" label isn't occluded by the value
 
+## P2P Network Settings
+
+### Pubsub Topic
+- Text input field for the IPFS pubsub topic used for peer discovery
+- Default value: `hollow-world`
+- Used by p2p-webapp to discover and communicate with peers on the same topic
+- Persisted to LocalStorage (profile-aware)
+- Reset button (🔄) to restore default value
+- Changes require app restart to take effect (notify user)
+
+### Peer Messaging Protocol
+- Text input field for the libp2p protocol string used for direct peer messaging
+- Default value: `/hollow-world/1.0.0`
+- Used by p2p-webapp for protocol-based message routing
+- Persisted to LocalStorage (profile-aware)
+- Reset button (🔄) to restore default value
+- Changes require app restart to take effect (notify user)
+
+**Storage:** Both settings stored in `hollowWorldSettings` object alongside player name and private notes
+
+**Use Case:** Advanced users can create isolated P2P networks by changing these values (e.g., for testing or private groups)
+
 ## private notes (not shared with other players)
 - embedded markdown editor
 

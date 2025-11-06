@@ -9,8 +9,6 @@ import { CharacterCalculations } from '../character/CharacterUtils.js';
 import { characterStorageService } from '../services/CharacterStorageService.js';
 import { IAudioManager } from '../audio/AudioManager.js';
 import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
-import '../styles/EnhancedAudioControl.css';
-import '../styles/CharacterManager.css';
 
 export interface ICharacterManager extends IUIComponent {
     getCharacters(): ICharacter[];

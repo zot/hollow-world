@@ -1,6 +1,17 @@
 # Dependencies
 node_modules/
 
+# p2p-webapp binary (platform-specific, download separately)
+bin/p2p-webapp
+
+# p2p-webapp client library (extracted from binary before build)
+src/p2p/client/client.js
+src/p2p/client/client.d.ts
+src/p2p/client/types.d.ts
+
+# p2p-webapp storage and app structure
+hollow-world-p2p/storage/
+
 # Obsolete files
 /obsolete
 
@@ -40,3 +51,9 @@ butler.zip
 test-stun-servers.html
 /specs/cache
 /specs/feedback
+
+# Claude agent scratch workspace
+.claude/scratch/
+
+# Claude diagram output (regenerate from sources)
+.claude/diagrams/output/

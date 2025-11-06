@@ -12,7 +12,6 @@ import {
     IHollowData
 } from './types.js';
 import { CharacterUpdater, CharacterValidation, CharacterCalculations } from './CharacterUtils.js';
-import '../styles/CharacterSheet.css';
 
 // Interface for UI components (Interface Segregation Principle)
 export interface ICharacterSheetComponent {

@@ -1,16 +1,16 @@
 /**
- * HollowIPeer - Adapter implementing Textcraft's IPeer interface using Hollow's LibP2P infrastructure
+ * HollowIPeer - Adapter implementing Textcraft's IPeer interface using Hollow's P2P infrastructure
  *
  * This adapter bridges Textcraft's MUD engine with Hollow World's existing P2P networking layer.
  * It implements the IPeer interface to provide MUD networking capabilities without duplicating
- * the LibP2P setup.
+ * the P2P setup.
  */
 
-import { IPeer, PeerID, UserInfo } from './peer'
-import { Thing, MudStorage } from './model'
-import { createConnection, type MudConnection } from './mudcontrol'
-import { LibP2PNetworkProvider } from '../p2p/LibP2PNetworkProvider'
-import type { P2PMessage } from '../p2p/types'
+import { IPeer, PeerID, UserInfo } from './peer.js'
+import { Thing, MudStorage } from './model.js'
+import { createConnection, type MudConnection } from './mudcontrol.js'
+import type { INetworkProvider } from '../p2p/types.js'
+import type { P2PMessage } from '../p2p/types.js'
 
 /**
  * Message types for the /hollow-mud/1.0.0 protocol
@@ -25,10 +25,10 @@ interface MudMessage {
 }
 
 /**
- * HollowIPeer implements the Textcraft IPeer interface using Hollow's LibP2PNetworkProvider.
+ * HollowIPeer implements the Textcraft IPeer interface using Hollow's INetworkProvider.
  *
  * Key responsibilities:
- * - Adapt LibP2P direct messages to Textcraft's command/output flow
+ * - Adapt P2P messages to Textcraft's command/output flow
  * - Manage MudConnection instances for each connected guest
  * - Route commands between guests and host
  * - Synchronize user Thing updates across the network
@@ -37,7 +37,7 @@ export class HollowIPeer implements IPeer {
   currentVersionID: string = '1.0.0'
   versionID: string = '1.0.0'
 
-  private networkProvider: LibP2PNetworkProvider | null
+  private networkProvider: INetworkProvider | null
   private mudConnections: Map<PeerID, MudConnection> = new Map()
   private isHost: boolean = false
   private hostPeerID: PeerID | null = null
@@ -55,7 +55,7 @@ export class HollowIPeer implements IPeer {
    */
   private thingToPeerMap: Map<Thing, PeerID> = new Map()
 
-  constructor(networkProvider?: LibP2PNetworkProvider) {
+  constructor(networkProvider?: INetworkProvider) {
     this.networkProvider = networkProvider || null
   }
 

@@ -1,11 +1,11 @@
-import protocol from './protocol-shim'
+import protocol from './protocol-shim.js'
 import {
   Constructor,
   MudConnection,
   connection,
   activeWorld,
   currentVersion,
-} from './mudcontrol'
+} from './mudcontrol.js'
 import {
   CONNECTIONS_SUFFIX,
   CHARACTERS_SUFFIX,

@@ -2,7 +2,7 @@
  * Event Notification Button - Shows pending events count with bugle icon
  */
 
-import type { EventService } from '../services/EventService';
+import type { EventService } from '../services/EventService.js';
 
 export interface IEventNotificationButton {
     render(): HTMLElement;

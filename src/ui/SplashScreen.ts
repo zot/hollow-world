@@ -2,8 +2,6 @@ import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { VERSION } from '../version.js';
 import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
-import '../styles/EnhancedAudioControl.css';
-import '../styles/SplashScreen.css';
 
 // Splash screen template is now loaded from splash-screen.html
 
@@ -179,7 +177,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         console.log('📍 peerIdElement exists:', !!this.peerIdElement);
         this.currentPeerId = peerId;
         if (this.peerIdElement) {
-            const newText = `Peer ID: ${peerId}`;
+            const newText = peerId; // Just the peer ID value, no "Peer ID:" label
             console.log('📍 Setting peer ID text to:', newText);
             this.peerIdElement.textContent = newText;
             // Force repaint
@@ -250,13 +248,12 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     private setupPeerIdInteraction(): void {
         if (!this.peerIdElement) return;
 
-        // Make peer ID selectable
-        this.peerIdElement.style.userSelect = 'text';
-        this.peerIdElement.style.cursor = 'text';
+        // Make peer ID clickable to copy
+        this.peerIdElement.style.cursor = 'pointer';
 
-        // Add click handler to select all text
-        this.peerIdElement.addEventListener('click', () => {
-            this.selectPeerIdText();
+        // Add click handler to copy to clipboard
+        this.peerIdElement.addEventListener('click', async () => {
+            await this.copyPeerIdToClipboard();
             if (this.onPeerIdClick) {
                 this.onPeerIdClick();
             }
@@ -333,6 +330,34 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
 
     refreshMusicButtonState(): void {
         AudioControlUtils.updateMusicButtonState(this);
+    }
+
+    private async copyPeerIdToClipboard(): Promise<void> {
+        if (!this.peerIdElement) return;
+
+        try {
+            // Copy to clipboard
+            await navigator.clipboard.writeText(this.currentPeerId);
+
+            // Visual feedback: briefly change background color
+            const originalBackground = this.peerIdElement.style.backgroundColor;
+            this.peerIdElement.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
+            this.peerIdElement.style.transition = 'background-color 0.3s ease';
+
+            // Log success
+            console.log('✅ Peer ID copied to clipboard:', this.currentPeerId);
+
+            // Restore original color after brief delay
+            setTimeout(() => {
+                if (this.peerIdElement) {
+                    this.peerIdElement.style.backgroundColor = originalBackground;
+                }
+            }, 500);
+        } catch (error) {
+            console.error('Failed to copy peer ID to clipboard:', error);
+            // Fallback: try to select the text
+            this.selectPeerIdText();
+        }
     }
 
     private selectPeerIdText(): void {

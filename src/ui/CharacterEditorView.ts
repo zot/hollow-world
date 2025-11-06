@@ -8,8 +8,6 @@ import { templateEngine } from '../utils/TemplateEngine.js';
 import { CharacterCalculations } from '../character/CharacterUtils.js';
 import { IAudioManager } from '../audio/AudioManager.js';
 import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
-import '../styles/EnhancedAudioControl.css';
-import '../styles/CharacterEditor.css';
 
 // Character editor template is now loaded from character-editor.html
 

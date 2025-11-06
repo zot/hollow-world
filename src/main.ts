@@ -17,7 +17,7 @@ import { EventNotificationButton } from './ui/EventNotificationButton.js';
 import { EventModal } from './ui/EventModal.js';
 import { GlobalAudioControl } from './ui/GlobalAudioControl.js';
 import { AdventureView } from './ui/AdventureView.js';
-import { HollowPeer, LocalStorageProvider } from './p2p/index.js';
+import { HollowPeer, LocalStorageProvider, P2PWebAppNetworkProvider } from './p2p/index.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
 import { characterStorageService } from './services/CharacterStorageService.js';
@@ -139,8 +139,11 @@ async function initializeHollowPeer(): Promise<void> {
         // Create profile-aware storage provider
         const profileAwareStorage = new LocalStorageProvider(profileService);
 
-        // HollowPeer will create and manage its own network provider
-        hollowPeer = new HollowPeer(undefined, profileAwareStorage);
+        // Create profile-aware network provider
+        const networkProvider = new P2PWebAppNetworkProvider(profileService);
+
+        // Create HollowPeer with profile-aware providers
+        hollowPeer = new HollowPeer(networkProvider, profileAwareStorage);
 
         // Initialize P2P with retry logic and exponential backoff
         const maxRetries = 3;
@@ -197,6 +200,24 @@ async function initializeHollowPeer(): Promise<void> {
                 console.log('🤝 Settings view updated with peer ID and hollowPeer reference');
             } catch (e) {
                 console.warn('Failed to update settings view:', e);
+            }
+        }
+
+        // Update friends view with hollowPeer reference
+        if (friendsView && hollowPeer) {
+            try {
+                console.log('🤝 Updating friends view with hollowPeer reference');
+                await friendsView.updateHollowPeer(hollowPeer);
+                console.log('🤝 Friends view updated with hollowPeer reference');
+
+                // Set up refresh callback for friend acceptance
+                hollowPeer.setRefreshFriendsViewCallback(async () => {
+                    console.log('🔄 Refreshing friends view...');
+                    await friendsView.refreshView();
+                });
+                console.log('🤝 Refresh callback set for friends view');
+            } catch (e) {
+                console.warn('Failed to update friends view:', e);
             }
         }
 
@@ -317,7 +338,7 @@ async function createApp(): Promise<void> {
                 profileService: getProfileService(),
                 get hollowPeer() { return hollowPeer; },
                 get audioManager() { return audioManager; },
-                get eventService() { return hollowPeer?.getEventService(); },
+                get eventService() { return hollowPeer?.getEventService(); }
             };
             console.log('🧪 Test API exposed on window.__HOLLOW_WORLD_TEST__');
         }

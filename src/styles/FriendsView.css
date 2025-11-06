@@ -277,8 +277,32 @@
     word-break: break-all;
 }
 
-/* Pending Badge */
+/* Pending Badge (legacy - kept for compatibility) */
 .pending-badge {
+    display: inline-block;
+    background-color: #ff8c00;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: 0.5rem;
+}
+
+/* Pending Badge - Unsent (gray) */
+.pending-badge-unsent {
+    display: inline-block;
+    background-color: #888;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: 0.5rem;
+}
+
+/* Pending Badge - Delivered (orange) */
+.pending-badge-delivered {
     display: inline-block;
     background-color: #ff8c00;
     color: white;

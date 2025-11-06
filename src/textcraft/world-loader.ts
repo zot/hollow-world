@@ -18,6 +18,10 @@ export class WorldLoader {
         // Open the world through storage (this handles all initialization)
         const world = await storage.openWorld('Test Room');
 
+        if (!world) {
+            throw new Error('Failed to create test world');
+        }
+
         // The MudConnection.start() will handle setting up the initial world state
         // Full world building will be implemented in Phase 3
 
@@ -33,6 +37,10 @@ export class WorldLoader {
 
         // Open/create the world through storage (this handles all initialization)
         const world = await storage.openWorld(worldName);
+
+        if (!world) {
+            throw new Error(`Failed to create world "${worldName}"`);
+        }
 
         // The MudConnection.start() will handle setting up the initial world state
 
@@ -53,6 +61,10 @@ export class WorldLoader {
 
         // Open the world through storage
         const world = await storage.openWorld(worldName);
+
+        if (!world) {
+            throw new Error(`Failed to load world "${worldName}"`);
+        }
 
         return world;
     }

@@ -1,19 +1,25 @@
 /**
  * Unit tests for HollowIPeer adapter
  *
- * Tests the integration between Textcraft's IPeer interface and Hollow's LibP2PNetworkProvider
+ * Tests the integration between Textcraft's IPeer interface and Hollow's INetworkProvider
+ * Works with both LibP2PNetworkProvider (legacy) and P2PWebAppNetworkProvider (current)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { HollowIPeer } from '../src/textcraft/hollow-peer';
-import type { LibP2PNetworkProvider } from '../src/p2p/LibP2PNetworkProvider';
-import type { P2PMessage } from '../src/p2p/types';
-import type { MudStorage } from '../src/textcraft/model';
+import { HollowIPeer } from '../src/textcraft/hollow-peer.js';
+import type { INetworkProvider, P2PMessage } from '../src/p2p/types.js';
+import type { MudStorage } from '../src/textcraft/model.js';
 
-// Mock LibP2PNetworkProvider
-class MockNetworkProvider implements Partial<LibP2PNetworkProvider> {
+// Mock INetworkProvider (works with any implementation)
+class MockNetworkProvider implements INetworkProvider {
     private messageHandlers: Array<(peerId: string, message: P2PMessage) => void> = [];
+    private peerConnectHandlers: Array<(peerId: string) => void> = [];
     private peerId: string = 'test-peer-id-12345';
+    private connectedPeers: Set<string> = new Set();
+
+    async initialize(): Promise<void> {
+        // Mock initialization
+    }
 
     getPeerId(): string {
         return this.peerId;
@@ -23,18 +29,43 @@ class MockNetworkProvider implements Partial<LibP2PNetworkProvider> {
         this.peerId = id;
     }
 
+    getConnectedPeers(): string[] {
+        return Array.from(this.connectedPeers);
+    }
+
     onMessage(handler: (peerId: string, message: P2PMessage) => void): void {
         this.messageHandlers.push(handler);
     }
 
+    onPeerConnect(handler: (peerId: string) => void): void {
+        this.peerConnectHandlers.push(handler);
+    }
+
     async sendMessage(peerId: string, message: P2PMessage): Promise<void> {
-        // Mock implementation - just log the message
+        // Mock implementation - track as connected
+        this.connectedPeers.add(peerId);
         console.log(`Sending message to ${peerId}:`, message);
     }
 
+    async destroy(): Promise<void> {
+        // Mock cleanup
+        this.connectedPeers.clear();
+        this.messageHandlers = [];
+        this.peerConnectHandlers = [];
+    }
+
+    // Test helper methods
     simulateIncomingMessage(peerId: string, message: P2PMessage): void {
+        this.connectedPeers.add(peerId);
         for (const handler of this.messageHandlers) {
             handler(peerId, message);
+        }
+    }
+
+    simulatePeerConnect(peerId: string): void {
+        this.connectedPeers.add(peerId);
+        for (const handler of this.peerConnectHandlers) {
+            handler(peerId);
         }
     }
 }

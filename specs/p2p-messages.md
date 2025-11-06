@@ -35,100 +35,101 @@ Some messages follow a **request-response pattern** where a request expects a co
 
 ## 🔧 Message Methods
 
-## 📋 Invitation Format
-
-Before sending a `requestFriend` message, the requester receives a **base64-encoded invitation string** containing:
-
-```json
-{
-  "inviteCode": "string",
-  "peerId": "string",
-  "addresses": {
-    "external": ["ip_address", ...],  // Optional: External/public IP addresses
-    "internal": ["ip_address", ...]   // Optional: Internal/LAN IP addresses (excluding localhost)
-  }
-}
-```
-
-**Fields:**
-- `inviteCode`: Random 8-character alphanumeric code
-- `peerId`: LibP2P peer ID of the inviter
-- `addresses`: IP addresses for direct connection (manual address exchange)
-  - `external`: Public/external IP addresses detected via STUN
-  - `internal`: Local network IP addresses (192.168.x.x, 10.x.x.x, etc.) excluding localhost
-
-**Usage:**
-1. Inviter calls `createInvitation(friendName, friendId?)` which detects IPs and returns base64 string
-2. Inviter shares base64 string out-of-band (copy/paste, QR code, etc.)
-3. Requester calls `sendRequestFriend(base64String)` which:
-   - Decodes the invitation
-   - Compares external IPs to determine routing (internal vs external addresses)
-   - Attempts direct connection using addresses before falling back to DHT/relay
-
-**Connection Routing Logic:**
-- If both peers share the same external IP (same LAN/NAT), use internal addresses
-- Otherwise, use external addresses for direct connection
-- If direct connection fails, fall back to DHT discovery and circuit relay
-
----
-
 ### `requestFriend`
 
-Sent to the peer ID specified in an invitation to request adding them as a friend.
+Sent when a player adds another player as a friend by peer ID. This message serves both as an initial friend request and as an acceptance response.
 
 ```json
 {
   "method": "requestFriend",
-  "inviteCode": "string"
+  "playerName": "string"
 }
 ```
 
 **Fields:**
-- `inviteCode`: The invitation code extracted from the base64-encoded invitation string
+- `playerName` (optional): The requesting player's display name
+  - **Not guaranteed to be unique** - multiple players can have the same name
+  - **May be empty/missing** - UI handlers must use fallback (e.g., `Peer ${peerId.substring(0, 8)}`)
+  - Used for display purposes only; peer ID is the unique identifier
 
-**Behavior on receiving peer:**
-1. Check `activeInvitations` object for `inviteCode` entry
-2. If entry has a `friendId`, verify it matches the message sender's peer ID
-3. If valid: Create a friend request event
+**Stubborn Delivery (Automatic Retry):**
+This message uses the ack handler pattern to track delivery status:
+1. When sent, friend is marked `pending: 'unsent'` and peer ID added to ephemeral `unsentFriends` set
+2. Ack handler changes to `pending: 'pending'` on successful delivery and removes from set
+3. If peer is offline, remains 'unsent' and stays in set
+4. **On app initialization**: System rebuilds `unsentFriends` set from all friends with `pending: 'unsent'`
+5. **When peer connects** (while user is online): Automatically resends if still 'unsent' (friend data fetched from FriendsManager - single source of truth)
+6. Works across app restarts - set is rebuilt from persisted friend data
+
+**Behavior on sending peer (Player A):**
+1. Player A adds Player B to their friends list with `pending: 'unsent'`
+2. Message sent to Player B's peer ID with ack handler
+3. **If acked**: Changes to `pending: 'pending'`
+4. **If not acked** (peer offline): Stays 'unsent', auto-retries when peer comes online
+5. Player A's friend entry remains in pending state until mutual acceptance
+
+**Behavior on receiving peer (Player B):**
+1. Check if Player A is in Player B's ban list:
+   - **If banned**: Silently ignore the message (no event created, no response)
+   - Prevents spam from unwanted peers
+2. Check if Player A is already in Player B's friends list:
+   - **If already has pending status**: Clear the `pending` field (mutual friend request = automatic acceptance)
+     - Create a "friend accepted" event to notify Player B
+     - Refresh friend UI if Friends view is visible (update all states: collapsed, expanded, etc.)
+   - **If not in list**: Create a friend request event
+3. If event created:
    - Event displays in event notification modal
-   - Event view shows Accept and Ignore buttons
-   - Accept button: Adds the friend to the friend list and removes event
-   - Ignore button: Removes event without adding friend
-4. If invalid: Log invalid friend request
+   - Event shows the requesting player's name and peer ID
+   - Event has Accept, Ignore, and Ban buttons
+4. If Accept clicked:
+   - Add Player A to Player B's friends list with `pending: 'unsent'`
+   - Send `requestFriend` back to Player A (mutual acceptance) with ack handler
+   - **If acked**:
+     - Clear `pending` field (friendship established - Player A received acceptance and already wanted friendship)
+     - Refresh friend UI if Friends view is visible to show friend is now fully connected
+   - **If not acked** (Player A offline):
+     - Friend stays `pending: 'unsent'`, will auto-retry when Player A comes online
+   - Remove event
+5. If Ignore clicked:
+   - Remove event without adding friend or sending message
+   - Player A's friend entry remains in pending state (they can remove it manually)
+   - Player A's system will keep retrying delivery when Player B comes online
+6. If Ban clicked:
+   - Add Player A to ban list (persisted)
+   - Remove event without adding friend or sending message
+   - Future friend requests from Player A will be silently ignored
+   - Player A's system will keep retrying (but all attempts will be silently ignored)
 
-**Purpose:** Initiates a friend request using the invite code system. The requester first decodes the base64 invitation to extract the peer ID and addresses, then sends this message to establish the friend request.
+**Purpose:** Initiates friend requests and mutually accepts them. When both peers send `requestFriend` to each other, both clear their `pending` flags and the friendship is established.
 
----
+**Note on Declining:** There is no `declineFriend` message. If a user doesn't want to accept a friend request, they simply ignore it. The requester will see their friend as `pending` and can remove it manually if desired. This keeps the protocol friendly and non-confrontational.
 
-### `approveFriendRequest`
+### Friend Presence Indicators
 
-Sent in response to a friend request to approve or decline it.
+**Overview:** Friends have a non-persisted `presence` boolean field indicating whether they are currently online.
 
-```json
-{
-  "method": "approveFriendRequest",
-  "peerId": "string",
-  "nickname": "string",
-  "approved": boolean
-}
-```
+**Presence Tracking:**
+- **Non-persisted**: The `presence` field is NOT saved to storage (ephemeral, runtime-only)
+- **Initialization**: On app startup, after subscribing to the pubsub topic and monitoring peer join/leave:
+  1. Get initial peer list from `listPeers()`
+  2. For each friend, check if their peer ID is in the connected peers list
+  3. Set `presence: true` if found, `presence: false` otherwise
+- **Real-time Updates**: When peers join/leave the topic:
+  - **Peer joins**: If peer ID matches a friend, set `presence: true` and refresh friend in all visible contexts
+  - **Peer leaves**: If peer ID matches a friend, set `presence: false` and refresh friend in all visible contexts
 
-**Fields:**
-- `peerId`: The approver's libp2p peer ID
-- `nickname`: Display name of the approver
-- `approved`: `true` to approve, `false` to deny
+**UI Display:**
+- Presence indicator shown in ALL contexts where friends are visible:
+  - Friends view (friend cards)
+  - Character editor (world sharing)
+  - Any other friend-related UI
+- Visual indicator: "🟢" (online) or "⚫" (offline)
+- Indicator placement: Next to friend's name
 
-**Behavior on receiving peer:**
-- If `approved` is `true`:
-  - Add an entry for the peer to the friends map using the provided `nickname`
-  - Remove the peer from quarantine if present
-  - Add a "friend approved" event to the event list
-    - Event view has a "View Friend" button
-    - Button removes the event and navigates to settings page with friend selected (`#friend=PEERID`)
-- If `approved` is `false`:
-  - Log the declined request
-
-**Purpose:** Responds to a friend request. When approved, establishes a bidirectional friend relationship and notifies the requester.
+**View Refresh on Presence Change:**
+- When a friend's presence changes, refresh the friend display in all visible contexts
+- Preserve UI state (collapsed/expanded) during refresh
+- Uses the same `refreshFriendsViewCallback` mechanism as friend acceptance
 
 ---
 

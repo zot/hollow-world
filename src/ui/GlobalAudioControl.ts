@@ -5,7 +5,6 @@
 
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
-import '../styles/GlobalAudioControl.css';
 
 export interface IGlobalAudioControl {
     render(): Promise<HTMLElement>;

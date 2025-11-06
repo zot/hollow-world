@@ -52,7 +52,15 @@ Each friend is shown on an expandable card:
     - Character list (if friend has characters in this world):
       - Character name
       - Default badge (⭐) for first/default character
-- **Remove button:** allows removing the friend from the list
+- **Remove button:** Allows removing the friend from the list
+- **Ban button:** Allows banning the friend
+  - Shows confirmation dialog: "Are you sure you want to ban [PlayerName]? This will remove them from your friends list and prevent future friend requests."
+  - If confirmed:
+    - Removes friend from friends list
+    - Adds peer ID to ban list (persisted)
+    - Prevents future friend requests from this peer
+  - If cancelled: No action taken
+  - Styling: Red button with warning icon
 - Click card header or collapse button (⬆️ in header) to collapse back to summary view
 
 ### Re-rendering Behavior
@@ -75,14 +83,24 @@ Each friend is shown on an expandable card:
   - **Triggering mechanism:** FriendsManager should call `notifyUpdateListeners()` when friend data changes, which triggers UI updates
 
 ### Pending Friend Status
-- Friends with `pending: true` flag show a "⏳ Pending" badge
+- Friends with `pending` field show status badges
 - Badge appears in both collapsed and expanded states (next to friend name)
-- **Purpose:** Indicates that friend request was accepted but not yet acknowledged by original requester
+- **Two states:**
+  - **"📤 Unsent"**: Friend request not yet delivered (peer offline or unreachable)
+    - Shows when `pending: 'unsent'`
+    - Styling: Gray badge (`background-color: #888`)
+    - System automatically retries delivery when peer comes online
+  - **"⏳ Pending"**: Friend request delivered, awaiting mutual acceptance
+    - Shows when `pending: 'pending'`
+    - Styling: Orange badge (`background-color: #ff8c00`)
+    - Mutual `requestFriend` will clear this badge
+- **Purpose:** Indicates friend request status and delivery state
 - **Behavior:**
-  - Badge appears immediately when accepting a friend request or adding a friend by peer ID
-  - Badge disappears when `acceptFriend` ack is received (requires friend card re-render)
+  - Badge appears immediately when accepting a friend request or adding a friend by peer ID (starts as "Unsent")
+  - Changes to "Pending" when message is acknowledged by peer's p2p-webapp server
+  - Badge disappears when mutual `requestFriend` is received (requires friend card re-render)
   - Pending friends are fully functional (can view/edit notes, etc.)
-- **Styling:** Orange badge with white text (`background-color: #ff8c00`)
+  - System automatically resends unsent requests when peer comes online
 
 ## Add Friend by Peer ID
 
@@ -97,10 +115,10 @@ Each friend is shown on an expandable card:
 - **Actions:**
   - **Add Friend button:**
     - Validates that Name and Peer ID are not empty
-    - Adds friend to friends list immediately
-    - Sends `requestFriend` resendable message to the peer (see p2p.md "Friend Request Flow")
+    - Adds friend to friends list immediately with `pending: true`
+    - Sends `requestFriend` message to the peer (see [`friends.md`](friends.md) "Friend Request Flow")
       - Message includes sender's player name from their profile
-      - Automatically retries until acknowledged or max retries
+      - p2p-webapp server handles delivery and retries
     - Closes the dialog
     - Shows temporary notification (via log): "Added friend: [name] ([peer ID])"
   - **Cancel button:** closes dialog without saving
@@ -110,6 +128,56 @@ Each friend is shown on an expandable card:
 When friends list is empty:
 - Shows centered message: "No friends yet. Add a friend to get started!"
 - "Add Friend by Peer ID" button still visible and accessible
+
+## Banned Peers Section
+
+Below the friends list and "Add Friend by Peer ID" button, show a collapsible "Banned Peers" section:
+
+### Collapsed State (default)
+- Header: "🚫 Banned Peers (N)" where N is the count of banned peers
+- Click to expand
+
+### Expanded State
+- Shows list of banned peers
+- Each banned peer entry shows:
+  - **Player Name** (editable textbox)
+    - Changes save automatically on blur
+    - Updates banned peer data in storage
+  - **Peer ID** (read-only, truncated, selectable/copyable)
+  - **Banned Date** (formatted timestamp, e.g., "Jan 15, 2025")
+  - **Private Notes** (editable markdown field, collapsible)
+    - Full Milkdown editor (same as friend cards)
+    - Changes save automatically
+    - Notes are preserved when banning (important for context about why banned)
+  - **Send Friend Request button** (📨 or "Request") for sending friend request
+  - **Unban button** (❌ or "Unban") for removing from ban list
+- Click header or collapse button to collapse back
+
+### Send Friend Request Action
+- Click "Send Friend Request" button (📨)
+- Automatically unban the peer (no confirmation needed)
+- Add peer to friends list with `pending: true` (preserving playerName and notes from ban list)
+- Send `requestFriend` message to the peer
+- Remove peer from banned peers list
+- Update UI to show in friends list with "⏳ Pending" badge
+- Show temporary notification: "Friend request sent to [PlayerName]"
+- **Note**: Player name and notes are preserved from banned peer data
+
+### Unban Action
+- Click "Unban" button (❌)
+- Show confirmation dialog: "Unban [PlayerName]? They will be able to send you friend requests again."
+- If confirmed:
+  - Remove peer from ban list (persisted)
+  - Update UI to remove from banned peers list
+  - Decrement count badge
+  - **Does NOT** add to friends list or send friend request
+- If cancelled: No action taken
+
+### Empty Banned Peers
+- If no banned peers, section header shows "🚫 Banned Peers (0)"
+- When expanded: "No banned peers"
+
+**Note:** Banned peers silently block ALL future friend requests. Unbanning allows the peer to send friend requests again. Sending a friend request automatically unbans the peer and adds them as a pending friend.
 
 ## Back Button
 

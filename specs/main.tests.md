@@ -311,13 +311,14 @@ Critical: Assets must load from origin on ALL routes
 ### Friend Invitation Flow Tests
 
 **FRIEND REQUEST SYSTEM**: Friends are added directly by Peer ID using the "Add Friend by Peer ID" modal. When you add a friend:
-1. Friend is added to friends list immediately with `pending` flag
-2. Peer ID is added to `pendingNewInvitations` queue (backend only, not visible in UI)
-3. When peer is discovered, `requestFriend` resendable message is sent automatically
-4. Recipient receives event notification and can Ignore/Decline/Accept
+1. Friend is added to friends list immediately with `pending: 'unsent'` status
+2. System attempts to send `requestFriend` message immediately
+3. If successful, status changes to `pending: 'pending'`
+4. If peer is offline/unreachable, stays `pending: 'unsent'` and auto-retries when peer comes online
+5. Recipient receives event notification and can Ignore or Accept
 
 - [ ] **Add friend by peer ID - UI and storage only (single tab)**
-  - Navigate to Settings view
+  - Navigate to Friends view
   - Click "Add Friend by Peer ID" button
   - Verify modal appears with fields: Friend Name, Peer ID, Notes
   - Enter friend name "Alice"
@@ -326,10 +327,8 @@ Critical: Assets must load from origin on ALL routes
   - Click Submit
   - Verify modal closes
   - Verify confirmation message appears: "Friend added! Will send friend request when peer is discovered."
-  - Verify "Alice" appears in friends list immediately
-  - **Note**: "Pending New Invitations" section is no longer visible in UI (backend logic still exists)
-  - Use test API: `profileService.getItem('hollowPeerFriends')` - verify Alice stored with correct peer ID and notes
-  - Use test API: `hollowPeer.getPendingNewInvitations()` - verify contains the peer ID (backend only)
+  - Verify "Alice" appears in friends list immediately with "📤 Unsent" badge
+  - Use test API: `profileService.getItem('hollowPeerFriends')` - verify Alice stored with correct peer ID, notes, and `pending: 'unsent'`
   - **Note**: Stop here - made-up peer ID won't result in actual message delivery
 
 - [ ] **Add multiple friends - different profiles (multiple tabs)**
@@ -339,22 +338,20 @@ Critical: Assets must load from origin on ALL routes
   - Tab B: Navigate to Settings view, click Profiles button, create/select "Profile B"
   - Tab B: Wait for P2P initialization, note peer ID (Peer B)
   - **CRITICAL**: Verify Peer A ≠ Peer B (different profiles = different peer IDs)
-  - Tab A: Use "Add Friend by Peer ID" modal to add "Bob" with Peer B's ID
-  - Tab B: Use "Add Friend by Peer ID" modal to add "Alice" with Peer A's ID
-  - Tab A: Verify "Bob" appears in friends list
-  - Tab B: Verify "Alice" appears in friends list
-  - Both tabs: Use test API to verify friends stored in profile-specific localStorage
-  - Both tabs: Use test API `hollowPeer.getPendingNewInvitations()` to verify peer IDs are queued (backend only)
+  - Tab A: Navigate to Friends view, use "Add Friend by Peer ID" modal to add "Bob" with Peer B's ID
+  - Tab B: Navigate to Friends view, use "Add Friend by Peer ID" modal to add "Alice" with Peer A's ID
+  - Tab A: Verify "Bob" appears in friends list with either "📤 Unsent" or "⏳ Pending" badge
+  - Tab B: Verify "Alice" appears in friends list with either "📤 Unsent" or "⏳ Pending" badge
+  - Both tabs: Use test API to verify friends stored in profile-specific localStorage with `pending` field
   - **Note**: Each profile has completely isolated storage
-  - **Note**: Pending invitations list is no longer visible in UI
 
-- [ ] **Pending invitations backend logic (no UI)**
-  - **Note**: "Pending New Invitations" section is hidden from UI but backend logic remains
-  - Navigate to Settings view
-  - Add friend by peer ID
-  - Use test API: `hollowPeer.getPendingNewInvitations()` - verify peer ID is queued
-  - Verify no "Pending New Invitations" section visible in UI
-  - Backend automatically retries sending `requestFriend` when peer is discovered
+- [ ] **Stubborn friend request auto-retry (no UI)**
+  - **Note**: Friend requests automatically retry when peer comes online
+  - Navigate to Friends view
+  - Add friend by peer ID (made-up ID so it stays offline)
+  - Verify friend appears with "📤 Unsent" badge
+  - Use test API: `hollowPeer.getFriend(peerId)` - verify `pending: 'unsent'`
+  - System automatically attempts to send `requestFriend` when peer connects
 
 ### Peer Connectivity Tests
 **Note**: These tests verify basic P2P connectivity infrastructure using ping/pong messages
@@ -415,11 +412,11 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
 - [ ] **Send friend request with peer ID - automatic delivery**
   - **Setup**: Open two separate browser tabs
   - Tab A: Navigate to Settings view, click Profiles button, create/select "Profile A"
-  - Tab A: Wait for P2P initialization, note peer ID (Peer A)
+  - Tab A: Wait for P2P initialization, set player name to "Alice", note peer ID (Peer A)
   - Tab B: Navigate to Settings view, click Profiles button, create/select "Profile B"
-  - Tab B: Wait for P2P initialization, note peer ID (Peer B)
+  - Tab B: Wait for P2P initialization, set player name to "Bob", note peer ID (Peer B)
   - **CRITICAL**: Verify Peer A ≠ Peer B (different profiles required)
-  - Tab B: Set player name to "Bob"
+  - Tab B: Navigate to Friends view
   - Tab B: Use "Add Friend by Peer ID" modal: name="Alice", peerID=(Peer A), notes="Test"
   - Tab B: Verify "Alice" added to friends list
   - Tab B: Verify Peer A added to pending new invitations
@@ -433,7 +430,7 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Verify event card shows:
     - "Friend Request" type (not "New Friend Request")
     - "[Player Name] (Peer ID: ...) wants to add you as a friend"
-    - Ignore/Decline/Accept buttons (in that order)
+    - Ignore/Accept buttons (in that order)
     - Skull button to remove
   - Use test API in Tab B: `hollowPeer.getPendingNewFriendRequests()` - verify empty (Tab B is sender)
   - Use test API in Tab A: `hollowPeer.getPendingNewFriendRequests()` - verify contains Peer B
@@ -441,6 +438,7 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
 - [ ] **Already-friend prevents duplicate request**
   - **Setup**: Keep Tab A and Tab B open with different profiles
   - Tab A & Tab B: Already friends (completed approval flow)
+  - Tab B: Navigate to Friends view
   - Tab B: Try to add Peer A again via "Add Friend by Peer ID"
   - Tab B: System adds to pending invitations (allowed for retry logic)
   - Wait for peer discovery, system sends another requestFriend
@@ -449,7 +447,7 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Verify existing friendship unchanged
 
 ### Friend Approval Tests
-**Note**: These tests require TWO tabs open simultaneously with different profiles. Each round of tests must create a new profile for Tab B; the same profile can be used for the ignore/decline/accept tests during the same round provided that accept is the last test.
+**Note**: These tests require TWO tabs open simultaneously with different profiles. Each round of tests must create a new profile for Tab B; the same profile can be used for the ignore/accept tests during the same round provided that accept is the last test.
 
 - [ ] **Ignore friend request - adds to ignored peers**
   - **Setup**: Complete "Send friend request with peer ID" test above (both tabs open with different profiles)
@@ -459,24 +457,27 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Verify event removed from event list
   - Tab A: Verify no friend added to friends list
   - Tab A: Use test API: `hollowPeer.getIgnoredPeers()` - verify contains Bob's peer ID and name
+  - Tab A: Navigate to Friends view
   - Tab A: Scroll to "Ignored Peers" section - verify "Bob" appears in list
   - Tab B: Check console - verify NO response received (no message from Tab A, silent ignore)
   - Tab B: Verify Peer A still in pending new invitations (continues retrying)
   - Tab B: System will keep trying to send requests (will be silently ignored each time)
 
-- [ ] **Decline friend request - sender notified**
+- [ ] **Ban friend request - adds to banned peers**
   - **Setup**: Complete "Send friend request with peer ID" test above (both tabs open with different profiles)
   - Tab A: Has received friendRequest event from Tab B (Bob)
   - Tab A: Click event button to open modal
-  - Tab A: Click "Decline" button on event
+  - Tab A: Click "Ban" button on event
   - Tab A: Verify event removed from event list
-  - Tab A: Verify no friend added
-  - Tab B: Wait for decline message (tab must remain open!)
-  - Tab B: Verify event notification button appears
-  - Tab B: Click event button, verify "Friend Request Declined" event appears
-  - Tab B: Event shows: "Alice declined your friend request"
-  - Tab B: Verify Peer A removed from pending new invitations (stops retrying)
-  - Tab B: Verify no friend added
+  - Tab A: Verify no friend added to friends list
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollow-banned-peers'))` - verify map structure with Bob's peer ID as key
+  - Tab A: Verify banned entry contains: `friend` object (with peerId, playerName, notes, worlds) and `bannedAt` timestamp
+  - Tab B: Check console - verify NO response received (no message from Tab A, silent ban)
+  - Tab B: Verify Peer A still in pending new invitations (continues retrying)
+  - **Critical**: Tab B's future friend requests to Tab A are silently ignored (no events created)
+  - Tab B: Send another requestFriend to Tab A
+  - Tab A: Check console for "Ignored request from banned peer" message
+  - Tab A: Verify NO new friendRequest event created
 
 - [ ] **Accept friend request - both peers become friends**
   - **Setup**: Open two separate browser tabs
@@ -491,19 +492,20 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Verify "Bob" added to friends list with "Pending..." badge
   - Tab A: **Bug Check**: Friend card must appear IMMEDIATELY in UI (without refresh)
   - Tab A: **Bug Check**: Use test API: `JSON.parse(profileService.getItem('hollowPeerFriends'))` - verify Bob entry exists with peerId=Peer B and pending=true
-  - Tab A: **CRITICAL Bug Check**: Scroll to Friends List section, verify Bob's friend card is visible RIGHT NOW
-  - Tab A: **Bug Check**: Friend card shows "Pending..." badge
-  - Tab A: **Failure mode**: If localStorage has Bob but UI shows empty = `SettingsView.renderSettings()` not calling `HollowPeer.getAllFriends()`
+  - Tab A: Navigate to Friends view
+  - Tab A: **CRITICAL Bug Check**: Verify Bob's friend card is visible in the friends list RIGHT NOW
+  - Tab A: **Bug Check**: Friend card shows "Pending..." badge (or "⏳ Pending" badge)
+  - Tab A: **Failure mode**: If localStorage has Bob but UI shows empty = `FriendsView.render()` not calling `HollowPeer.getAllFriends()`
   - Tab A: Verify event removed from event list
   - Tab B: Wait for acceptance message (tab must remain open!)
-  - Tab B: Check console for "Received acceptFriend from Alice"
+  - Tab B: Check console for "Received requestFriend from Alice" (mutual acceptance)
   - Tab B: Verify "Alice" already in friends list (was added when sending request)
-  - Tab B: **Bug Check**: Use test API: `JSON.parse(profileService.getItem('hollowPeerFriends'))` - verify Alice has correct peerId=Peer A
+  - Tab B: **Bug Check**: Use test API: `JSON.parse(profileService.getItem('hollowPeerFriends'))` - verify Alice has correct peerId=Peer A and pending flag cleared
   - Tab B: Verify Peer A removed from pending new invitations (request successful)
-  - Tab A: Wait for acceptFriend ack
+  - Tab A: Wait for mutual requestFriend message from Tab B
   - Tab A: Verify "Pending..." badge disappears from Bob's friend card
   - Tab A: **Bug Check**: Use test API - verify Bob's pending flag cleared (pending=false or undefined)
-  - **Note**: Tab B already had "Alice" as friend before acceptance. Acceptance confirms the connection. Tab A shows pending until ack received.
+  - **Note**: When Tab B accepts, it sends requestFriend back to Tab A. Upon receiving this mutual requestFriend, Tab A clears the pending flag. Both peers now have accepted each other.
 
 ### Quarantine Tests
 **Note**: These tests require TWO tabs open simultaneously with different profiles
@@ -521,6 +523,66 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Accept friend request
   - Tab A: Verify peer removed from quarantine
   - Tab B: Verify peer removed from quarantine
+
+### Ban Management Tests
+**Note**: These tests verify banning existing friends and managing the ban list
+
+- [ ] **Ban existing friend from Friends view**
+  - **Setup**: Tab A and Tab B are already friends (completed approval flow, both tabs open)
+  - Tab A: Navigate to Friends view
+  - Tab A: Expand friend card for Tab B (Bob)
+  - Tab A: Click "Ban" button on friend card
+  - Tab A: Verify confirmation dialog appears: "Are you sure you want to ban Bob? This will remove them from your friends list and prevent future friend requests."
+  - Tab A: Click "Cancel" on dialog
+  - Tab A: Verify dialog closes, friend remains in friends list
+  - Tab A: Click "Ban" button again
+  - Tab A: Click "Confirm" on dialog
+  - Tab A: Verify Bob removed from friends list
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollow-banned-peers'))` - verify map structure with Bob's peer ID as key
+  - Tab A: Verify banned entry contains: `friend` object (with peerId, playerName, notes, worlds) and `bannedAt` timestamp
+  - Tab A: **Critical**: Verify notes are preserved from friend data (if Bob had notes, they should be in ban list)
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollowPeerFriends'))` - verify Bob NOT in friends list
+  - Tab B: Send another requestFriend to Tab A
+  - Tab A: Check console for "Ignored request from banned peer" message
+  - Tab A: Verify NO friendRequest event created
+
+- [ ] **Banned peers preserve notes and allow editing**
+  - **Setup**: Tab A has banned Bob (from previous test)
+  - Tab A: Navigate to Friends view
+  - Tab A: Expand "Banned Peers" section
+  - Tab A: Verify Bob appears in banned peers list with preserved notes
+  - Tab A: Edit Bob's player name
+  - Tab A: Edit Bob's notes (add/modify text)
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollow-banned-peers'))` - verify changes saved to map
+  - Tab A: Verify changes persist in UI
+
+- [ ] **Banned peers persist across sessions**
+  - **Setup**: Tab A has banned Bob (from previous test)
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollow-banned-peers'))` - note banned peers map
+  - Tab A: Close and reopen application
+  - Tab A: Navigate to Settings view, select same profile
+  - Tab A: Wait for P2P initialization
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollow-banned-peers'))` - verify Bob still in ban list (map structure)
+  - Tab A: Navigate to Friends view, expand "Banned Peers" section
+  - Tab A: Verify Bob visible with preserved data (playerName, notes, bannedAt)
+  - Tab B: Send requestFriend to Tab A
+  - Tab A: Check console for "Ignored request from banned peer" message
+  - Tab A: Verify NO friendRequest event created (ban persists)
+
+- [ ] **Send friend request to banned peer preserves notes**
+  - **Setup**: Tab A has banned Bob with notes "Was spamming" (from previous tests, both tabs open)
+  - Tab A: Navigate to Friends view
+  - Tab A: Expand "Banned Peers" section
+  - Tab A: Verify Bob in banned peers list with notes
+  - Tab A: Click "Send Friend Request" button (📨) on Bob's entry
+  - Tab A: Verify Bob removed from banned peers list
+  - Tab A: Verify Bob added to friends list with "⏳ Pending" badge
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollowPeerFriends'))` - verify Bob in friends list
+  - Tab A: **Critical**: Verify Bob's notes are preserved ("Was spamming")
+  - Tab A: Use test API: `JSON.parse(profileService.getItem('hollow-banned-peers'))` - verify Bob NOT in ban list
+  - Tab A: Verify temporary notification: "Friend request sent to Bob"
+  - Tab B: Wait for friend request message (tab must be open!)
+  - Tab B: Verify friend request event received
 
 ### Persistence Tests
 - [ ] **Friends persist across sessions**
@@ -547,28 +609,27 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab B: **Bug Check**: Verify `notes` field contains any notes entered during "Add Friend"
   - **Failure mode**: If data is missing or "undefined" = storage bug in FriendsManager or HollowPeer
 
-- [ ] **Pending new invitations persist and retry on startup**
+- [ ] **Unsent friend requests persist and rebuild on startup**
   - **Setup**: Single tab with any profile
   - Add friend via "Add Friend by Peer ID" with made-up peer ID
-  - Verify appears in pending new invitations list
+  - Verify friend appears with "📤 Unsent" badge
+  - Use test API: `hollowPeer.getFriend(peerId)` - verify `pending: 'unsent'`
   - Close and reopen application
   - Navigate to Settings view, select same profile
   - Wait for P2P initialization
-  - Verify peer ID still in pending new invitations list
-  - Use test API: `hollowPeer.getPendingNewInvitations()` - verify contains peer ID
-  - Check console for "Found N pending new invitation(s)" message
-  - Check console for "Starting background peer resolution" messages
-  - **Purpose**: Verify pendingNewInvitations persists and automatically retries on startup
+  - Verify friend still shows "📤 Unsent" badge
+  - Check console for "📤 Rebuilt unsentFriends set with N peer(s) pending delivery" message
+  - **Purpose**: Verify unsent friend requests persist and ephemeral set is rebuilt on startup
 
-- [ ] **Pending new invitations removed after successful friend request**
+- [ ] **Pending status cleared after mutual acceptance**
   - **Setup**: Complete friend approval flow (both tabs open with different profiles)
-  - Tab B: Had added Tab A via "Add Friend by Peer ID" (was in pending new invitations)
-  - Tab A: Accepted the request
-  - Tab B: Verify Peer A removed from pending new invitations list
-  - Tab B: Use test API: `hollowPeer.getPendingNewInvitations()` - verify does NOT contain Peer A
+  - Tab B: Had added Tab A via "Add Friend by Peer ID" (shows "⏳ Pending" badge)
+  - Tab A: Accepted the request (both send mutual requestFriend)
+  - Tab B: Verify Peer A's badge cleared (no "Unsent" or "Pending" badge)
+  - Tab B: Use test API: `hollowPeer.getFriend(peerA)` - verify `pending` field is undefined
   - Tab B: Close and reopen, select same profile
-  - Tab B: Verify Peer A NOT in pending new invitations after restart
-  - **Purpose**: Verify successful requests clean up pending invitations permanently
+  - Tab B: Verify Peer A still has no pending badge after restart
+  - **Purpose**: Verify mutual acceptance clears pending status permanently
 
 ### Event Service Integration Tests
 **Note**: These tests require TWO tabs open simultaneously with different profiles
@@ -738,7 +799,7 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab B: Verify retries continue
 
 ### New Friend Request Flow Tests
-**Note**: These tests verify the new requestFriend, acceptFriend, declineFriend message flow
+**Note**: These tests verify the new requestFriend (mutual acceptance) message flow
 
 - [ ] **requestFriend message with player name**
   - **Setup**: Tab A and Tab B connected with different profiles
@@ -752,43 +813,42 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Verify ack sent back to Tab B
   - Tab B: Receive ack, verify message removed from resend queue
 
-- [ ] **acceptFriend message creates friendship**
-  - **Setup**: Tab A has received requestFriend from Tab B
+- [ ] **Mutual requestFriend creates friendship**
+  - **Setup**: Tab A has received requestFriend from Tab B (Tab B has friend with pending=true)
   - Tab A: Set player name to "Alice"
-  - Tab A: Call `hollowPeer.sendAcceptFriend(peerBId, "Alice")`
-  - Tab A: Verify message has: method="acceptFriend", messageId (UUID), sender=peerAId, target=peerBId
+  - Tab A: Accept friend request (sends requestFriend back)
+  - Tab A: Verify message has: method="requestFriend", playerName="Alice"
   - Tab A: Verify message added to resend queue
-  - Tab B: Receive acceptFriend message
-  - Tab B: Check console for "Received acceptFriend from Alice"
+  - Tab A: Verify friend added with pending=true
+  - Tab B: Receive requestFriend message from Alice (mutual acceptance)
+  - Tab B: Check console for "Received requestFriend from Alice"
   - Tab B: Verify friend's pending flag cleared (friend.pending = false)
   - Tab B: Use test API: `hollowPeer.getFriend(peerAId)` - verify pending=false
   - Tab B: Verify ack sent back to Tab A
   - Tab A: Receive ack, verify message removed from resend queue
+  - Tab A: Pending flag cleared automatically upon receiving Tab B's original requestFriend
 
-- [ ] **declineFriend message sends notification**
+- [ ] **Ignoring a friend request**
   - **Setup**: Tab A has received requestFriend from Tab B
-  - Tab A: Set player name to "Alice"
-  - Tab A: Call `hollowPeer.sendDeclineFriend(peerBId, "Alice")`
-  - Tab A: Verify message has: method="declineFriend", messageId (UUID), sender=peerAId, target=peerBId, playerName="Alice"
-  - Tab A: Verify message added to resend queue
-  - Tab B: Receive declineFriend message
-  - Tab B: Check console for "Received declineFriend from Alice"
-  - Tab B: Verify friendDeclined event created with playerName="Alice"
-  - Tab B: Verify ack sent back to Tab A
-  - Tab A: Receive ack, verify message removed from resend queue
+  - Tab A: Click "Ignore" button on friend request event
+  - Tab A: Verify event removed from event list
+  - Tab A: Verify NO message sent to Tab B
+  - Tab A: Verify Tab B NOT added to friends list
+  - Tab B: Verify friend entry for Tab A still has pending=true
+  - Tab B: Can manually remove Tab A from friends list if desired
 
 - [ ] **Pending friend status badge**
   - **Setup**: Tab A and Tab B connected with different profiles
-  - Tab A: Accept friend request from Tab B
-  - Tab A: Add friend with pending=true
-  - Tab A: Navigate to Settings view
-  - Tab A: Verify friend card shows "⏳ Pending" badge
-  - Tab A: Verify badge appears in both collapsed and expanded views
-  - Tab B: Send acceptFriend message back to Tab A
-  - Tab A: Receive acceptFriend, pending flag cleared
-  - Tab A: Navigate to Settings view (or refresh)
-  - Tab A: Verify "⏳ Pending" badge removed
-  - Tab A: Verify friend card shows normal state
+  - Tab B: Send requestFriend to Tab A
+  - Tab B: Verify friend added with pending=true
+  - Tab B: Navigate to Friends view
+  - Tab B: Verify friend card shows "⏳ Pending" badge
+  - Tab B: Verify badge appears in both collapsed and expanded views
+  - Tab A: Accept friend request (sends requestFriend back to Tab B)
+  - Tab B: Receive mutual requestFriend, pending flag cleared
+  - Tab B: Navigate to Friends view (or refresh)
+  - Tab B: Verify "⏳ Pending" badge removed
+  - Tab B: Verify friend card shows normal state
 
 ### Ignored Peers Tests
 **Note**: These tests verify the new ignored peers functionality
@@ -857,22 +917,12 @@ The `LibP2PNetworkProvider` must call `pubsub.subscribe(PUBSUB_PEER_DISCOVERY_TO
   - Tab A: Verify event card shows:
     - Title: "👥 Friend Request"
     - Content: "Bob (Peer ID: [truncated]) wants to add you as a friend"
-    - Three buttons: Ignore, Decline, Accept
+    - Two buttons: Ignore, Accept
     - Skull button (💀) to remove
   - Tab A: Verify Accept button is rightmost (green styling)
-  - Tab A: Verify Decline button is middle (red styling)
   - Tab A: Verify Ignore button is leftmost (brown styling)
-
-- [ ] **friendDeclined event card rendering**
-  - **Setup**: Tab B has received declineFriend from Tab A (Alice)
-  - Tab B: Click event button to open modal
-  - Tab B: Verify event card shows:
-    - Title: "❌ Friend Request Declined"
-    - Content: "Alice declined your friend request"
-    - Dismiss button
-    - Skull button (💀) to remove
-  - Tab B: Click Dismiss button
-  - Tab B: Verify event removed from list
+  - Tab A: Click Dismiss button (or skull)
+  - Tab A: Verify event removed from list
 
 - [ ] **Event modal actions**
   - **Setup**: Tab A has multiple events

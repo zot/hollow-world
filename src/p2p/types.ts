@@ -3,7 +3,6 @@
  * Following SOLID principles and universal-connectivity patterns
  */
 
-import type { Stream, Connection } from '@libp2p/interface';
 import type { ICharacter } from '../character/types.js';
 
 // Re-export ICharacter for convenience
@@ -27,33 +26,10 @@ export interface IPongMessage extends IP2PMessage {
     messageId: string;
 }
 
-// Resendable messages with UUID tracking
-export interface IResendableMessage extends IP2PMessage {
-    messageId: string;    // UUID for tracking
-    sender: string;       // Sender's peer ID
-    target: string;       // Target peer ID
-}
-
-export interface IRequestFriendMessage extends IResendableMessage {
+// Friend request message (also used for mutual acceptance)
+export interface IRequestFriendMessage extends IP2PMessage {
     method: 'requestFriend';
     playerName: string;   // Sender's player name from settings
-}
-
-export interface IAcceptFriendMessage extends IResendableMessage {
-    method: 'acceptFriend';
-}
-
-export interface IDeclineFriendMessage extends IResendableMessage {
-    method: 'declineFriend';
-}
-
-export interface IAckMessage extends IP2PMessage {
-    method: 'ack';
-    messageId: string;    // The messageId from the original resendable message
-}
-
-export interface IFriendRequestReceivedMessage extends IP2PMessage {
-    method: 'friendRequestReceived';
 }
 
 export interface IMudMessage extends IP2PMessage {
@@ -65,10 +41,6 @@ export type P2PMessage =
     | IPingMessage
     | IPongMessage
     | IRequestFriendMessage
-    | IAcceptFriendMessage
-    | IDeclineFriendMessage
-    | IAckMessage
-    | IFriendRequestReceivedMessage
     | IMudMessage;
 
 // ==================== Friend Types ====================
@@ -92,7 +64,15 @@ export interface IFriend {
     peerId: string;       // LibP2P peer ID (unique identifier)
     playerName: string;   // Display name for the friend
     notes: string;        // Private notes (not transmitted in messages)
-    pending?: boolean;    // Optional: true when friend request is sent but not yet acknowledged
+    pending?: 'unsent' | 'pending';  // Optional: Friend request status
+                                      // - 'unsent': Request not yet delivered (peer offline/unreachable)
+                                      // - 'pending': Request delivered, awaiting mutual acceptance
+                                      // - undefined: Mutual acceptance complete
+    presence?: boolean;   // Optional: Online presence indicator (NON-PERSISTED - runtime only)
+                          // - true: Friend is currently online (in connected peers list)
+                          // - false: Friend is currently offline
+                          // - undefined: Presence not yet initialized
+                          // This field is NOT saved to storage, rebuilt on app startup
     worlds?: IFriendWorld[];  // NEW - optional for backward compatibility
     // Worlds can be:
     //   - Hosted by friend (I join their world)
@@ -100,16 +80,21 @@ export interface IFriend {
     // Both scenarios tracked in same array, distinguished by hostPeerId
 }
 
+// ==================== Ban List Types ====================
+
+export interface IBannedPeerEntry {
+    friend: IFriend;      // Full friend data including notes
+    bannedAt: string;     // ISO 8601 timestamp
+}
+
+// Ban list is a map: peerId -> IBannedPeerEntry
+export type BanList = Record<string, IBannedPeerEntry>;
+
 // ==================== Storage Types ====================
 
 export interface IIgnoredPeer {
     peerId: string;
     peerName: string;
-}
-
-export interface IPendingInvitation {
-    state: 'resend' | 'sent';  // State tracking for retry logic
-    friend: IFriend;           // The friend being requested
 }
 
 export interface IResendableMessageStorage {
@@ -200,6 +185,48 @@ export interface IFriendsManager {
      * @returns Array of my worlds where friend has characters
      */
     getMyWorldsWithFriend(peerId: string): IFriendWorld[];
+
+    // ==================== Ban List Methods ====================
+
+    /**
+     * Ban a peer (adds to ban list, removes from friends)
+     * @param peerId - Peer ID to ban
+     * @param friend - Friend data to preserve (including notes)
+     */
+    banPeer(peerId: string, friend: IFriend): void;
+
+    /**
+     * Unban a peer (removes from ban list only, does NOT add to friends)
+     * @param peerId - Peer ID to unban
+     */
+    unbanPeer(peerId: string): void;
+
+    /**
+     * Check if a peer is banned
+     * @param peerId - Peer ID to check
+     * @returns true if peer is banned
+     */
+    isBanned(peerId: string): boolean;
+
+    /**
+     * Get banned peer entry
+     * @param peerId - Peer ID
+     * @returns Banned peer entry or undefined
+     */
+    getBannedPeer(peerId: string): IBannedPeerEntry | undefined;
+
+    /**
+     * Get all banned peers
+     * @returns Map of peerId to banned peer entry
+     */
+    getAllBannedPeers(): BanList;
+
+    /**
+     * Update banned peer data (e.g., edit notes or player name)
+     * @param peerId - Peer ID
+     * @param friend - Updated friend data
+     */
+    updateBannedPeer(peerId: string, friend: IFriend): void;
 }
 
 // ==================== Network Provider Interface ====================
@@ -209,38 +236,8 @@ export interface INetworkProvider {
     getPeerId(): string;
     getConnectedPeers(): string[];
     destroy(): Promise<void>;
-    sendMessage(peerId: string, message: P2PMessage): Promise<void>;
+    sendMessage(peerId: string, message: P2PMessage, onAck?: () => void | Promise<void>): Promise<void>;
     onMessage(handler: (peerId: string, message: P2PMessage) => void): void;
     onPeerConnect(handler: (peerId: string) => void): void;
-}
-
-// ==================== Direct Message Service Events ====================
-
-export interface IDirectMessageEvent {
-    message: P2PMessage;
-    peerId: string;
-    stream: Stream;
-    connection: Connection;
-}
-
-export interface IDirectMessageEvents {
-    message: CustomEvent<IDirectMessageEvent>;
-}
-
-// ==================== Message Metadata ====================
-
-export interface IMessageMetadata {
-    timestamp: number;
-    clientVersion: string;
-}
-
-export interface IMessageRequest {
-    message: P2PMessage;
-    metadata: IMessageMetadata;
-}
-
-export interface IMessageResponse {
-    status: 'OK' | 'ERROR';
-    metadata: IMessageMetadata;
-    error?: string;
+    onPeerDisconnect(handler: (peerId: string) => void): void;
 }

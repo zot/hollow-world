@@ -154,6 +154,70 @@
     box-shadow: 0 0 10px rgba(139,69,19,0.3);
 }
 
+/* P2P Network Settings styles */
+.settings-warning {
+    font-family: 'Rye', serif;
+    color: #8b4513;
+    background: rgba(255,223,0,0.2);
+    border: 2px solid #daa520;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    text-align: center;
+    font-weight: bold;
+}
+
+.field-with-reset {
+    position: relative;
+}
+
+.input-with-reset {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-with-reset input {
+    flex: 1;
+}
+
+.reset-btn {
+    font-family: 'Rye', serif;
+    background: rgba(139,69,19,0.8);
+    color: #f4a460;
+    border: 2px solid #654321;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    min-width: 42px;
+}
+
+.reset-btn:hover {
+    background: rgba(101,67,33,0.9);
+    color: #fff;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.6);
+    transform: translateY(-1px);
+}
+
+.reset-btn:active {
+    transform: translateY(0);
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.settings-field small {
+    display: block;
+    font-family: 'Rye', serif;
+    color: #654321;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    font-style: italic;
+    opacity: 0.8;
+}
+
 /* Peer ID field with enhanced label protection */
 .settings-field:has(.peer-id-readonly) {
     padding: 8px;
