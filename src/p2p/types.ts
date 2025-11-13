@@ -1,6 +1,10 @@
 /**
  * TypeScript types and interfaces for Hollow World P2P system
  * Following SOLID principles and universal-connectivity patterns
+ *
+ * CRC: specs-crc/crc-Friend.md, specs-crc/crc-P2PMessage.md
+ * Spec: specs/friends.md, specs/p2p-messages.md, specs/p2p.md
+ * Sequences: specs-crc/seq-friend-status-change.md, specs-crc/seq-send-receive-p2p-message.md
  */
 
 import type { ICharacter } from '../character/types.js';
@@ -10,28 +14,50 @@ export type { ICharacter };
 
 // ==================== P2P Message Types ====================
 
+/**
+ * Base P2P message interface
+ * CRC: specs-crc/crc-P2PMessage.md
+ */
 export interface IP2PMessage {
     method: string;
 }
 
+/**
+ * Ping message for connectivity testing
+ * CRC: specs-crc/crc-P2PMessage.md
+ * Sequence: specs-crc/seq-send-receive-p2p-message.md
+ */
 export interface IPingMessage extends IP2PMessage {
     method: 'ping';
     timestamp: number;
     messageId: string;
 }
 
+/**
+ * Pong response message
+ * CRC: specs-crc/crc-P2PMessage.md
+ * Sequence: specs-crc/seq-send-receive-p2p-message.md
+ */
 export interface IPongMessage extends IP2PMessage {
     method: 'pong';
     timestamp: number;
     messageId: string;
 }
 
-// Friend request message (also used for mutual acceptance)
+/**
+ * Friend request message (also used for mutual acceptance)
+ * CRC: specs-crc/crc-P2PMessage.md
+ * Sequence: specs-crc/seq-friend-status-change.md, specs-crc/seq-add-friend-by-peerid.md
+ */
 export interface IRequestFriendMessage extends IP2PMessage {
     method: 'requestFriend';
     playerName: string;   // Sender's player name from settings
 }
 
+/**
+ * MUD message for TextCraft integration
+ * CRC: specs-crc/crc-P2PMessage.md
+ */
 export interface IMudMessage extends IP2PMessage {
     method: 'mud';
     payload: any;  // MudMessage payload from textcraft integration
@@ -45,6 +71,10 @@ export type P2PMessage =
 
 // ==================== Friend Types ====================
 
+/**
+ * Shared world data structure
+ * CRC: specs-crc/crc-Friend.md
+ */
 export interface IFriendWorld {
     worldId: string;                    // TextCraft world ID
     worldName: string;                  // Human-readable world name
@@ -54,12 +84,21 @@ export interface IFriendWorld {
     //       If hostPeerId === myPeerId, I host and friend can join
 }
 
+/**
+ * Friend's character in a shared world
+ * CRC: specs-crc/crc-Friend.md
+ */
 export interface IFriendCharacter {
     character: ICharacter;         // Full copy as it exists in the world (includes character.id)
     characterHash: string;         // SHA-256 hash for integrity verification
     // Note: character.id serves as the identifier - no need for separate characterId field
 }
 
+/**
+ * Friend data structure
+ * CRC: specs-crc/crc-Friend.md
+ * Sequences: specs-crc/seq-friend-status-change.md, specs-crc/seq-add-friend-by-peerid.md
+ */
 export interface IFriend {
     peerId: string;       // LibP2P peer ID (unique identifier)
     playerName: string;   // Display name for the friend
@@ -82,6 +121,10 @@ export interface IFriend {
 
 // ==================== Ban List Types ====================
 
+/**
+ * Banned peer entry
+ * CRC: specs-crc/crc-FriendsManager.md
+ */
 export interface IBannedPeerEntry {
     friend: IFriend;      // Full friend data including notes
     bannedAt: string;     // ISO 8601 timestamp

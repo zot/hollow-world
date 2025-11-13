@@ -42,3 +42,38 @@
   - [x] Credits get their own line so people see 'em ✅ **IMPLEMENTED**
   - [x] Make audio file titles into links with the URL to the project ✅ **IMPLEMENTED**
 - [ ] settings button at the lower left of the screen shows settings view (see ui.settings.md)
+
+### 🌍 Adventure Mode Navigation
+
+**Route Selection Logic**: The splash screen delegates to AdventureMode (or WorldListView) to determine the appropriate route when entering adventure mode.
+
+**Behavior**:
+
+When user clicks "Start Game" or similar adventure mode entry point:
+1. Query AdventureMode/WorldListView for the appropriate route
+2. Navigate to the returned route
+
+**Route Decision**:
+- **No active world**: Navigate to `/worlds` (world list view)
+- **Active world exists**: Navigate to `/world/:worldId` (return to active world)
+
+**Implementation Pattern**:
+```typescript
+// Splash screen delegates route decision
+const adventureRoute = adventureMode.getDefaultRoute();
+router.navigate(adventureRoute);
+
+// AdventureMode decides based on active world state
+getDefaultRoute(): string {
+  if (this.activeWorld) {
+    return `/world/${this.activeWorld.id}`;
+  } else {
+    return '/worlds';
+  }
+}
+```
+
+**Rationale**:
+- Keeps splash screen simple (no world state management)
+- Single source of truth for active world state (AdventureMode)
+- Consistent behavior across app (world list shows active indicator, splash respects active world)

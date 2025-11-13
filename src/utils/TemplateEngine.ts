@@ -1,6 +1,16 @@
-// Simple HTML Template Engine for Character Management
-// Replaces JavaScript template literals with external HTML files
+/**
+ * TemplateEngine - HTML Template Rendering
+ *
+ * CRC: specs-crc/crc-TemplateEngine.md
+ * Spec: specs/ui.md, specs/coding-standards.md
+ * Sequences: specs-crc/seq-edit-character.md, specs-crc/seq-render-character-list.md
+ */
 
+/**
+ * ITemplateEngine interface
+ *
+ * CRC: specs-crc/crc-TemplateEngine.md
+ */
 export interface ITemplateEngine {
     loadTemplate(templateName: string): Promise<string>;
     renderTemplate(template: string, data: Record<string, any>): string;
@@ -15,6 +25,11 @@ export class TemplateEngine implements ITemplateEngine {
         this.base = base;
     }
 
+    /**
+     * loadTemplate implementation
+     *
+     * CRC: specs-crc/crc-TemplateEngine.md
+     */
     async loadTemplate(templateName: string): Promise<string> {
         // Check cache first
         if (this.templateCache.has(templateName)) {
@@ -39,6 +54,11 @@ export class TemplateEngine implements ITemplateEngine {
         }
     }
 
+    /**
+     * renderTemplate implementation
+     *
+     * CRC: specs-crc/crc-TemplateEngine.md
+     */
     renderTemplate(template: string, data: Record<string, any>): string {
         let result = template;
 
@@ -168,6 +188,11 @@ export class TemplateEngine implements ITemplateEngine {
     }
 
     // Clear template cache (useful for development)
+    /**
+     * clearCache implementation
+     *
+     * CRC: specs-crc/crc-TemplateEngine.md
+     */
     clearCache(): void {
         this.templateCache.clear();
     }

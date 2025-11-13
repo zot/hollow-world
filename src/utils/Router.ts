@@ -1,4 +1,10 @@
-// Route-based navigation system for Hollow World
+/**
+ * Router - Route-based Navigation System
+ *
+ * CRC: specs-crc/crc-Router.md
+ * Spec: specs/ui.md, specs/routes.md
+ * Sequences: specs-crc/seq-edit-character.md
+ */
 
 export interface IRoute {
     path: string;
@@ -6,6 +12,11 @@ export interface IRoute {
     handler: (params?: Record<string, string>) => Promise<void> | void;
 }
 
+/**
+ * IRouter interface
+ *
+ * CRC: specs-crc/crc-Router.md
+ */
 export interface IRouter {
     addRoute(route: IRoute): void;
     navigate(path: string, title?: string): void;
@@ -34,10 +45,20 @@ export class Router implements IRouter {
         );
     }
 
+    /**
+     * addRoute implementation
+     *
+     * CRC: specs-crc/crc-Router.md
+     */
     addRoute(route: IRoute): void {
         this.routes.push(route);
     }
 
+    /**
+     * navigate implementation
+     *
+     * CRC: specs-crc/crc-Router.md
+     */
     navigate(path: string, title?: string): void {
         const pageTitle = title || document.title;
 
@@ -48,6 +69,11 @@ export class Router implements IRouter {
         this.handleRoute(path);
     }
 
+    /**
+     * replace implementation
+     *
+     * CRC: specs-crc/crc-Router.md
+     */
     replace(path: string, title?: string): void {
         const pageTitle = title || document.title;
 
@@ -58,15 +84,30 @@ export class Router implements IRouter {
         this.handleRoute(path);
     }
 
+    /**
+     * getCurrentPath implementation
+     *
+     * CRC: specs-crc/crc-Router.md
+     */
     getCurrentPath(): string {
         return this.currentPath;
     }
 
+    /**
+     * initialize implementation
+     *
+     * CRC: specs-crc/crc-Router.md
+     */
     initialize(): void {
         // Handle initial route
         this.handleRoute(this.currentPath);
     }
 
+    /**
+     * destroy implementation
+     *
+     * CRC: specs-crc/crc-Router.md
+     */
     destroy(): void {
         window.removeEventListener('popstate', this.handlePopState);
     }
@@ -116,6 +157,11 @@ export class Router implements IRouter {
         return regex.test(path);
     }
 
+    /**
+     * extractParams implementation
+     *
+     * CRC: specs-crc/crc-Router.md
+     */
     private extractParams(pattern: string, path: string): Record<string, string> {
         const params: Record<string, string> = {};
 

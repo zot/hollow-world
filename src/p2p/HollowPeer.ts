@@ -1,6 +1,12 @@
 /**
- * HollowPeer - Main P2P interface for Hollow World
- * High-level API following SOLID principles
+ * HollowPeer - Main P2P coordinator for Hollow World
+ * High-level API: message routing, friend requests, presence tracking, stubborn delivery
+ *
+ * CRC: specs-crc/crc-HollowPeer.md
+ * Spec: specs/p2p.md, specs/friends.md, specs/p2p-messages.md
+ * Sequences: specs-crc/seq-establish-p2p-connection.md, specs-crc/seq-send-receive-p2p-message.md,
+ *            specs-crc/seq-friend-presence-update.md, specs-crc/seq-friend-status-change.md,
+ *            specs-crc/seq-add-friend-by-peerid.md
  */
 
 import { EventService } from '../services/EventService.js';
@@ -29,6 +35,10 @@ import type {
     IIgnoredPeer
 } from './types.js';
 
+/**
+ * HollowPeer class - P2P orchestrator with stubborn delivery and presence tracking
+ * CRC: specs-crc/crc-HollowPeer.md
+ */
 export class HollowPeer {
     private networkProvider: INetworkProvider;
     private friendsManager: IFriendsManager;
@@ -309,6 +319,10 @@ export class HollowPeer {
         console.log(`🔗 Connected peers (${peers.length}):`, peers.length > 0 ? peers : 'None');
     }
 
+    /**
+     * Add friend and optionally send friend request
+     * Sequence: specs-crc/seq-add-friend-by-peerid.md (lines TBD)
+     */
     async addFriend(playerName: string, peerId: string, notes: string = '', pending?: 'unsent' | 'pending', sendRequest: boolean = true): Promise<void> {
         const trimmedName = playerName.trim();
         if (!trimmedName) {
@@ -635,6 +649,10 @@ export class HollowPeer {
 
     // ==================== Friend Request Flow (Resendable Messages) ====================
 
+    /**
+     * Process friend request (ban check, mutual acceptance, event creation)
+     * Sequence: specs-crc/seq-friend-status-change.md (receive request)
+     */
     private async handleRequestFriend(remotePeerId: string, message: IRequestFriendMessage): Promise<void> {
         console.log(`👥 Received requestFriend from ${remotePeerId.substring(0, 20)}... (${message.playerName})`);
 

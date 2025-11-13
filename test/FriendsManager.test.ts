@@ -1,5 +1,8 @@
 /**
  * Unit tests for FriendsManager world tracking methods
+ *
+ * CRC: specs-crc/crc-FriendsManager.md
+ * Spec: specs/friends.md, specs/p2p.md
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';

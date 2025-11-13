@@ -1,8 +1,11 @@
 /**
  * Network provider implementation using p2p-webapp
- *
  * Replaces browser libp2p implementation with p2p-webapp Go server + TypeScript client
  * Implements INetworkProvider interface for compatibility with HollowPeer
+ *
+ * CRC: specs-crc/crc-P2PWebAppNetworkProvider.md
+ * Spec: specs/p2p.md
+ * Sequences: specs-crc/seq-establish-p2p-connection.md
  */
 
 import { P2PWebAppClient } from './client/client.js';
@@ -22,6 +25,10 @@ const SETTINGS_STORAGE_KEY = 'hollowWorldSettings';
 
 /**
  * Network provider using p2p-webapp for P2P communication
+ */
+/**
+ * P2PWebAppNetworkProvider class - Adapter for p2p-webapp client
+ * CRC: specs-crc/crc-P2PWebAppNetworkProvider.md
  */
 export class P2PWebAppNetworkProvider implements INetworkProvider {
     private client: P2PWebAppClient;
@@ -52,6 +59,10 @@ export class P2PWebAppNetworkProvider implements INetworkProvider {
      * Initialize the network provider
      *
      * Connects to p2p-webapp WebSocket and initializes peer
+     */
+    /**
+     * Initialize P2P connection (WebSocket + peer + protocol + topic)
+     * Sequence: specs-crc/seq-establish-p2p-connection.md (initialization)
      */
     async initialize(): Promise<void> {
         try {

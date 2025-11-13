@@ -1,10 +1,24 @@
-// Profile management service for Hollow World
-// Implements profile-based storage isolation as per specs/main.md
+/**
+ * Profile Service - Profile-based storage isolation
+ * Implements profile-based storage isolation for multi-profile support
+ *
+ * CRC: specs-crc/crc-ProfileService.md
+ * Spec: specs/main.md, specs/storage.md
+ * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md, specs-crc/seq-log-message.md
+ */
 
+/**
+ * IProfile - Profile data structure
+ * CRC: specs-crc/crc-ProfileService.md
+ */
 export interface IProfile {
     name: string;
 }
 
+/**
+ * IProfileService - Profile management interface
+ * CRC: specs-crc/crc-ProfileService.md
+ */
 export interface IProfileService {
     getCurrentProfile(): IProfile;
     setCurrentProfile(profileName: string): void;
@@ -20,6 +34,12 @@ const PROFILES_LIST_KEY = '__hollow_profiles__';
 const CURRENT_PROFILE_SESSION_KEY = '__hollow_current_profile__';
 const DEFAULT_PROFILE_NAME = 'Default';
 
+/**
+ * ProfileService - Profile-based storage isolation and management
+ * CRC: specs-crc/crc-ProfileService.md
+ * Spec: specs/storage.md, specs/main.md
+ * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md, specs-crc/seq-log-message.md
+ */
 export class ProfileService implements IProfileService {
     private currentProfile: IProfile;
     private onProfileChangeCallbacks: Array<(profile: IProfile) => void> = [];
@@ -84,10 +104,20 @@ export class ProfileService implements IProfileService {
         localStorage.setItem(PROFILES_LIST_KEY, JSON.stringify(profiles));
     }
 
+    /**
+     * Get current active profile
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     */
     getCurrentProfile(): IProfile {
         return { ...this.currentProfile };
     }
 
+    /**
+     * Switch to a different profile
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     */
     setCurrentProfile(profileName: string): void {
         const profiles = this.loadProfiles();
         const profile = profiles.find(p => p.name === profileName);
@@ -105,10 +135,20 @@ export class ProfileService implements IProfileService {
         console.log(`🔄 Switched to profile: ${profileName}`);
     }
 
+    /**
+     * Get list of all profiles
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     */
     getAllProfiles(): IProfile[] {
         return this.loadProfiles().map(p => ({ ...p }));
     }
 
+    /**
+     * Create a new profile
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     */
     createProfile(name: string): void {
         if (!name.trim()) {
             throw new Error('Profile name cannot be empty');
@@ -126,6 +166,11 @@ export class ProfileService implements IProfileService {
         console.log(`✅ Profile created: ${name}`);
     }
 
+    /**
+     * Delete a profile and all its data
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     */
     deleteProfile(name: string): boolean {
         if (name === DEFAULT_PROFILE_NAME) {
             throw new Error('Cannot delete default profile');
@@ -170,23 +215,52 @@ export class ProfileService implements IProfileService {
         keysToRemove.forEach(key => localStorage.removeItem(key));
     }
 
+    /**
+     * getStorageKey implementation
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     */
     getStorageKey(key: string): string {
         // Add profile prefix to storage key
         return `${this.currentProfile.name}:${key}`;
     }
 
+    /**
+     * Get item from profile-scoped storage
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     * Sequences:
+     * - specs-crc/seq-load-character.md (lines 29-38)
+     * - specs-crc/seq-save-character.md (lines 68-78)
+     */
     getItem(key: string): string | null {
         return localStorage.getItem(this.getStorageKey(key));
     }
 
+    /**
+     * Set item in profile-scoped storage
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     * Sequences:
+     * - specs-crc/seq-save-character.md (lines 84-94)
+     * - specs-crc/seq-log-message.md (lines 51-61)
+     */
     setItem(key: string, value: string): void {
         localStorage.setItem(this.getStorageKey(key), value);
     }
 
+    /**
+     * Remove item from profile-scoped storage
+     *
+     * CRC: specs-crc/crc-ProfileService.md
+     */
     removeItem(key: string): void {
         localStorage.removeItem(this.getStorageKey(key));
     }
 
+    /**
+     * Register callback for profile changes
+     */
     onProfileChange(callback: (profile: IProfile) => void): void {
         this.onProfileChangeCallbacks.push(callback);
     }

@@ -1,3 +1,12 @@
+/**
+ * FriendsView - P2P Friend Management Interface
+ *
+ * CRC: specs-crc/crc-FriendsView.md
+ * Spec: specs/ui.friends.md
+ * Sequences: specs-crc/seq-add-friend-by-peerid.md
+ * Template: public/templates/friends-view.html
+ */
+
 import { IUIComponent } from './SplashScreen.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
@@ -68,6 +77,28 @@ interface ICharacterViewData {
     isDefault: boolean;
 }
 
+/**
+ * FriendsView - Manage P2P friend relationships and view friend status
+ *
+ * Purpose: Display friends list with expandable cards, manage friend requests,
+ * handle banned peers, and coordinate P2P friendship operations.
+ *
+ * Specifications:
+ * - UI Structure: specs-ui/ui-friends-view.md
+ * - UI Concept: specs-wysiwid/concepts-ui.md → FriendsView
+ * - Coordination: specs-wysiwid/synchronizations-friends.md → Friend operations
+ * - UI Sync: specs-wysiwid/synchronizations-ui.md → UI-to-domain coordination
+ *
+ * Template: public/templates/friends-view.html
+ *
+ * Key Features:
+ * - Expandable friend cards with Milkdown editor for notes
+ * - Status badges (unsent/pending friend requests)
+ * - Banned peers management section
+ * - Add friend by peer ID modal
+ * - Presence indicators (online/offline)
+ * - Shared worlds display
+ */
 export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
     private config: IFriendsViewConfig;
     public container: HTMLElement | null = null;
@@ -741,6 +772,37 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
 
         this.backButtonElement = null;
         this.container = null;
+    }
+
+    /**
+     * getContainer implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    getContainer(): HTMLElement | null {
+        return this.container;
+    }
+
+    /**
+     * show implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    show(): void {
+        if (this.container) {
+            this.container.style.display = 'block';
+        }
+    }
+
+    /**
+     * hide implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    hide(): void {
+        if (this.container) {
+            this.container.style.display = 'none';
+        }
     }
 
     // IEnhancedAudioControlSupport implementation

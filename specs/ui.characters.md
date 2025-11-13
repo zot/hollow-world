@@ -83,6 +83,7 @@
       - 5px left/right padding on the attributes container
 - **🎨 Attribute value spacing** - Add visual spacing before each attribute input value for better readability *(Make it easy on the eyes)*
 - **🖱️ Mouse wheel interaction** - Attribute input spinners respond to mouse wheel for increment/decrement with range validation (-2 to 15) *(Scroll like you're spinning the cylinder of a six-shooter)*
+- **📝 Character description** - Optional descriptive text/backstory displayed as a paragraph below the character name *(Tell their tale)*
 - **📈 Top stats bar** - Rank, damage capacity, dust, available XP, and Attribute Chips at top under character name *(The important stuff front and center)*
 - **🎯 Available XP display** *(Your advancement currency)*:
   - Show total XP in parentheses in label based on rank (rank 1 = 10 XP, +10 per additional rank) *(Show the pot size)*

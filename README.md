@@ -11,7 +11,7 @@ Welcome to Hollow World - a single-page web application that brings the mysterio
 ## ✅ Current Implementation Status
 
 ### **Real P2P Network Integration**
-- **Real Peer ID**: Display actual peer ID from LibP2PNetworkProvider instead of mock
+- **Real Peer ID**: Display actual libp2p peer ID instead of mock
 - **Persistent Network**: Peer ID persists across sessions using stored private key
 - **Selectable Peer ID**: Click to select full peer ID text
 

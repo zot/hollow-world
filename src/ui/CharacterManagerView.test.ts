@@ -1,3 +1,9 @@
+/**
+ * Unit tests for CharacterManagerView
+ *
+ * CRC: specs-crc/crc-CharacterManagerView.md
+ */
+
 // Unit tests for CharacterManagerView following SOLID principles
 
 import { CharacterManagerView } from './CharacterManagerView.js';

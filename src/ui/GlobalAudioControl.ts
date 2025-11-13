@@ -1,17 +1,29 @@
 /**
  * Global Audio Control - Fixed bottom-right audio controls visible on all pages
  * Following CLAUDE.md UI principles: "Audio control MUST be visible on all pages at the bottom-right"
+ *
+ * CRC: specs-crc/crc-GlobalAudioControl.md
+ * Spec: specs/audio.md, specs/ui.md
+ * Sequences: specs-crc/seq-play-background-music.md
  */
 
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 
+/**
+ * IGlobalAudioControl interface
+ * CRC: specs-crc/crc-GlobalAudioControl.md
+ */
 export interface IGlobalAudioControl {
     render(): Promise<HTMLElement>;
     update(): void;
     destroy(): void;
 }
 
+/**
+ * GlobalAudioControl class - Fixed audio controls visible on all pages
+ * CRC: specs-crc/crc-GlobalAudioControl.md
+ */
 export class GlobalAudioControl implements IGlobalAudioControl {
     private audioManager: IAudioManager | undefined;
     private container: HTMLElement | null = null;
@@ -131,6 +143,11 @@ export class GlobalAudioControl implements IGlobalAudioControl {
         });
     }
 
+    /**
+     * update implementation
+     *
+     * CRC: specs-crc/crc-GlobalAudioControl.md
+     */
     update(): void {
         if (!this.container || !this.audioManager) return;
 
@@ -184,6 +201,11 @@ export class GlobalAudioControl implements IGlobalAudioControl {
         }
     }
 
+    /**
+     * updateAudioManager implementation
+     *
+     * CRC: specs-crc/crc-GlobalAudioControl.md
+     */
     updateAudioManager(audioManager: IAudioManager | undefined): void {
         this.audioManager = audioManager;
         if (this.container) {
@@ -193,6 +215,11 @@ export class GlobalAudioControl implements IGlobalAudioControl {
         }
     }
 
+    /**
+     * destroy implementation
+     *
+     * CRC: specs-crc/crc-GlobalAudioControl.md
+     */
     destroy(): void {
         if (this.updateInterval) {
             clearInterval(this.updateInterval);

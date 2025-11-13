@@ -1,0 +1,72 @@
+<!-- @layout: specs-ui/ui-join-session-modal.md -->
+<div class="modal-overlay" data-modal="join-session">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2>Join Multiplayer Session</h2>
+      <button class="modal-close" data-action="closeJoinSessionModal">×</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Form state -->
+      <div class="join-form-state" data-state="form">
+        <form id="join-session-form">
+          <!-- Host peer ID input -->
+          <div class="form-group">
+            <label for="host-peer-id">Host Peer ID:</label>
+            <input type="text"
+                   id="host-peer-id"
+                   name="hostPeerId"
+                   required
+                   placeholder="Enter host peer ID">
+            <span class="form-hint">or</span>
+            <select id="friend-selector" data-action="selectFriend">
+              <option value="">Select Friend</option>
+              {{#each friends}}
+              <option value="{{peerId}}">{{name}} ({{peerId}})</option>
+              {{/each}}
+            </select>
+          </div>
+
+          <!-- Character selection -->
+          <div class="form-group">
+            <label for="character-select">Your Character:</label>
+            <select id="character-select" name="characterId" required>
+              <option value="">Select Character</option>
+              {{#each characters}}
+              <option value="{{id}}">{{name}} (Rank {{rank}})</option>
+              {{/each}}
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <!-- Loading state -->
+      <div class="join-form-state" data-state="loading" style="display: none;">
+        <div class="loading-message">
+          <p>Connecting to host...</p>
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div class="join-form-state" data-state="error" style="display: none;">
+        <div class="error-message">
+          <span class="error-icon">❌</span>
+          <p><strong>Connection failed</strong></p>
+          <p class="error-details">Could not connect to host peer. Please check the peer ID and try again.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" data-action="closeJoinSessionModal">Cancel</button>
+      <button class="btn-primary"
+              data-action="joinSession"
+              data-state="form">Join Session</button>
+      <button class="btn-primary"
+              data-action="retryJoinSession"
+              data-state="error"
+              style="display: none;">Retry</button>
+    </div>
+  </div>
+</div>

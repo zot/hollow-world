@@ -1,10 +1,19 @@
 /**
  * Event Modal - Displays event cards with actions
+ * Observer Pattern: Listens to EventService for real-time updates
+ *
+ * CRC: specs-crc/crc-EventModal.md
+ * Spec: specs/friends.md, specs/ui.settings.md
+ * Sequences: specs-crc/seq-friend-status-change.md, specs-crc/seq-add-friend-by-peerid.md
  */
 
 import type { EventService, IEvent, IFriendRequestEvent, IFriendDeclinedEvent, IFriendAcceptedEvent } from '../services/EventService.js';
 import type { HollowPeer } from '../p2p/HollowPeer.js';
 
+/**
+ * IEventModal interface
+ * CRC: specs-crc/crc-EventModal.md
+ */
 export interface IEventModal {
     render(): Promise<HTMLElement>;
     show(): void;
@@ -12,6 +21,10 @@ export interface IEventModal {
     destroy(): void;
 }
 
+/**
+ * EventModal class - Event details modal
+ * CRC: specs-crc/crc-EventModal.md
+ */
 export class EventModal implements IEventModal {
     private modal: HTMLDivElement | null = null;
     private eventService: EventService;
@@ -153,6 +166,11 @@ export class EventModal implements IEventModal {
         // via event delegation on document, so we don't need to attach them here
     }
 
+    /**
+     * show implementation
+     *
+     * CRC: specs-crc/crc-EventModal.md
+     */
     show(): void {
         if (this.modal) {
             this.modal.style.display = 'flex';
@@ -160,12 +178,22 @@ export class EventModal implements IEventModal {
         }
     }
 
+    /**
+     * hide implementation
+     *
+     * CRC: specs-crc/crc-EventModal.md
+     */
     hide(): void {
         if (this.modal) {
             this.modal.style.display = 'none';
         }
     }
 
+    /**
+     * destroy implementation
+     *
+     * CRC: specs-crc/crc-EventModal.md
+     */
     destroy(): void {
         if (this.modal) {
             this.modal.remove();

@@ -1,3 +1,11 @@
+/**
+ * CharacterEditorView - Individual Character Editing Interface
+ *
+ * CRC: specs-crc/crc-CharacterEditorView.md
+ * Spec: specs/ui.characters.md, specs/ui.md
+ * Sequences: specs-crc/seq-edit-character.md, specs-crc/seq-save-character-ui.md, specs-crc/seq-revert-character.md
+ */
+
 // Character Editor View - Separate component for editing individual characters
 // Following SOLID principles with route-based navigation
 
@@ -11,6 +19,11 @@ import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioC
 
 // Character editor template is now loaded from character-editor.html
 
+/**
+ * ICharacterEditor interface
+ *
+ * CRC: specs-crc/crc-CharacterEditorView.md
+ */
 export interface ICharacterEditor extends IUIComponent {
     setCharacter(character: ICharacter): void;
     getCharacter(): ICharacter | null;
@@ -34,6 +47,29 @@ const DEFAULT_CONFIG: ICharacterEditorConfig = {
     showCreationMode: true
 };
 
+/**
+ * CharacterEditorView - Edit or create individual character
+ *
+ * Purpose: Provide form interface for editing character attributes, skills,
+ * equipment, and all character data. Supports both creation and editing modes.
+ *
+ * Specifications:
+ * - UI Structure: specs-ui/ui-character-editor-view.md
+ * - UI Concept: specs-wysiwid/concepts-ui.md → CharacterEditorView
+ * - Character Operations: specs-wysiwid/synchronizations-character.md
+ * - Save Behavior: specs-ui/manifest.md → Save Behavior (never block saves)
+ * - Change Detection: specs-ui/manifest.md → Hash-based with 250ms polling
+ *
+ * Template: public/templates/character-editor.html
+ *
+ * Key Features:
+ * - Character sheet with all editable fields
+ * - Hash-based change detection (originalCharacterHash)
+ * - Save/Cancel buttons (enabled when changes detected)
+ * - Validation warnings (don't block saves)
+ * - Delete character (with confirmation)
+ * - Freeze/unfreeze character
+ */
 export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioControlSupport {
     private config: ICharacterEditorConfig;
     public container: HTMLElement | null = null;
@@ -52,6 +88,11 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         this.audioManager = audioManager;
     }
 
+    /**
+     * setCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     */
     async setCharacter(character: ICharacter): Promise<void> {
         this.character = { ...character };
 
@@ -69,10 +110,21 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         }
     }
 
+    /**
+     * getCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     */
     getCharacter(): ICharacter | null {
         return this.character ? { ...this.character } : null;
     }
 
+    /**
+     * render implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     * Sequence: specs-crc/seq-edit-character.md (lines 26-45)
+     */
     async render(container: HTMLElement): Promise<void> {
         if (!container) {
             throw new Error('Container element is required');
@@ -162,6 +214,11 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         }
     }
 
+    /**
+     * setupEventListeners implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     */
     private setupEventListeners(): void {
         if (!this.container) return;
 
@@ -189,10 +246,11 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         this.updateButtonStates();
     }
 
-    
-
-    
-
+    /**
+     * setupChangeTracking implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     */
     private setupChangeTracking(): void {
         if (!this.characterSheet) return;
 
@@ -206,6 +264,11 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         setInterval(checkForChanges, 250);
     }
 
+    /**
+     * detectChanges implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     */
     private async detectChanges(): Promise<boolean> {
         if (!this.character || !this.originalCharacterHash || !this.characterSheet) {
             return false;
@@ -228,6 +291,11 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         return currentHash !== this.originalCharacterHash;
     }
 
+    /**
+     * updateButtonStates implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     */
     private updateButtonStates(): void {
         if (!this.container) return;
 
@@ -247,6 +315,12 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         }
     }
 
+    /**
+     * revertChanges implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     * Sequence: specs-crc/seq-revert-character.md (lines 14-42)
+     */
     private async revertChanges(): Promise<void> {
         if (!this.character) return;
 
@@ -281,6 +355,12 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         }
     }
 
+    /**
+     * saveCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     * Sequence: specs-crc/seq-save-character-ui.md (lines 14-67)
+     */
     private async saveCharacter(): Promise<void> {
         if (!this.characterSheet || !this.character) return;
 
@@ -418,6 +498,11 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
         }, 5000);
     }
 
+    /**
+     * destroy implementation
+     *
+     * CRC: specs-crc/crc-CharacterEditorView.md
+     */
     destroy(): void {
         if (this.characterSheet) {
             this.characterSheet.destroy();
@@ -431,6 +516,37 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
 
         this.character = null;
         this.musicButtonElement = null;
+    }
+
+    /**
+     * getContainer implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    getContainer(): HTMLElement | null {
+        return this.container;
+    }
+
+    /**
+     * show implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    show(): void {
+        if (this.container) {
+            this.container.style.display = 'block';
+        }
+    }
+
+    /**
+     * hide implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    hide(): void {
+        if (this.container) {
+            this.container.style.display = 'none';
+        }
     }
 
     private applyStyles(): void {

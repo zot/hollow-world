@@ -356,8 +356,6 @@ Critical: Assets must load from origin on ALL routes
 ### Peer Connectivity Tests
 **Note**: These tests verify basic P2P connectivity infrastructure using ping/pong messages
 
-See [`specs/coms.md`](coms.md#-testing-findings--limitations) for detailed explanation of browser P2P limitations on localhost.
-
 - [ ] **Peer address resolution via DHT and relay**
   - **Setup**: Open Tab A with Profile A, open Tab B with Profile B (keep both open!)
   - Tab A: Navigate to Settings view, note peer ID (Peer A)

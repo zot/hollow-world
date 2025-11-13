@@ -1,3 +1,12 @@
+/**
+ * SettingsView - Application Settings and Configuration Interface
+ * Single Responsibility: Manages settings UI only (delegates storage to ProfileService, logging to LogService)
+ *
+ * CRC: specs-crc/crc-SettingsView.md
+ * Spec: specs/ui.settings.md
+ * Template: public/templates/settings-view.html, public/templates/log-view.html
+ */
+
 import { IUIComponent } from './SplashScreen.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
@@ -10,6 +19,10 @@ import { router } from '../utils/Router.js';
 import { getProfileService } from '../services/ProfileService.js';
 import { DEFAULT_PUBSUB_TOPIC, DEFAULT_PEER_PROTOCOL } from '../p2p/constants.js';
 
+/**
+ * ISettingsView interface
+ * CRC: specs-crc/crc-SettingsView.md
+ */
 export interface ISettingsView {
     onBackToMenu?: () => void;
     audioManager?: IAudioManager;
@@ -46,6 +59,18 @@ const DEFAULT_CONFIG: ISettingsViewConfig = {
     backButtonClass: 'settings-back-button'
 };
 
+/**
+ * SettingsView - Manage application settings and view system log
+ *
+ * CRC: specs-crc/crc-SettingsView.md
+ *
+ * Key Features:
+ * - Peer ID display (read-only, copyable)
+ * - Profile picker (switch profiles)
+ * - Private notes (Milkdown editor)
+ * - System log viewer with filtering and sorting
+ * - Debug configuration (pubsub topic, peer protocol)
+ */
 export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport {
     private readonly STORAGE_KEY = 'hollowWorldSettings';
     private config: ISettingsViewConfig;
@@ -79,6 +104,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         this.setupEventCardHandlers();
     }
 
+    /**
+     * renderSettings implementation
+     *
+     * CRC: specs-crc/crc-SettingsView.md
+     */
     async renderSettings(container: HTMLElement): Promise<void> {
         if (!container) {
             throw new Error('Container element is required');
@@ -163,6 +193,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
+    /**
+     * destroy implementation
+     *
+     * CRC: specs-crc/crc-SettingsView.md
+     */
     destroy(): void {
         if (this.peerCountInterval) {
             clearInterval(this.peerCountInterval);
@@ -179,6 +214,37 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         this.backButtonElement = null;
         this.playerNameInput = null;
         this.musicButtonElement = null;
+    }
+
+    /**
+     * getContainer implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    getContainer(): HTMLElement | null {
+        return this.container;
+    }
+
+    /**
+     * show implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    show(): void {
+        if (this.container) {
+            this.container.style.display = 'block';
+        }
+    }
+
+    /**
+     * hide implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    hide(): void {
+        if (this.container) {
+            this.container.style.display = 'none';
+        }
     }
 
     private loadSettings(): ISettingsData {
@@ -557,6 +623,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
+    /**
+     * updatePeerId implementation
+     *
+     * CRC: specs-crc/crc-SettingsView.md
+     */
     updatePeerId(peerId: string): void {
         this.settingsData.peerId = peerId;
         this.logService.log(`Peer ID updated: ${peerId}`);
@@ -569,6 +640,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
+    /**
+     * updateHollowPeer implementation
+     *
+     * CRC: specs-crc/crc-SettingsView.md
+     */
     updateHollowPeer(hollowPeer: HollowPeer): void {
         this.hollowPeer = hollowPeer;
         this.updatePeerCount();
@@ -581,6 +657,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
 
     private peerCountInterval?: number;
 
+    /**
+     * startPeerCountUpdates implementation
+     *
+     * CRC: specs-crc/crc-SettingsView.md
+     */
     startPeerCountUpdates(): void {
         this.updatePeerCount();
         this.peerCountInterval = window.setInterval(() => {
@@ -588,6 +669,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }, 5000); // Update every 5 seconds
     }
 
+    /**
+     * updatePeerCount implementation
+     *
+     * CRC: specs-crc/crc-SettingsView.md
+     */
     updatePeerCount(): void {
         const peerCountElement = this.container?.querySelector('#peer-count');
         if (peerCountElement && this.hollowPeer) {
@@ -597,6 +683,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     }
 
 
+    /**
+     * refreshMusicButtonState implementation
+     *
+     * CRC: specs-crc/crc-SettingsView.md
+     */
     refreshMusicButtonState(): void {
         if (this.audioManager) {
             AudioControlUtils.updateMusicButtonState(this);
@@ -761,6 +852,11 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
         }
     }
 
+    /**
+     * renderLog implementation
+     *
+     * CRC: specs-crc/crc-SettingsView.md
+     */
     async renderLog(container: HTMLElement): Promise<void> {
         if (!container) {
             throw new Error('Container element is required');

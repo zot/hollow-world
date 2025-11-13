@@ -54,6 +54,7 @@ cat > hollow-world-p2p/html/index.html << 'HTML'
     <link rel="stylesheet" href="/styles/SplashScreen.css">
     <link rel="stylesheet" href="/styles/CharacterManager.css">
     <link rel="stylesheet" href="/styles/CharacterEditor.css">
+    <link rel="stylesheet" href="/styles/CharacterSheet.css">
     <link rel="stylesheet" href="/styles/FriendsView.css">
     <link rel="stylesheet" href="/styles/SettingsView.css">
     <link rel="stylesheet" href="/styles/EventModal.css">

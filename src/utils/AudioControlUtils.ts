@@ -1,5 +1,10 @@
-// Enhanced audio control utilities following DRY principle
-// Provides access to all AudioManager features through consistent UI
+/**
+ * AudioControlUtils - Shared audio control UI utilities
+ *
+ * CRC: specs-crc/crc-AudioControlUtils.md
+ * Spec: specs/audio.md
+ * Sequences: seq-app-startup.md, seq-play-sound-effect.md
+ */
 
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from './TemplateEngine.js';
@@ -14,7 +19,11 @@ export interface IEnhancedAudioControlSupport extends IAudioControlSupport {
 }
 
 export class AudioControlUtils {
-    // Legacy simple toggle support (for backward compatibility)
+    /**
+     * toggleMusic implementation
+     *
+     * CRC: specs-crc/crc-AudioControlUtils.md
+     */
     static async toggleMusic(component: IAudioControlSupport): Promise<void> {
         if (!component.audioManager) return;
 
@@ -26,6 +35,11 @@ export class AudioControlUtils {
         }
     }
 
+    /**
+     * updateMusicButtonState implementation
+     *
+     * CRC: specs-crc/crc-AudioControlUtils.md
+     */
     static updateMusicButtonState(component: IAudioControlSupport): void {
         if (!component.musicButtonElement || !component.audioManager) return;
 
@@ -34,6 +48,11 @@ export class AudioControlUtils {
         component.musicButtonElement.title = isPlaying ? 'Pause Music' : 'Play Music';
     }
 
+    /**
+     * setupMusicButtonEventListener implementation
+     *
+     * CRC: specs-crc/crc-AudioControlUtils.md
+     */
     static setupMusicButtonEventListener(component: IAudioControlSupport): void {
         if (component.musicButtonElement && component.audioManager) {
             component.musicButtonElement.addEventListener('click', async () => {
@@ -42,7 +61,12 @@ export class AudioControlUtils {
         }
     }
 
-    // Enhanced audio control support
+    /**
+     * renderEnhancedAudioControl implementation
+     *
+     * CRC: specs-crc/crc-AudioControlUtils.md
+     * Sequence: seq-app-startup.md
+     */
     static async renderEnhancedAudioControl(component: IEnhancedAudioControlSupport): Promise<string> {
         if (!component.audioManager) return '';
 
@@ -76,6 +100,12 @@ export class AudioControlUtils {
         }
     }
 
+    /**
+     * setupEnhancedAudioControls implementation
+     *
+     * CRC: specs-crc/crc-AudioControlUtils.md
+     * Sequence: seq-app-startup.md
+     */
     static setupEnhancedAudioControls(component: IEnhancedAudioControlSupport): void {
         if (!component.container || !component.audioManager) return;
 
@@ -151,6 +181,12 @@ export class AudioControlUtils {
         }
     }
 
+    /**
+     * updateEnhancedAudioState implementation
+     *
+     * CRC: specs-crc/crc-AudioControlUtils.md
+     * Sequence: seq-app-startup.md
+     */
     static updateEnhancedAudioState(component: IEnhancedAudioControlSupport): void {
         if (!component.container || !component.audioManager) return;
 
@@ -199,6 +235,12 @@ export class AudioControlUtils {
         }
     }
 
+    /**
+     * playButtonSound implementation
+     *
+     * CRC: specs-crc/crc-AudioControlUtils.md
+     * Sequence: seq-play-sound-effect.md
+     */
     static async playButtonSound(audioManager?: IAudioManager): Promise<void> {
         // Gunshot sound disabled - no longer plays on button clicks
         return;

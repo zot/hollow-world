@@ -6,7 +6,7 @@
 - **Version**: Latest from repository
 - **Purpose**: P2P networking server providing libp2p capabilities to browsers via WebSocket
 - **Location**: `bin/p2p-webapp`
-- **Source**: https://github.com/emendir/p2p-webapp
+- **Source**: https://github.com/zot/p2p-webapp
 - **Platform**: Platform-specific binary (Linux, macOS, Windows)
 - **Installation**: Download from GitHub releases or build from source
 - **Note**: Binary is .gitignored - must be obtained separately
@@ -14,7 +14,7 @@
 #### Building from Source
 ```bash
 # Clone repository
-git clone https://github.com/emendir/p2p-webapp.git
+git clone https://github.com/zot/p2p-webapp.git
 cd p2p-webapp
 
 # Build (requires Go 1.21+)
@@ -73,55 +73,14 @@ Rich markdown editor framework:
 - **playwright** (^1.55.1) - Browser automation
 
 #### P2P Client Library
-- **@emendir/p2p-webapp-client** - TypeScript client for p2p-webapp
+- **p2p-webapp client** - TypeScript client extracted from p2p-webapp binary
+  - **Not installed via npm** - extracted using CLI command
+  - **Location**: `src/p2p/client/` (client.js, client.d.ts, types.d.ts)
+  - **Extract command**: `bin/p2p-webapp cp client.js client.d.ts types.d.ts src/p2p/client/`
   - WebSocket-based communication with p2p-webapp server
   - Provides P2P messaging API
   - Used by `P2PWebAppNetworkProvider`
-
-## Dependency History
-
-### Major Removals (P2P Migration)
-
-**Phase 4: Removed libp2p/helia (591 packages)**
-- All `@libp2p/*` packages
-- All `@chainsafe/libp2p-*` packages
-- `helia` and related IPFS packages
-- `@multiformats/*` packages
-- WebRTC/WebTransport dependencies
-- See: `specs/p2p-migration-progress.md` Phase 4
-
-**Phase 6: Removed Vite (195 packages)**
-- `vite` and all Vite plugins
-- Rollup and related bundler tools
-- Development server dependencies
-- Replaced with lightweight esbuild
-- See: `specs/p2p-migration-progress.md` Phase 6
-
-**Net Result**:
-- **Removed**: 786 packages (591 libp2p + 195 Vite)
-- **Added back**: 76 packages (vitest 31 + jsdom 44 + fake-indexeddb 1)
-- **Net reduction**: 710 packages removed
-- **Bundle size reduction**: From complex Vite setup to 5.2MB esbuild bundle
-
-### Why These Changes Were Made
-
-#### libp2p → p2p-webapp
-**Problem**: Browser-based libp2p was complex with 591 dependencies
-**Solution**: Use Go-based p2p-webapp server with WebSocket client (zero runtime dependencies)
-**Benefits**:
-- Simpler dependency management
-- Faster installs
-- More reliable P2P connectivity
-- Easier troubleshooting
-
-#### Vite → esbuild
-**Problem**: Vite brought 195 dependencies and slower builds (8.88s)
-**Solution**: Use esbuild directly for bundling
-**Benefits**:
-- Faster builds (729ms)
-- Fewer dependencies
-- Simpler configuration
-- Sufficient for project needs
+  - See [`development.md`](development.md#updating-p2p-webapp) for update instructions
 
 ## Package Version Management
 
@@ -262,10 +221,9 @@ See: `build.sh` for complete configuration
 ## Related Documentation
 
 - **[`p2p.md`](p2p.md)** - P2P system architecture and p2p-webapp usage
-- **[`p2p-migration-progress.md`](p2p-migration-progress.md)** - Dependency removal history
 - **[`testing.md`](testing.md)** - Test framework setup and usage
+- **[`development.md`](development.md)** - Development server and build process
 
 ---
 
-*Last updated: 2025-11-03*
-*For dependency removal history, see: [`p2p-migration-progress.md`](p2p-migration-progress.md)*
+*Last updated: 2025-11-08*

@@ -1,3 +1,9 @@
+/**
+ * Unit tests for CharacterEditorView
+ *
+ * CRC: specs-crc/crc-CharacterEditorView.md
+ */
+
 // Unit tests for CharacterEditorView UI behavior
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';

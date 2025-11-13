@@ -1,3 +1,7 @@
+<!-- @layout specs-ui/ui-characters-view.md → CharacterCard -->
+<!-- @spec specs/ui.characters.md -->
+<!-- Character card displayed in character list -->
+<!-- Used by: src/ui/CharacterManagerView.ts -->
 <div class="character-item" data-character-id="{{id}}" role="listitem" tabindex="0"
      aria-label="Character {{name}}, {{primaryStats}}"
      onkeydown="if(event.key==='Enter'||event.key===' ') event.target.querySelector('[data-action=edit]').click()">

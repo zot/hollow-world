@@ -4,7 +4,7 @@
 
 ## Overview
 
-The Friends system manages peer-to-peer relationships between Hollow World players. Each friend represents a LibP2P peer connection and tracks shared worlds and characters across those worlds.
+The Friends system manages peer-to-peer relationships between Hollow World players. Each friend represents a peer connection and tracks shared worlds and characters across those worlds.
 
 ## 🤝 Friend Data Structure
 
@@ -12,7 +12,7 @@ The Friends system manages peer-to-peer relationships between Hollow World playe
 
 ```typescript
 interface IFriend {
-    peerId: string;        // LibP2P peer ID (unique identifier)
+    peerId: string;        // Peer ID (unique identifier)
     playerName: string;    // Display name for the friend
     notes: string;         // Private notes (not transmitted)
     pending?: 'unsent' | 'pending';  // Friend request status:

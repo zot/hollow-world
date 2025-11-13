@@ -11,7 +11,7 @@
 - selecting a profile
   - chooses which storage profile the app uses
   - applies only to the current tab (i.e. the selection is not persisted)
-  - reconnects to libp2p using profile's peerID
+  - reconnects to p2p-webapp using profile's peerID
 - at startup
   - if storage exists but does not use profiles, remove it
   - if storage is empty (including if it was just removed), create the Default profile
@@ -29,19 +29,19 @@
 - 🏜️ [`ui.splash.md`](ui.splash.md) - Main splash screen with western styling
 - 👤 [`ui.characters.md`](ui.characters.md) - Character management system
 - ⚙️ [`ui.settings.md`](ui.settings.md) - Settings view with log and peer management
-- 📊 [`character-sheet-plan.md`](character-sheet-plan.md) - Comprehensive character sheet design
 
 ### System Architecture
-- 🌐 [`p2p.md`](p2p.md) - Peer-to-peer networking with LibP2P
+- 🪟 [`view-management.md`](view-management.md) - View manager and single-active-view pattern
+- 🌐 [`p2p.md`](p2p.md) - Peer-to-peer networking with p2p-webapp
 - 💬 [`p2p-messages.md`](p2p-messages.md) - P2P message protocols and formats
 - 📦 [`dependencies.md`](dependencies.md) - NPM dependency management and overrides
-- 🎮 [`integrate-textcraft.md`](integrate-textcraft.md) - TextCraft MUD integration
+- 🎮 [`game-worlds.md`](game-worlds.md) - TextCraft integration, Adventure Mode, startup sequence
+- 🎮 [`integrate-textcraft.md`](integrate-textcraft.md) - TextCraft MUD integration details
+- 🛠️ [`development.md`](development.md) - Development server and build process
+- 📏 [`coding-standards.md`](coding-standards.md) - Coding standards and best practices
 
 ### Game Rules Reference
 - 📖 [`Hollow-summary.md`](Hollow-summary.md) - Complete RPG system rules and mechanics
-
-## 📈 Current Implementation Plan
-- 📝 [`main-plan.md`](main-plan.md) - Detailed implementation plan and progress tracking
 
 ## 🎵 Audio System
 **See [`audio.md`](audio.md) for comprehensive audio system specifications**

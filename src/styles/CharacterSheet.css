@@ -54,6 +54,35 @@
     text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
 }
 
+.character-name-section {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.character-name-input {
+    font-family: 'Sancreek', 'Rye', serif;
+    font-size: 2.5rem;
+    color: #8b4513;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    text-align: center;
+    width: 100%;
+    padding: 5px;
+    transition: all 0.2s ease;
+}
+
+.character-name-input:hover {
+    border-bottom-color: #cd853f;
+}
+
+.character-name-input:focus {
+    outline: none;
+    border-bottom-color: #8b4513;
+    background: rgba(255,248,220,0.3);
+}
+
 .character-description {
     font-style: italic;
     color: #654321;
@@ -73,6 +102,27 @@
     border-radius: 4px;
     border: 1px solid #cd853f;
     font-weight: bold;
+}
+
+.rank-stat {
+    font-family: 'Rye', serif;
+    font-weight: bold;
+    color: #654321;
+    font-size: 1rem;
+}
+
+.rank-stat input[type="number"] {
+    font-family: 'Rye', serif;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #8b4513;
+    background: rgba(255,248,220,0.9);
+    border: 1px solid #8b4513;
+    border-radius: 3px;
+    padding: 2px 8px;
+    text-align: center;
+    width: 50px;
+    margin-left: 5px;
 }
 
 .resource-displays {
@@ -178,12 +228,7 @@
     text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
 }
 
-.attribute-category-row {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    flex-wrap: wrap;
-}
+/* Removed duplicate - see line 457 for consolidated definition */
 
 .attribute-item {
     display: flex;
@@ -445,6 +490,7 @@
     align-items: center;
     justify-content: center;
     gap: 5px;
+    flex-wrap: nowrap;
 }
 
 .attribute-line .attribute-value {
@@ -452,12 +498,13 @@
     font-size: 16px;
 }
 
-/* Attribute category row with emoji */
+/* Attribute category row with emoji - 3 attributes horizontally per spec */
 .attribute-category-row {
     display: flex;
     align-items: center;
     margin-bottom: 15px;
     gap: 5px;
+    flex-wrap: nowrap; /* Keep attributes on single row */
 }
 
 .category-emoji {
@@ -466,10 +513,11 @@
     min-width: 30px;
 }
 
-/* Attribute spinner buttons in box layout */
+/* Attribute spinner buttons in box layout - MUST be vertically stacked per spec */
 .attribute-box .attribute-spinner {
     display: flex;
-    flex-direction: column;
+    flex-direction: column !important;
+    gap: 1px;
 }
 
 .attribute-box .attr-btn {

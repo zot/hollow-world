@@ -8,14 +8,14 @@
     "watch": "esbuild src/main.ts --bundle --format=esm --platform=browser --target=es2020 --sourcemap --outfile=hollow-world-p2p/html/main.js --watch",
     "build": "./build.sh",
     "build:prod": "MODE=production ./build.sh",
-    "serve": "cd hollow-world-p2p && ../bin/p2p-webapp serve -v",
+    "serve": "cd hollow-world-p2p && ../bin/p2p-webapp --dir . -v",
     "test": "vitest",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "p2p:demo": "mkdir -p test-peer && cd test-peer && ../bin/p2p-webapp demo -v"
+    "p2p:demo": "../bin/p2p-webapp -v"
   },
   "keywords": [],
   "author": "",

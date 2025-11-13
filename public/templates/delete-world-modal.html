@@ -1,0 +1,31 @@
+<!-- @layout: specs-ui/ui-delete-world-modal.md -->
+<div class="modal-overlay" data-modal="delete-world">
+  <div class="modal-dialog modal-danger">
+    <div class="modal-header">
+      <h2>Delete World</h2>
+      <button class="modal-close" data-action="closeDeleteWorldModal">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="warning-message">
+        <span class="warning-icon">⚠️</span>
+        <strong>Warning: This action cannot be undone</strong>
+      </div>
+
+      <p>Are you sure you want to delete the world:</p>
+
+      <p class="world-name-display">"{{worldName}}"</p>
+
+      <p class="warning-text">
+        All world data, rooms, and objects will be permanently removed.
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" data-action="closeDeleteWorldModal">Cancel</button>
+      <button class="btn-danger"
+              data-action="confirmDeleteWorld"
+              data-world-id="{{worldId}}">Delete World</button>
+    </div>
+  </div>
+</div>

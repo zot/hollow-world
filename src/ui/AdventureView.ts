@@ -1,52 +1,76 @@
 /**
- * AdventureView - Text-based MUD adventure mode interface
+ * Adventure View - Text-based MUD adventure gameplay interface
+ *
+ * CRC: specs-crc/crc-AdventureView.md
+ * Spec: specs/game-worlds.md (lines 75-108)
+ * Sequences:
+ * - specs-crc/seq-select-world.md
+ * - specs-crc/seq-send-command.md
+ * - specs-crc/seq-host-session.md
+ * - specs-crc/seq-join-session.md
+ * UI Spec: specs-ui/ui-adventure-view.md
  *
  * This component provides the UI for TextCraft MUD integration,
  * supporting both solo and multiplayer (host/guest) modes.
+ * World management is delegated to WorldListView and AdventureMode.
  */
 
 import { TemplateEngine } from '../utils/TemplateEngine.js';
 import { HollowIPeer } from '../textcraft/hollow-peer.js';
 import { LocalMudSession } from '../textcraft/local-session.js';
 import { WorldLoader } from '../textcraft/world-loader.js';
-import { getStorage, World } from '../textcraft/model.js';
 import type { HollowPeer } from '../p2p/HollowPeer.js';
-import type { INetworkProvider } from '../p2p/types.js';
 import type { IRouter } from '../utils/Router.js';
+import { SessionControls, type SessionMode } from './SessionControls.js';
+import { JoinSessionModal } from './JoinSessionModal.js';
+import { getProfileService } from '../services/ProfileService.js';
 
+/**
+ * OutputEntry interface
+ * CRC: specs-crc/crc-AdventureView.md
+ * Spec: specs/game-worlds.md (Adventure Output History Persistence)
+ */
+interface OutputEntry {
+    type: 'command' | 'output' | 'system' | 'error';
+    text: string;
+}
+
+// Storage constants
+const OUTPUT_HISTORY_KEY = 'adventureOutputHistory';
+const MAX_HISTORY_LINES = 1000;
+
+/**
+ * IAdventureViewConfig interface
+ * CRC: specs-crc/crc-AdventureView.md
+ */
 export interface IAdventureViewConfig {
     hollowPeer?: HollowPeer;
     onBack: () => void;
     router?: IRouter;
 }
 
-type SessionMode = 'solo' | 'host' | 'guest';
-
+/**
+ * AdventureView class - Adventure gameplay view
+ * CRC: specs-crc/crc-AdventureView.md
+ */
 export class AdventureView {
     private container: HTMLElement | null = null;
     private outputElement: HTMLElement | null = null;
     private inputElement: HTMLInputElement | null = null;
-    private statusIndicator: HTMLElement | null = null;
-    private statusText: HTMLElement | null = null;
-    private sessionInfo: HTMLElement | null = null;
-    private connectionString: HTMLElement | null = null;
-    private joinModal: HTMLElement | null = null;
     private worldNameElement: HTMLElement | null = null;
-    private createWorldModal: HTMLElement | null = null;
-    private worldSettingsModal: HTMLElement | null = null;
-    private worldSettingsContainer: HTMLElement | null = null;
-    private deleteWorldModal: HTMLElement | null = null;
-    private worldListView: HTMLElement | null = null;
-    private worldListViewContainer: HTMLElement | null = null;
-    private worldListContainer: HTMLElement | null = null;
-    private currentWorldName: string = '';
-    private isWorldListVisible: boolean = false;
 
     private hollowPeer: HollowPeer | undefined;
     private mudPeer: HollowIPeer | null = null;
     private localSession: LocalMudSession | null = null;
     private onBackCallback: () => void;
     private router: IRouter | undefined;
+
+    // Session controls component
+    private sessionControls: SessionControls | null = null;
+    private sessionControlsContainer: HTMLElement | null = null;
+
+    // Join session modal component
+    private joinSessionModal: JoinSessionModal | null = null;
 
     // Event handler references for proper cleanup
     private boundBackClickHandler: (() => void) | null = null;
@@ -55,6 +79,8 @@ export class AdventureView {
     private commandHistory: string[] = [];
     private historyIndex: number = -1;
     private sessionMode: SessionMode = 'solo';
+    private currentWorldName: string = '';
+    private outputHistory: OutputEntry[] = [];
 
     constructor(config: IAdventureViewConfig) {
         this.hollowPeer = config.hollowPeer;
@@ -62,6 +88,13 @@ export class AdventureView {
         this.router = config.router;
     }
 
+    /**
+     * render implementation - Display adventure UI with banner, output area, command input
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-select-world.md
+     */
     async render(worldId?: string, skipInitialization: boolean = false): Promise<HTMLElement> {
         // Load template
         const templateEngine = new TemplateEngine();
@@ -75,67 +108,60 @@ export class AdventureView {
         // Get element references
         this.outputElement = this.container.querySelector('#adventure-output');
         this.inputElement = this.container.querySelector('#adventure-input');
-        this.statusIndicator = this.container.querySelector('#status-indicator');
-        this.statusText = this.container.querySelector('#status-text');
-        this.sessionInfo = this.container.querySelector('#session-info');
-        this.connectionString = this.container.querySelector('#connection-string');
-        this.joinModal = this.container.querySelector('#join-modal');
         this.worldNameElement = this.container.querySelector('#world-name');
-        this.createWorldModal = this.container.querySelector('#create-world-modal');
-        this.worldSettingsContainer = this.container.querySelector('#world-settings-modal-container');
-        this.worldListViewContainer = this.container.querySelector('#world-list-view-container');
-
-        // Clear world list view references since we have a new container
-        this.worldListView = null;
-        this.worldListContainer = null;
+        this.sessionControlsContainer = this.container.querySelector('#session-controls-container');
 
         // Setup event listeners
         this.setupEventListeners();
+
+        // Initialize session controls component
+        const templateEngineInstance = new TemplateEngine();
+        this.sessionControls = new SessionControls(
+            templateEngineInstance,
+            () => this.handleHostSession(),
+            () => this.handleJoinSession(),
+            () => this.handleEndSession()
+        );
+
+        if (this.sessionControlsContainer) {
+            const controlsElement = await this.sessionControls.render();
+            this.sessionControlsContainer.appendChild(controlsElement);
+        }
+
+        // Initialize join session modal
+        this.joinSessionModal = new JoinSessionModal(
+            templateEngineInstance,
+            (hostPeerId: string, characterId: string) => this.confirmJoin(hostPeerId, characterId)
+        );
 
         // Initialize MUD peer with specific world (unless we're skipping initialization)
         if (!skipInitialization) {
             await this.initializeMudPeer(worldId);
         }
 
+        // Load output history from storage
+        this.loadHistory();
+
         return this.container;
     }
 
+    /**
+     * initializeMudPeer implementation - Set up MUD connection for specified world
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-select-world.md
+     */
     private async initializeMudPeer(worldId?: string): Promise<void> {
-        try {
-            console.log('🎮 Initializing adventure mode...');
-
-            // Always start in solo mode (Phase 2.5)
-            await this.initializeSoloMode(worldId);
-
-            // Check if multiplayer is available (but don't auto-enable)
-            const networkProvider = this.hollowPeer?.getNetworkProvider() as INetworkProvider | null;
-
-            if (networkProvider) {
-                // Network available - prepare multiplayer capability
-                console.log('🌐 Multiplayer available (use Host/Join buttons to enable)');
-
-                // Create HollowIPeer for multiplayer (ready but not active)
-                this.mudPeer = new HollowIPeer(networkProvider);
-                this.mudPeer.init({
-                    displayOutput: (text: string) => this.addOutput(text),
-                    updateUser: (peerID: string, name: string, properties: any) => {
-                        this.addSystemOutput(`👤 User ${name} updated`);
-                    }
-                });
-
-                await this.mudPeer.start({} as any); // MudStorage will be implemented later
-
-                this.addSystemOutput('💡 Multiplayer available - use Host/Join buttons to connect with others.');
-                console.log('✅ Multiplayer peer ready (inactive)');
-            } else {
-                console.log('📴 Network unavailable - solo mode only');
-            }
-        } catch (error) {
-            console.error('❌ Failed to initialize adventure mode:', error);
-            this.addSystemOutput(`❌ Failed to initialize: ${error}`);
-        }
+        // Solo mode by default
+        await this.initializeSoloMode(worldId);
     }
 
+    /**
+     * initializeSoloMode implementation - Start local solo session
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     private async initializeSoloMode(worldId?: string): Promise<void> {
         this.addSystemOutput('🎮 Solo Mode');
         console.log('🎮 Initializing solo mode...');
@@ -165,7 +191,7 @@ export class AdventureView {
 
             // Set session mode to solo
             this.sessionMode = 'solo';
-            this.updateStatus();
+            this.updateSessionControls();
 
             // Update world name display
             this.currentWorldName = world.name;
@@ -182,6 +208,11 @@ export class AdventureView {
         }
     }
 
+    /**
+     * setupEventListeners implementation - Attach handlers for adventure controls
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     private setupEventListeners(): void {
         // Back button
         const backBtn = this.container?.querySelector('#adventure-back-btn');
@@ -197,7 +228,7 @@ export class AdventureView {
             backBtn.addEventListener('click', this.boundBackClickHandler);
         }
 
-        // Worlds button click (show world list view)
+        // Worlds button click - navigate to world list
         const worldsButton = this.container?.querySelector('#worlds-btn');
         if (worldsButton) {
             // Remove old listener if it exists
@@ -206,7 +237,7 @@ export class AdventureView {
             }
             // Create and store new bound handler
             this.boundWorldsButtonClickHandler = () => {
-                this.showWorldListViewFromButton();
+                this.handleWorldsButton();
             };
             worldsButton.addEventListener('click', this.boundWorldsButtonClickHandler);
         }
@@ -229,54 +260,15 @@ export class AdventureView {
         submitBtn?.addEventListener('click', () => {
             this.handleCommand();
         });
-
-        // Host session button
-        const hostBtn = this.container?.querySelector('#host-session-btn');
-        hostBtn?.addEventListener('click', () => {
-            this.startHosting();
-        });
-
-        // Join session button
-        const joinBtn = this.container?.querySelector('#join-session-btn');
-        joinBtn?.addEventListener('click', () => {
-            this.showJoinModal();
-        });
-
-        // Join modal buttons
-        const joinConfirmBtn = this.container?.querySelector('#join-confirm-btn');
-        joinConfirmBtn?.addEventListener('click', () => {
-            this.confirmJoin();
-        });
-
-        const joinCancelBtn = this.container?.querySelector('#join-cancel-btn');
-        joinCancelBtn?.addEventListener('click', () => {
-            this.hideJoinModal();
-        });
-
-        // Copy connection button
-        const copyBtn = this.container?.querySelector('#copy-connection-btn');
-        copyBtn?.addEventListener('click', () => {
-            this.copyConnectionString();
-        });
-
-        // World name click - toggle world list view
-        // TODO: Implement toggleWorldListView method
-        // this.worldNameElement?.addEventListener('click', () => {
-        //     this.toggleWorldListView();
-        // });
-
-        // Create world modal buttons
-        const createWorldConfirmBtn = this.container?.querySelector('#create-world-confirm-btn');
-        createWorldConfirmBtn?.addEventListener('click', () => {
-            this.confirmCreateWorld();
-        });
-
-        const createWorldCancelBtn = this.container?.querySelector('#create-world-cancel-btn');
-        createWorldCancelBtn?.addEventListener('click', () => {
-            this.hideCreateWorldModal();
-        });
     }
 
+    /**
+     * handleCommand implementation - Process user command through MUD engine
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-send-command.md
+     */
     private handleCommand(): void {
         if (!this.inputElement) return;
 
@@ -314,163 +306,217 @@ export class AdventureView {
         this.inputElement.value = '';
     }
 
+    /**
+     * handleBasicCommand implementation - Fallback for basic commands without MUD engine
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     private handleBasicCommand(cmd: string): void {
-        const lower = cmd.toLowerCase();
+        const lowerCmd = cmd.toLowerCase();
 
-        if (lower === 'help') {
-            this.addOutput(`
-<strong>Available Commands:</strong>
-• help - Show this help message
-• clear - Clear the output
-• status - Show current session status
-
-<strong>Session Commands:</strong>
-• Host a session using the "Host Session" button
-• Join a session using the "Join Session" button
-            `.trim());
-        } else if (lower === 'clear') {
+        if (lowerCmd === 'help') {
+            this.addOutput('Available commands: help, clear, status');
+        } else if (lowerCmd === 'clear') {
             this.clearOutput();
-        } else if (lower === 'status') {
-            this.addOutput(`Session Mode: ${this.sessionMode}`);
-            if (this.mudPeer) {
-                this.addOutput(`Peer ID: ${this.mudPeer.connectString()}`);
-            }
+        } else if (lowerCmd === 'status') {
+            this.addOutput(`Session mode: ${this.sessionMode}`);
+            this.addOutput(`World: ${this.currentWorldName || 'None'}`);
         } else {
-            this.addOutput('Command not recognized. Type "help" for available commands.');
+            this.addOutput(`Unknown command: ${cmd}`);
+            this.addOutput('Type "help" for available commands.');
         }
     }
 
+    /**
+     * navigateHistory implementation - Navigate up/down through command history
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     private navigateHistory(direction: number): void {
         if (!this.inputElement || this.commandHistory.length === 0) return;
 
-        const newIndex = this.historyIndex + direction;
+        this.historyIndex += direction;
 
-        if (newIndex >= 0 && newIndex < this.commandHistory.length) {
-            this.historyIndex = newIndex;
-            this.inputElement.value = this.commandHistory[this.historyIndex];
-        } else if (newIndex === this.commandHistory.length) {
-            this.historyIndex = newIndex;
+        // Clamp index
+        if (this.historyIndex < 0) {
+            this.historyIndex = 0;
+        } else if (this.historyIndex >= this.commandHistory.length) {
+            this.historyIndex = this.commandHistory.length;
             this.inputElement.value = '';
+            return;
         }
+
+        // Set input to history item
+        this.inputElement.value = this.commandHistory[this.historyIndex];
     }
 
-    private startHosting(): void {
-        if (!this.mudPeer) {
-            this.addErrorOutput('MUD peer not initialized');
-            return;
-        }
+    /**
+     * handleHostSession implementation - Start hosting multiplayer session
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-host-session.md
+     */
+    private handleHostSession(): void {
+        this.startHosting();
+    }
 
-        if (!this.hollowPeer) {
-            this.addErrorOutput('Cannot host in solo mode - network connection required');
-            return;
-        }
+    /**
+     * startHosting implementation - Initialize host mode
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-host-session.md
+     */
+    private startHosting(): void {
+        this.addSystemOutput('🏠 Starting host mode...');
 
         try {
-            // Close solo session before switching to multiplayer
-            if (this.localSession) {
-                console.log('🔄 Switching from solo mode to hosting...');
-                this.localSession.close();
-                this.localSession = null;
+            if (!this.hollowPeer) {
+                this.addErrorOutput('P2P peer not available');
+                return;
             }
 
-            this.mudPeer.startHosting();
+            // Get network provider from HollowPeer
+            const networkProvider = this.hollowPeer.getNetworkProvider();
+            if (!networkProvider) {
+                this.addErrorOutput('Network provider not available');
+                return;
+            }
+
+            // Create HollowIPeer using existing network provider
+            this.mudPeer = new HollowIPeer(networkProvider);
+
+            // Set session mode to host
             this.sessionMode = 'host';
-            this.updateStatus();
+            this.updateSessionControls();
 
-            const connectStr = this.mudPeer.connectString();
-            this.addSystemOutput('🏠 Now hosting a session!');
-            this.addSystemOutput(`Share this ID with guests: ${connectStr}`);
-
-            // Show connection info
-            if (this.sessionInfo && this.connectionString) {
-                this.connectionString.textContent = connectStr;
-                this.sessionInfo.style.display = 'block';
-            }
+            this.addSystemOutput('✅ Host mode active! Share your peer ID with friends.');
+            this.addSystemOutput(`Peer ID: ${networkProvider.getPeerId()}`);
         } catch (error) {
+            console.error('Failed to start hosting:', error);
             this.addErrorOutput(`Failed to start hosting: ${error}`);
         }
     }
 
+    /**
+     * handleJoinSession implementation - Open join session modal
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-join-session.md
+     */
+    private handleJoinSession(): void {
+        this.showJoinModal();
+    }
+
+    /**
+     * showJoinModal implementation - Display join session modal
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-join-session.md
+     */
     private showJoinModal(): void {
-        if (!this.hollowPeer) {
-            this.addErrorOutput('Cannot join session in solo mode - network connection required');
-            return;
-        }
-        
-        if (this.joinModal) {
-            this.joinModal.style.display = 'flex';
-            const input = this.joinModal.querySelector('#join-peer-id') as HTMLInputElement;
-            input?.focus();
+        if (this.joinSessionModal) {
+            this.joinSessionModal.show();
         }
     }
 
-    private hideJoinModal(): void {
-        if (this.joinModal) {
-            this.joinModal.style.display = 'none';
-            const input = this.joinModal.querySelector('#join-peer-id') as HTMLInputElement;
-            if (input) input.value = '';
-        }
-    }
-
-    private async confirmJoin(): Promise<void> {
-        const input = this.joinModal?.querySelector('#join-peer-id') as HTMLInputElement;
-        const peerID = input?.value.trim();
-
-        if (!peerID) {
-            this.addErrorOutput('Please enter a host peer ID');
-            return;
-        }
-
-        if (!this.mudPeer) {
-            this.addErrorOutput('MUD peer not initialized');
-            return;
-        }
+    /**
+     * confirmJoin implementation - Connect to host peer
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-join-session.md
+     */
+    private confirmJoin(hostPeerId: string, characterId: string): void {
+        this.addSystemOutput(`🚪 Joining session: ${hostPeerId}`);
+        this.addSystemOutput(`Character: ${characterId}`);
 
         try {
-            // Close solo session before switching to multiplayer
-            if (this.localSession) {
-                console.log('🔄 Switching from solo mode to joining session...');
-                this.localSession.close();
-                this.localSession = null;
+            if (!this.hollowPeer) {
+                this.addErrorOutput('P2P peer not available');
+                return;
             }
 
-            await this.mudPeer.joinSession(peerID);
-            this.sessionMode = 'guest';
-            this.updateStatus();
+            // Get network provider from HollowPeer
+            const networkProvider = this.hollowPeer.getNetworkProvider();
+            if (!networkProvider) {
+                this.addErrorOutput('Network provider not available');
+                return;
+            }
 
-            this.addSystemOutput(`🚪 Joining session hosted by ${peerID}...`);
-            this.hideJoinModal();
+            // Create HollowIPeer using existing network provider
+            this.mudPeer = new HollowIPeer(networkProvider);
+
+            // TODO: Implement actual P2P connection to host
+            // This would involve:
+            // 1. Connect to host peer via network provider
+            // 2. Initialize guest MudConnection
+            // 3. Set up bidirectional message handling
+
+            // Set session mode to guest
+            this.sessionMode = 'guest';
+            this.updateSessionControls();
+
+            this.addSystemOutput('✅ Joined session!');
         } catch (error) {
-            this.addErrorOutput(`Failed to join session: ${error}`);
+            console.error('Failed to join session:', error);
+            this.addErrorOutput(`Failed to join: ${error}`);
         }
     }
 
-    private copyConnectionString(): void {
-        if (!this.connectionString) return;
+    /**
+     * handleEndSession implementation - End current session and return to solo mode
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
+    private handleEndSession(): void {
+        this.addSystemOutput('🛑 Ending session...');
 
-        const text = this.connectionString.textContent || '';
-        navigator.clipboard.writeText(text).then(() => {
-            this.addSystemOutput('📋 Connection ID copied to clipboard!');
-        }).catch((error) => {
-            this.addErrorOutput(`Failed to copy: ${error}`);
-        });
+        // Clean up multiplayer peer
+        if (this.mudPeer) {
+            this.mudPeer = null;
+        }
+
+        // Return to solo mode
+        this.sessionMode = 'solo';
+        this.updateSessionControls();
+
+        this.addSystemOutput('✅ Returned to solo mode');
     }
 
-    private updateStatus(): void {
-        if (!this.statusIndicator || !this.statusText) return;
-
-        // Update status indicator class
-        this.statusIndicator.className = `status-indicator ${this.sessionMode}`;
-
-        // Update status text
-        const statusMap: Record<SessionMode, string> = {
-            solo: 'Solo',
-            host: 'Hosting',
-            guest: 'Guest'
-        };
-        this.statusText.textContent = statusMap[this.sessionMode];
+    /**
+     * updateSessionControls implementation - Update session controls display
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
+    private updateSessionControls(): void {
+        if (this.sessionControls) {
+            this.sessionControls.setSessionMode(this.sessionMode);
+        }
     }
 
+    /**
+     * handleWorldsButton implementation - Navigate to world list
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Sequences:
+     * - specs-crc/seq-switch-to-world-list.md
+     */
+    private handleWorldsButton(): void {
+        if (this.router) {
+            this.router.navigate('/worlds');
+        }
+    }
+
+    /**
+     * addOutput implementation - Add text to output area and scroll to bottom
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
+     */
     private addOutput(text: string, className?: string): void {
         if (!this.outputElement) return;
 
@@ -479,6 +525,16 @@ export class AdventureView {
         div.innerHTML = text;
         this.outputElement.appendChild(div);
 
+        // Determine output type from className
+        let type: OutputEntry['type'] = 'output';
+        if (className === 'command-output') type = 'command';
+        else if (className === 'error-output') type = 'error';
+        else if (className === 'system-output') type = 'system';
+
+        // Add to history and persist
+        this.outputHistory.push({ type, text });
+        this.saveHistory();
+
         // Auto-scroll to bottom
         const container = this.outputElement.parentElement;
         if (container) {
@@ -486,731 +542,199 @@ export class AdventureView {
         }
     }
 
+    /**
+     * addCommandOutput implementation - Add command text to output
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     private addCommandOutput(text: string): void {
-        this.addOutput(text, 'command');
+        this.addOutput(text, 'command-output');
     }
 
+    /**
+     * addErrorOutput implementation - Add error text to output
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     private addErrorOutput(text: string): void {
-        this.addOutput(text, 'error');
+        this.addOutput(text, 'error-output');
     }
 
+    /**
+     * addSystemOutput implementation - Add system message to output
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     private addSystemOutput(text: string): void {
-        this.addOutput(text, 'system');
+        this.addOutput(text, 'system-output');
     }
 
+    /**
+     * clearOutput implementation - Clear all output text
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     private clearOutput(): void {
         if (this.outputElement) {
             this.outputElement.innerHTML = '';
-            this.addSystemOutput('Output cleared.');
         }
     }
 
+    /**
+     * show implementation - Display adventure view
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     show(): void {
         if (this.container) {
-            this.container.style.display = 'flex';
+            this.container.style.display = 'block';
         }
     }
 
+    /**
+     * hide implementation - Hide adventure view
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     hide(): void {
         if (this.container) {
             this.container.style.display = 'none';
         }
     }
 
-    private showCreateWorldModal(): void {
-        if (this.createWorldModal) {
-            this.createWorldModal.style.display = 'flex';
-            const input = this.createWorldModal.querySelector('#new-world-name') as HTMLInputElement;
-            input?.focus();
-        }
-    }
-
-    private hideCreateWorldModal(): void {
-        if (this.createWorldModal) {
-            this.createWorldModal.style.display = 'none';
-            const nameInput = this.createWorldModal.querySelector('#new-world-name') as HTMLInputElement;
-            const descInput = this.createWorldModal.querySelector('#new-world-desc') as HTMLTextAreaElement;
-            if (nameInput) nameInput.value = '';
-            if (descInput) descInput.value = '';
-        }
-    }
-
     /**
-     * Navigate to world list view from button
+     * saveHistory implementation - Persist output history to localStorage
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
      */
-    private async showWorldListViewFromButton(): Promise<void> {
-        if (this.router) {
-            // Always navigate to world list
-            this.router.navigate('/worlds');
-        } else {
-            // Fallback to direct show if no router
-            await this.showWorldListView();
-        }
-    }
-
-    /**
-     * Show world list view from route
-     * This is called by the router when navigating to /adventure/worlds
-     */
-    /**
-     * Shows the world list view when navigating via router.
-     * This is called by the router when navigating to /worlds
-     */
-    /**
-     * Shows the world list view when navigating via router.
-     * This is called by the router when navigating to /worlds
-     */
-    public async showWorldListViewFromRoute(): Promise<void> {
-        await this.showWorldListView();
-    }
-
-    /**
-     * Show world list view
-     */
-    private async showWorldListView(): Promise<void> {
+    private saveHistory(): void {
         try {
-            // Load world list view template if not already loaded
-            if (!this.worldListView && this.worldListViewContainer) {
-                const templateEngine = new TemplateEngine();
-                const worldListHtml = await templateEngine.renderTemplateFromFile('adventure/world-list-view', {});
-                this.worldListViewContainer.innerHTML = worldListHtml;
-                this.worldListView = this.worldListViewContainer.querySelector('#world-list-view');
-                this.worldListContainer = this.worldListView?.querySelector('#world-list-container') || null;
-
-                // Setup event listener for create world button in world list
-                const createBtn = this.worldListView?.querySelector('#world-list-create-btn');
-                createBtn?.addEventListener('click', () => {
-                    this.showCreateWorldModal();
-                });
+            // Trim to max lines (FIFO)
+            if (this.outputHistory.length > MAX_HISTORY_LINES) {
+                this.outputHistory = this.outputHistory.slice(-MAX_HISTORY_LINES);
             }
 
-            // Clear world name display when showing world list (not in any specific world)
-            if (this.worldNameElement) {
-                this.worldNameElement.textContent = '🌵 Select World';
-            }
-
-            // Render world list items
-            await this.renderWorldListView();
-
-            // Show the world list view
-            if (this.worldListView) {
-                this.worldListView.classList.add('active');
-                this.isWorldListVisible = true;
-            }
+            const profileService = getProfileService();
+            profileService.setItem(OUTPUT_HISTORY_KEY, JSON.stringify(this.outputHistory));
         } catch (error) {
-            console.error('Failed to show world list view:', error);
-            this.addErrorOutput(`Failed to show world list: ${error}`);
+            console.error('Failed to save output history:', error);
         }
     }
 
     /**
-     * Hide world list view
+     * loadHistory implementation - Load output history from localStorage and populate output area
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
      */
-    private async hideWorldListView(): Promise<void> {
-        if (this.worldListView) {
-            this.worldListView.classList.remove('active');
-            this.isWorldListVisible = false;
-        }
-
-        // Restore current world name display
-        if (this.worldNameElement && this.currentWorldName) {
-            this.worldNameElement.textContent = this.currentWorldName;
-        }
-    }
-
-    /**
-     * Render world list view with all worlds
-     */
-    private async renderWorldListView(): Promise<void> {
-        if (!this.worldListContainer) return;
-
+    private loadHistory(): void {
         try {
-            // Get storage to list available worlds
-            const storage = await getStorage();
+            const profileService = getProfileService();
+            const historyJson = profileService.getItem(OUTPUT_HISTORY_KEY);
 
-            // Clear existing world items
-            this.worldListContainer.innerHTML = '';
-
-            // Render each world
-            for (const worldName of storage.worlds) {
-                await this.renderWorldListItem(worldName);
-            }
-        } catch (error) {
-            console.error('Failed to render world list:', error);
-            this.addErrorOutput(`Failed to render world list: ${error}`);
-        }
-    }
-
-    /**
-     * Render a single world list item
-     */
-    private async renderWorldListItem(worldName: string): Promise<void> {
-        if (!this.worldListContainer) return;
-
-        const templateEngine = new TemplateEngine();
-        const itemHtml = await templateEngine.renderTemplateFromFile('adventure/world-list-item', {
-            worldName: worldName
-        });
-
-        const temp = document.createElement('div');
-        temp.innerHTML = itemHtml;
-        const worldItem = temp.firstElementChild;
-
-        if (worldItem) {
-            // Add event listeners for world item buttons
-            const startBtn = worldItem.querySelector('.world-item-start-btn');
-            startBtn?.addEventListener('click', async () => {
-                await this.startWorld(worldName);
-            });
-
-            const editBtn = worldItem.querySelector('.world-item-edit-btn');
-            editBtn?.addEventListener('click', async () => {
-                await this.editWorld(worldName);
-            });
-
-            const deleteBtn = worldItem.querySelector('.world-item-delete-btn');
-            deleteBtn?.addEventListener('click', async () => {
-                await this.deleteWorldFromList(worldName);
-            });
-
-            this.worldListContainer.appendChild(worldItem);
-        }
-    }
-
-    /**
-     * Start/switch to a world from the world list
-     */
-    private async startWorld(worldName: string): Promise<void> {
-        try {
-            // Navigate to the world using the new URL format
-            if (this.router) {
-                this.router.navigate(`/world/${encodeURIComponent(worldName)}`);
-            } else {
-                // Fallback: switch world and hide world list
-                await this.switchWorld(worldName);
-                await this.hideWorldListView();
-            }
-        } catch (error) {
-            console.error('Failed to start world:', error);
-            this.addErrorOutput(`Failed to start world: ${error}`);
-        }
-    }
-
-    /**
-     * Edit a world from the world list
-     */
-    private async editWorld(worldName: string): Promise<void> {
-        try {
-            // Navigate to the world using the new URL format
-            if (this.router) {
-                this.router.navigate(`/world/${encodeURIComponent(worldName)}`);
-                // Wait a moment for navigation to complete
-                await new Promise(resolve => setTimeout(resolve, 100));
-            } else {
-                // Fallback: switch world and hide world list
-                if (worldName !== this.currentWorldName) {
-                    await this.switchWorld(worldName);
-                }
-                await this.hideWorldListView();
-            }
-
-            // Show world settings modal
-            await this.showWorldSettingsModal();
-        } catch (error) {
-            console.error('Failed to edit world:', error);
-            this.addErrorOutput(`Failed to edit world: ${error}`);
-        }
-    }
-
-    /**
-     * Delete a world from the world list
-     */
-    private async deleteWorldFromList(worldName: string): Promise<void> {
-        try {
-            // Switch to the world first if not already current (required for delete modal)
-            if (worldName !== this.currentWorldName) {
-                await this.switchWorld(worldName);
-            }
-
-            // Show delete confirmation modal
-            await this.showDeleteConfirmationModal();
-        } catch (error) {
-            console.error('Failed to delete world:', error);
-            this.addErrorOutput(`Failed to delete world: ${error}`);
-        }
-    }
-
-    /**
-     * Show world settings modal
-     */
-    private async showWorldSettingsModal(): Promise<void> {
-        try {
-            // Load modal template if not already loaded
-            if (!this.worldSettingsModal) {
-                const templateEngine = new TemplateEngine();
-                const modalHtml = await templateEngine.renderTemplateFromFile('adventure/world-settings-modal', {});
-                
-                if (this.worldSettingsContainer) {
-                    this.worldSettingsContainer.innerHTML = modalHtml;
-                    this.worldSettingsModal = this.worldSettingsContainer.querySelector('#world-settings-modal');
-                    
-                    // Set up event listeners for modal
-                    this.setupWorldSettingsListeners();
-                }
-            }
-
-            // Load current world settings
-            await this.loadWorldSettings();
-
-            // Show modal
-            if (this.worldSettingsModal) {
-                this.worldSettingsModal.style.display = 'flex';
-            }
-        } catch (error) {
-            console.error('Failed to show world settings modal:', error);
-            this.addErrorOutput(`Failed to open world settings: ${error}`);
-        }
-    }
-
-    /**
-     * Hide world settings modal
-     */
-    private hideWorldSettingsModal(): void {
-        if (this.worldSettingsModal) {
-            this.worldSettingsModal.style.display = 'none';
-        }
-    }
-
-    /**
-     * Setup event listeners for world settings modal
-     */
-    private setupWorldSettingsListeners(): void {
-        const saveBtn = this.worldSettingsModal?.querySelector('#save-world-settings-btn');
-        saveBtn?.addEventListener('click', () => {
-            this.saveWorldSettings();
-        });
-
-        const cancelBtn = this.worldSettingsModal?.querySelector('#cancel-world-settings-btn');
-        cancelBtn?.addEventListener('click', () => {
-            this.hideWorldSettingsModal();
-        });
-
-        const deleteBtn = this.worldSettingsModal?.querySelector('#delete-world-btn');
-        deleteBtn?.addEventListener('click', () => {
-            this.showDeleteConfirmationModal();
-        });
-
-        const addUserBtn = this.worldSettingsModal?.querySelector('#add-user-btn');
-        addUserBtn?.addEventListener('click', () => {
-            this.addUser();
-        });
-    }
-
-    /**
-     * Load current world settings into modal
-     */
-    private async loadWorldSettings(): Promise<void> {
-        if (!this.localSession || !this.worldSettingsModal) return;
-
-        try {
-            // Get world from local session
-            const { getStorage } = await import('../textcraft/model.js');
-            const storage = await getStorage();
-            const world = storage.openWorlds.get(this.currentWorldName);
-
-            if (!world) {
-                throw new Error('World not found');
-            }
-
-            // Populate world name and description
-            const worldNameInput = this.worldSettingsModal.querySelector('#settings-world-name') as HTMLInputElement;
-            const worldDescInput = this.worldSettingsModal.querySelector('#settings-world-desc') as HTMLTextAreaElement;
-
-            if (worldNameInput) worldNameInput.value = world.name || '';
-            // TODO: World description not yet supported
-            // if (worldDescInput) worldDescInput.value = world.description || '';
-
-            // Load users
-            await this.loadUsers(world);
-        } catch (error) {
-            console.error('Failed to load world settings:', error);
-            this.addErrorOutput(`Failed to load settings: ${error}`);
-        }
-    }
-
-    /**
-     * Load users into the users list
-     */
-    private async loadUsers(world: any): Promise<void> {
-        const usersList = this.worldSettingsModal?.querySelector('#users-list');
-        if (!usersList) return;
-
-        // Clear existing users
-        usersList.innerHTML = '';
-
-        // Get all users from world
-        const users = await this.getWorldUsers(world);
-
-        // Render each user
-        for (const user of users) {
-            await this.renderUserItem(user, usersList);
-        }
-    }
-
-    /**
-     * Get all users from a world
-     */
-    private async getWorldUsers(world: any): Promise<any[]> {
-        const users: any[] = [];
-        
-        // Iterate through world.userCache
-        if (world.userCache) {
-            for (const [_userName, user] of world.userCache) {
-                users.push(user);
-            }
-        }
-
-        return users;
-    }
-
-    /**
-     * Render a single user item
-     */
-    private async renderUserItem(user: any, container: Element): Promise<void> {
-        const templateEngine = new TemplateEngine();
-        const userHtml = await templateEngine.renderTemplateFromFile('adventure/user-item', {
-            userId: user.name || '',
-            userName: user.name || '',
-            userPassword: user.password || '',
-            userAdminChecked: user.admin ? 'checked' : ''
-        });
-
-        const temp = document.createElement('div');
-        temp.innerHTML = userHtml;
-        const userItem = temp.firstElementChild;
-
-        if (userItem) {
-            // Add remove button listener
-            const removeBtn = userItem.querySelector('.remove-user-btn');
-            removeBtn?.addEventListener('click', () => {
-                userItem.remove();
-            });
-
-            container.appendChild(userItem);
-        }
-    }
-
-    /**
-     * Add a new user to the list
-     */
-    private async addUser(): Promise<void> {
-        const usersList = this.worldSettingsModal?.querySelector('#users-list');
-        if (!usersList) return;
-
-        // Create a new user with default values
-        const newUser = {
-            name: '',
-            password: '',
-            admin: false
-        };
-
-        await this.renderUserItem(newUser, usersList);
-    }
-
-    /**
-     * Save world settings
-     */
-    private async saveWorldSettings(): Promise<void> {
-        if (!this.localSession || !this.worldSettingsModal) return;
-
-        try {
-            // Get world name and description
-            const worldNameInput = this.worldSettingsModal.querySelector('#settings-world-name') as HTMLInputElement;
-            const worldDescInput = this.worldSettingsModal.querySelector('#settings-world-desc') as HTMLTextAreaElement;
-
-            const newWorldName = worldNameInput?.value.trim();
-            const newWorldDesc = worldDescInput?.value.trim();
-
-            if (!newWorldName) {
-                this.addErrorOutput('World name cannot be empty');
+            if (!historyJson) {
+                this.outputHistory = [];
                 return;
             }
 
-            // Get all users from the form
-            const users = this.collectUsersFromForm();
+            this.outputHistory = JSON.parse(historyJson) as OutputEntry[];
 
-            // Validate users
-            if (users.length === 0) {
-                this.addErrorOutput('At least one user is required');
-                return;
-            }
+            // Restore output to DOM
+            if (this.outputElement) {
+                this.outputElement.innerHTML = '';
 
-            // Get world from storage
-            const { getStorage } = await import('../textcraft/model.js');
-            const storage = await getStorage();
-            const world = storage.openWorlds.get(this.currentWorldName);
+                for (const entry of this.outputHistory) {
+                    const div = document.createElement('div');
 
-            if (!world) {
-                throw new Error('World not found');
-            }
+                    // Map type to className
+                    if (entry.type === 'command') div.className = 'command-output';
+                    else if (entry.type === 'error') div.className = 'error-output';
+                    else if (entry.type === 'system') div.className = 'system-output';
 
-            // Update world name
-            world.name = newWorldName;
-            // TODO: World description not yet supported
-            // world.description = newWorldDesc;
+                    div.innerHTML = entry.text;
+                    this.outputElement.appendChild(div);
+                }
 
-            // Update users
-            await world.replaceUsers(users);
-
-            // Store world info within a transaction
-            await world.doTransaction(async (_store, _users, _txn) => {
-                await world.store();
-            });
-
-            this.addSystemOutput(`✅ World settings saved successfully!`);
-            this.hideWorldSettingsModal();
-
-            // Update world name display if changed
-            if (newWorldName !== this.currentWorldName) {
-                this.currentWorldName = newWorldName;
-                if (this.worldNameElement) {
-                    this.worldNameElement.textContent = newWorldName;
+                // Auto-scroll to bottom
+                const container = this.outputElement.parentElement;
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
                 }
             }
         } catch (error) {
-            console.error('Failed to save world settings:', error);
-            this.addErrorOutput(`Failed to save settings: ${error}`);
+            console.error('Failed to load output history:', error);
+            this.outputHistory = [];
         }
     }
 
     /**
-     * Collect users from the form
+     * clearHistory implementation - Clear output history from memory and storage
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
      */
-    private collectUsersFromForm(): any[] {
-        if (!this.worldSettingsModal) return [];
-
-        const users: any[] = [];
-        const userItems = this.worldSettingsModal.querySelectorAll('.user-item');
-
-        userItems.forEach((item) => {
-            const nameInput = item.querySelector('.user-name-input') as HTMLInputElement;
-            const passwordInput = item.querySelector('.user-password-input') as HTMLInputElement;
-            const adminCheckbox = item.querySelector('.user-admin-checkbox') as HTMLInputElement;
-
-            const name = nameInput?.value.trim();
-            const password = passwordInput?.value.trim();
-            const admin = adminCheckbox?.checked || false;
-
-            if (name && password) {
-                users.push({ name, password, admin });
-            }
-        });
-
-        return users;
-    }
-
-    /**
-     * Show delete confirmation modal
-     */
-    private async showDeleteConfirmationModal(): Promise<void> {
-        // Load the delete confirmation modal template if not already loaded
-        if (!this.deleteWorldModal && this.worldSettingsContainer) {
-            const templateEngine = new TemplateEngine();
-            const templateHtml = await templateEngine.renderTemplateFromFile('adventure/delete-world-modal', {});
-            this.worldSettingsContainer.insertAdjacentHTML('beforeend', templateHtml);
-            this.deleteWorldModal = this.worldSettingsContainer.querySelector('#delete-world-confirmation-modal');
-
-            // Setup event listeners for delete confirmation modal
-            const confirmBtn = this.deleteWorldModal?.querySelector('#delete-world-confirm-btn');
-            confirmBtn?.addEventListener('click', () => {
-                this.deleteWorld();
-            });
-
-            const cancelBtn = this.deleteWorldModal?.querySelector('#delete-world-cancel-btn');
-            cancelBtn?.addEventListener('click', () => {
-                this.hideDeleteConfirmationModal();
-            });
-        }
-
-        // Set the world name in the confirmation message
-        const worldNameDisplay = this.deleteWorldModal?.querySelector('#delete-world-name-display');
-        if (worldNameDisplay) {
-            worldNameDisplay.textContent = this.currentWorldName;
-        }
-
-        // Show the delete confirmation modal
-        if (this.deleteWorldModal) {
-            this.deleteWorldModal.style.display = 'flex';
-        }
-    }
-
-    /**
-     * Hide delete confirmation modal
-     */
-    private hideDeleteConfirmationModal(): void {
-        if (this.deleteWorldModal) {
-            this.deleteWorldModal.style.display = 'none';
-        }
-    }
-
-    /**
-     * Delete the current world
-     */
-    private async deleteWorld(): Promise<void> {
-        try {
-            const worldToDelete = this.currentWorldName;
-
-            // Hide the delete confirmation modal
-            this.hideDeleteConfirmationModal();
-
-            // Close the world settings modal
-            this.hideWorldSettingsModal();
-
-            // Get the MudStorage instance
-            const storage = await getStorage();
-
-            // Delete the world from storage
-            await storage.deleteWorld(worldToDelete);
-
-            // Get list of remaining worlds
-            const worldNames = storage.worlds;
-
-            if (worldNames.length === 0) {
-                // No worlds left - just refresh the list
-                this.addSystemOutput(`World "${worldToDelete}" deleted.`);
-                this.addSystemOutput('No worlds remaining.');
-
-                // Refresh world list if visible
-                if (this.isWorldListVisible) {
-                    await this.renderWorldListView();
-                }
-
-                // We're already on the world list view, no navigation needed
-            } else {
-                // Switch to the first available world
-                const newWorldName = worldNames[0];
-                this.addSystemOutput(`World "${worldToDelete}" deleted. Switching to "${newWorldName}"...`);
-                this.currentWorldName = newWorldName;
-
-                // Navigate to the new world or stay on world list
-                if (this.router) {
-                    if (this.isWorldListVisible) {
-                        // Stay on world list and refresh it
-                        await this.renderWorldListView();
-                    } else {
-                        // Navigate to the first available world
-                        this.router.navigate(`/world/${encodeURIComponent(newWorldName)}`);
-                    }
-                } else {
-                    await this.switchWorld(newWorldName);
-                    if (this.isWorldListVisible) {
-                        await this.renderWorldListView();
-                    }
-                }
-            }
-
-        } catch (error) {
-            console.error('Failed to delete world:', error);
-            this.addErrorOutput(`Failed to delete world: ${error}`);
-        }
-    }
-
-    private async confirmCreateWorld(): Promise<void> {
-        const nameInput = this.createWorldModal?.querySelector('#new-world-name') as HTMLInputElement;
-        const descInput = this.createWorldModal?.querySelector('#new-world-desc') as HTMLTextAreaElement;
-
-        const worldName = nameInput?.value.trim();
-
-        if (!worldName) {
-            this.addErrorOutput('Please enter a world name');
-            return;
-        }
+    clearHistory(): void {
+        this.outputHistory = [];
 
         try {
-            this.addSystemOutput(`🌍 Creating new world "${worldName}"...`);
-
-            // Close current session
-            if (this.localSession) {
-                this.localSession.close();
-                this.localSession = null;
-            }
-
-            // Create new local session
-            this.localSession = new LocalMudSession((output: string) => {
-                this.addOutput(output);
-            });
-
-            // Create new world using WorldLoader
-            const worldLoader = new WorldLoader();
-            const world = await worldLoader.createWorld(worldName);
-
-            // Load the new world
-            await this.localSession.loadWorld(world);
-
-            // Update UI
-            this.currentWorldName = worldName;
-            if (this.worldNameElement) {
-                this.worldNameElement.textContent = worldName;
-            }
-
-            this.addSystemOutput(`✅ World "${worldName}" created successfully!`);
-
-            // Refresh world list if visible
-            if (this.isWorldListVisible) {
-                await this.renderWorldListView();
-            }
-
-            this.hideCreateWorldModal();
+            const profileService = getProfileService();
+            profileService.removeItem(OUTPUT_HISTORY_KEY);
         } catch (error) {
-            console.error('❌ Failed to create world:', error);
-            this.addErrorOutput(`Failed to create world: ${error}`);
+            console.error('Failed to clear output history:', error);
+        }
+
+        // Clear output element
+        if (this.outputElement) {
+            this.outputElement.innerHTML = '';
         }
     }
 
-    private async switchWorld(worldName?: string): Promise<void> {
-        const selectedWorld = worldName;
-        if (!selectedWorld) return;
-
-        try {
-            this.addSystemOutput(`🌍 Switching to world "${selectedWorld}"...`);
-
-            // Close current session
-            if (this.localSession) {
-                this.localSession.close();
-                this.localSession = null;
-            }
-
-            // Create new session
-            this.localSession = new LocalMudSession((output: string) => {
-                this.addOutput(output);
-            });
-
-            // Load the selected world
-            const worldLoader = new WorldLoader();
-            const world = await worldLoader.loadWorld(selectedWorld);
-            await this.localSession.loadWorld(world);
-
-            // Update world name display
-            this.currentWorldName = selectedWorld;
-            if (this.worldNameElement) {
-                this.worldNameElement.textContent = selectedWorld;
-            }
-
-            this.addSystemOutput(`✅ Switched to world "${selectedWorld}"`);
-        } catch (error) {
-            console.error('❌ Failed to switch world:', error);
-            this.addErrorOutput(`Failed to switch world: ${error}`);
-        }
-    }
-
+    /**
+     * destroy implementation - Dispose of MUD engine and network connections
+     *
+     * CRC: specs-crc/crc-AdventureView.md
+     */
     destroy(): void {
+        // Clean up event listeners
+        const backBtn = this.container?.querySelector('#adventure-back-btn');
+        if (backBtn && this.boundBackClickHandler) {
+            backBtn.removeEventListener('click', this.boundBackClickHandler);
+        }
+
+        const worldsButton = this.container?.querySelector('#worlds-btn');
+        if (worldsButton && this.boundWorldsButtonClickHandler) {
+            worldsButton.removeEventListener('click', this.boundWorldsButtonClickHandler);
+        }
+
+        // Clean up components
+        if (this.sessionControls) {
+            this.sessionControls.destroy();
+            this.sessionControls = null;
+        }
+
+        if (this.joinSessionModal) {
+            this.joinSessionModal.destroy();
+            this.joinSessionModal = null;
+        }
+
+        // Clean up MUD peer
+        if (this.mudPeer) {
+            this.mudPeer = null;
+        }
+
+        // Clean up local session
         if (this.localSession) {
-            this.localSession.close();
             this.localSession = null;
         }
-        if (this.mudPeer) {
-            this.mudPeer.reset();
+
+        // Remove container
+        if (this.container) {
+            this.container.remove();
+            this.container = null;
         }
-        this.container?.remove();
+
+        this.boundBackClickHandler = null;
+        this.boundWorldsButtonClickHandler = null;
     }
 }

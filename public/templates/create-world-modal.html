@@ -1,0 +1,52 @@
+<!-- @layout: specs-ui/ui-create-world-modal.md -->
+<div class="modal-overlay" data-modal="create-world">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2>Create New World</h2>
+      <button class="modal-close" data-action="closeCreateWorldModal">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form id="create-world-form">
+        <!-- World name input -->
+        <div class="form-group">
+          <label for="world-name">World Name:</label>
+          <input type="text"
+                 id="world-name"
+                 name="name"
+                 required
+                 maxlength="100"
+                 placeholder="Enter world name">
+        </div>
+
+        <!-- Description textarea -->
+        <div class="form-group">
+          <label for="world-description">Description:</label>
+          <textarea id="world-description"
+                    name="description"
+                    rows="4"
+                    placeholder="Enter world description (optional)"></textarea>
+        </div>
+
+        <!-- YAML import option -->
+        <div class="form-group">
+          <label>
+            <input type="checkbox"
+                   id="import-yaml-check"
+                   data-action="toggleYamlImport">
+            Import from YAML file
+          </label>
+          <input type="file"
+                 id="yaml-file-input"
+                 accept=".yaml,.yml"
+                 style="display: none;">
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" data-action="closeCreateWorldModal">Cancel</button>
+      <button class="btn-primary" data-action="createWorld">Create World</button>
+    </div>
+  </div>
+</div>

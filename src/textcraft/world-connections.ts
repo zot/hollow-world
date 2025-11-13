@@ -2,6 +2,9 @@
  * World Connections and Characters Management
  * Helper functions for Phase 2 implementation
  *
+ * CRC: specs-crc/crc-WorldConnections.md
+ * Spec: specs/integrate-textcraft.md
+ *
  * These functions provide CRUD operations for world connections and characters
  */
 
@@ -14,6 +17,8 @@ import { calculateCharacterHash } from '../utils/characterHash.js';
 
 /**
  * Add a connection to the world
+ * CRC: crc-WorldConnections.md → addConnection()
+ * Seq: seq-textcraft-solo-command.md, seq-textcraft-multiplayer-command.md
  * @param world - The world instance
  * @param connection - Connection data
  * @returns Promise resolving to the connection ID
@@ -32,6 +37,7 @@ export async function addConnection(world: World, connection: IWorldConnection):
 
 /**
  * Get all connections for a world
+ * CRC: crc-WorldConnections.md → getAllConnections()
  * @param world - The world instance
  * @returns Promise resolving to array of connections
  */
@@ -49,6 +55,7 @@ export async function getAllConnections(world: World): Promise<IWorldConnection[
 
 /**
  * Get connections for a specific peer
+ * CRC: crc-WorldConnections.md → getConnectionsByPeer()
  * @param world - The world instance
  * @param peerId - Peer ID (null for owner)
  * @returns Promise resolving to array of connections
@@ -68,6 +75,7 @@ export async function getConnectionsByPeer(world: World, peerId: string | null):
 
 /**
  * Get connections for a specific character
+ * CRC: crc-WorldConnections.md → getConnectionsByCharacter()
  * @param world - The world instance
  * @param characterId - Character UUID
  * @returns Promise resolving to array of connections
@@ -87,6 +95,7 @@ export async function getConnectionsByCharacter(world: World, characterId: strin
 
 /**
  * Remove a connection from the world
+ * CRC: crc-WorldConnections.md → removeConnection()
  * @param world - The world instance
  * @param connectionId - Connection ID to remove
  * @returns Promise resolving when complete
@@ -107,6 +116,8 @@ export async function removeConnection(world: World, connectionId: number): Prom
 
 /**
  * Add a character to the world
+ * CRC: crc-WorldConnections.md → addWorldCharacter()
+ * Seq: seq-textcraft-character-sync.md
  * @param world - The world instance
  * @param character - Character data
  * @returns Promise resolving to the world character data
@@ -134,6 +145,8 @@ export async function addWorldCharacter(world: World, character: ICharacter): Pr
 
 /**
  * Get a character from the world
+ * CRC: crc-WorldConnections.md → getWorldCharacter()
+ * Seq: seq-textcraft-character-sync.md
  * @param world - The world instance
  * @param characterId - Character UUID
  * @returns Promise resolving to the world character data or null
@@ -152,6 +165,7 @@ export async function getWorldCharacter(world: World, characterId: string): Prom
 
 /**
  * Get all characters in the world
+ * CRC: crc-WorldConnections.md → getAllWorldCharacters()
  * @param world - The world instance
  * @returns Promise resolving to array of world characters
  */
@@ -169,6 +183,8 @@ export async function getAllWorldCharacters(world: World): Promise<IWorldCharact
 
 /**
  * Update a character in the world
+ * CRC: crc-WorldConnections.md → updateWorldCharacter()
+ * Seq: seq-textcraft-character-sync.md
  * @param world - The world instance
  * @param character - Updated character data
  * @returns Promise resolving to the updated world character data
@@ -200,6 +216,7 @@ export async function updateWorldCharacter(world: World, character: ICharacter):
 
 /**
  * Remove a character from the world
+ * CRC: crc-WorldConnections.md → removeWorldCharacter()
  * @param world - The world instance
  * @param characterId - Character UUID to remove
  * @returns Promise resolving when complete
@@ -218,6 +235,7 @@ export async function removeWorldCharacter(world: World, characterId: string): P
 
 /**
  * Verify character integrity by comparing hash
+ * CRC: crc-WorldConnections.md → verifyWorldCharacterIntegrity()
  * @param worldCharacter - World character data with hash
  * @returns Promise resolving to true if valid, false if tampered
  */

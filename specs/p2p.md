@@ -2,7 +2,7 @@
 
 **Peer-to-peer networking for Hollow World using p2p-webapp**
 
-*See also: [`p2p-messages.md`](p2p-messages.md), [`friends.md`](friends.md), [`new-p2p.md`](new-p2p.md) (migration docs)*
+*See also: [`p2p-messages.md`](p2p-messages.md), [`friends.md`](friends.md)*
 
 ---
 
@@ -23,10 +23,11 @@ Hollow World uses **p2p-webapp** for P2P networking, providing browser-based pee
 - **Language**: Go
 - **Role**: Local WebSocket server providing libp2p P2P capabilities to browsers
 - **Location**: `bin/p2p-webapp` (downloaded binary)
-- **Repository**: https://github.com/emendir/p2p-webapp
+- **Repository**: https://github.com/zot/p2p-webapp
 
 ### Browser Client
-- **Library**: `@emendir/p2p-webapp-client`
+- **Library**: TypeScript client extracted using CLI (`bin/p2p-webapp cp client.js client.d.ts types.d.ts src/p2p/client/`)
+- **Location**: `src/p2p/client/` (client.js, client.d.ts, types.d.ts)
 - **Protocol**: WebSocket
 - **Connection**: `ws://localhost:<port>` (random port by default)
 - **API**: Async JavaScript functions wrapping WebSocket communication
@@ -73,7 +74,7 @@ Hollow World uses **p2p-webapp** for P2P networking, providing browser-based pee
 1. **Server Startup**
    ```bash
    cd hollow-world-p2p
-   ../bin/p2p-webapp serve -v
+   ../bin/p2p-webapp --dir . -v
    ```
    - Server starts on random port (e.g., `http://localhost:36157`)
    - libp2p peer created with unique ID
@@ -178,7 +179,7 @@ See [`p2p-messages.md`](p2p-messages.md) for complete message protocol specifica
 ```typescript
 test('multi-peer communication', async ({ browser }) => {
     // Start p2p-webapp server
-    const server = exec('cd hollow-world-p2p && ../bin/p2p-webapp serve --noopen -v');
+    const server = exec('cd hollow-world-p2p && ../bin/p2p-webapp --dir . --noopen -v');
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Create two browser contexts (two peers)
@@ -215,10 +216,10 @@ This runs `dev.sh` which:
 ```bash
 # Start server
 cd hollow-world-p2p
-../bin/p2p-webapp serve -v
+../bin/p2p-webapp --dir . -v
 
 # Start without auto-opening browser
-../bin/p2p-webapp serve -v --noopen
+../bin/p2p-webapp --dir . -v --noopen
 
 # Server prints URL when ready
 # Output: Server running at http://localhost:36157
@@ -402,11 +403,11 @@ The application maintains a real-time peer list for the `hollow-world` topic. Th
 
 Friends can be in one of three states:
 
-| State | Description | UI Display | Behavior |
-|-------|-------------|------------|----------|
-| `unsent` | Friend request created but not yet sent | `pending` | Auto-send when peer appears in peer list |
-| `pending` | Friend request sent, awaiting response | `pending` | Wait for mutual `requestFriend` message |
-| `accepted` | Friend accepted the request | Shows online/offline status | Can exchange messages |
+| State      | Description                             | UI Display                  | Behavior                                 |
+|------------|-----------------------------------------|-----------------------------|------------------------------------------|
+| `unsent`   | Friend request created but not yet sent | `pending`                   | Auto-send when peer appears in peer list |
+| `pending`  | Friend request sent, awaiting response  | `pending`                   | Wait for mutual `requestFriend` message  |
+| `accepted` | Friend accepted the request             | Shows online/offline status | Can exchange messages                    |
 
 **State Transitions**:
 ```
@@ -519,9 +520,8 @@ document.getElementById('peer-count').textContent = `${peerCount}`;
 
 - **[`p2p-messages.md`](p2p-messages.md)** - Complete P2P message protocol
 - **[`friends.md`](friends.md)** - Friends system using P2P
-- **[`new-p2p.md`](new-p2p.md)** - Migration plan from libp2p to p2p-webapp
-- **[`p2p-migration-progress.md`](p2p-migration-progress.md)** - Migration implementation progress
 - **[`dependencies.md`](dependencies.md)** - Dependency versions and management
+- **[`p2p-webapp-cli.md`](p2p-webapp-cli.md)** - p2p-webapp CLI tool documentation
 
 ## 🎯 Design Principles
 
@@ -545,5 +545,4 @@ document.getElementById('peer-count').textContent = `${peerCount}`;
 
 ---
 
-*Last updated: 2025-11-03*
-*For migration details, see [`new-p2p.md`](new-p2p.md) and [`p2p-migration-progress.md`](p2p-migration-progress.md)*
+*Last updated: 2025-11-08*

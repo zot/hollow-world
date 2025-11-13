@@ -37,9 +37,39 @@ See [`../CLAUDE.md#development-server`](../CLAUDE.md#development-server) for det
 
 | Route | View | Description | Spec | Handler |
 |-------|------|-------------|------|---------|
-| `/worlds` | World Selector | Select which world to enter | - | `renderWorldSelector()` |
-| `/world/:worldId` | Adventure Mode | TextCraft MUD adventure in specific world | - | `renderAdventureMode()` |
-| `/world` | Adventure Mode | TextCraft MUD adventure (fallback) | - | `renderAdventureMode()` |
+| `/worlds` | World List | List/manage worlds, create/edit/delete | [`ui-world-list-view.md`](../specs-ui/ui-world-list-view.md) | `renderWorldListView()` |
+| `/world/:worldId` | Adventure Mode | TextCraft MUD adventure in specific world | [`ui-adventure-view.md`](../specs-ui/ui-adventure-view.md) | `renderAdventureMode()` |
+
+**Route Selection Logic**:
+
+The application uses **active world state** (runtime only, not persisted) to determine which route to navigate to:
+
+- **`/worlds`** - Used when:
+  - No active world (first time entering adventure mode)
+  - User explicitly clicks "🌵 Worlds" button
+  - User wants to switch to a different world
+
+- **`/world/:worldId`** - Used when:
+  - An active world exists (returning to gameplay)
+  - User activates a world from world list
+  - User navigates from splash screen with active world
+  - User clicks active world in world list (returns without reset)
+
+**Navigation Pattern**:
+
+```typescript
+// From splash screen
+const route = adventureMode.getDefaultRoute();
+// Returns '/worlds' if no active world
+// Returns '/world/:worldId' if active world exists
+
+// From world list
+// Click inactive world → activate → navigate to '/world/:worldId'
+// Click active world → navigate to '/world/:worldId' (no reset)
+// Click different world when one is active → confirm → terminate → activate → navigate
+```
+
+See [`game-worlds.md`](game-worlds.md#active-world-state-management) for complete active world lifecycle documentation.
 
 ## Route Parameters
 

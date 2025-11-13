@@ -1,5 +1,18 @@
+/**
+ * AudioManager - Background music and sound effects system
+ *
+ * CRC: specs-crc/crc-AudioManager.md, specs-crc/crc-AudioProvider.md
+ * Spec: specs/audio.md
+ * Sequences: seq-app-startup.md, seq-play-background-music.md, seq-play-sound-effect.md
+ */
+
 // Audio interfaces following SOLID principles
 
+/**
+ * IAudioProvider interface
+ *
+ * CRC: specs-crc/crc-AudioProvider.md
+ */
 export interface IAudioProvider {
     load(src: string): Promise<void>;
     play(): Promise<void>;
@@ -12,6 +25,11 @@ export interface IAudioProvider {
     getDuration(): number;
 }
 
+/**
+ * IAudioManager interface
+ *
+ * CRC: specs-crc/crc-AudioManager.md
+ */
 export interface IAudioManager {
     initialize(): Promise<void>;
     playBackgroundMusic(): Promise<void>;
@@ -29,7 +47,12 @@ export interface IAudioManager {
     isCyclingEnabled(): boolean;
 }
 
-// HTML5 Audio implementation (Single Responsibility)
+/**
+ * HTMLAudioProvider - HTML5 Audio implementation
+ *
+ * CRC: specs-crc/crc-AudioProvider.md
+ * Spec: specs/audio.md
+ */
 export class HTMLAudioProvider implements IAudioProvider {
     private audio: HTMLAudioElement;
     private isLoaded: boolean = false;
@@ -39,6 +62,11 @@ export class HTMLAudioProvider implements IAudioProvider {
         this.setupEventListeners();
     }
 
+    /**
+     * load implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     async load(src: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.audio.src = src;
@@ -65,6 +93,11 @@ export class HTMLAudioProvider implements IAudioProvider {
         });
     }
 
+    /**
+     * play implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     async play(): Promise<void> {
         if (!this.isLoaded) {
             throw new Error('Audio not loaded');
@@ -82,23 +115,48 @@ export class HTMLAudioProvider implements IAudioProvider {
         }
     }
 
+    /**
+     * pause implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     pause(): void {
         this.audio.pause();
     }
 
+    /**
+     * stop implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     stop(): void {
         this.audio.pause();
         this.audio.currentTime = 0;
     }
 
+    /**
+     * setVolume implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     setVolume(volume: number): void {
         this.audio.volume = Math.max(0, Math.min(1, volume));
     }
 
+    /**
+     * setLoop implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     setLoop(loop: boolean): void {
         this.audio.loop = loop;
     }
 
+    /**
+     * isPlaying implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     isPlaying(): boolean {
         // Check if audio is not paused and either currentTime > 0 or readyState indicates playing
         return !this.audio.paused && !this.audio.ended && (
@@ -107,10 +165,20 @@ export class HTMLAudioProvider implements IAudioProvider {
         );
     }
 
+    /**
+     * getCurrentTime implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     getCurrentTime(): number {
         return this.audio.currentTime;
     }
 
+    /**
+     * getDuration implementation
+     *
+     * CRC: specs-crc/crc-AudioProvider.md
+     */
     getDuration(): number {
         return this.audio.duration || 0;
     }
@@ -137,7 +205,13 @@ export class HTMLAudioProvider implements IAudioProvider {
     }
 }
 
-// Enhanced Audio Manager implementation with music cycling (Single Responsibility)
+/**
+ * AudioManager - Enhanced audio manager with music cycling
+ *
+ * CRC: specs-crc/crc-AudioManager.md
+ * Spec: specs/audio.md
+ * Sequences: seq-app-startup.md, seq-play-background-music.md, seq-play-sound-effect.md
+ */
 export class AudioManager implements IAudioManager {
     private musicProviders: IAudioProvider[] = [];
     private gunshotProvider: IAudioProvider;
@@ -164,6 +238,12 @@ export class AudioManager implements IAudioManager {
         this.musicProviders = this.musicSources.map(() => new HTMLAudioProvider());
     }
 
+    /**
+     * initialize implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     * Sequence: seq-app-startup.md
+     */
     async initialize(): Promise<void> {
         try {
             console.log(`Initializing audio system with ${this.musicSources.length} music tracks`);
@@ -199,6 +279,12 @@ export class AudioManager implements IAudioManager {
         }
     }
 
+    /**
+     * playBackgroundMusic implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     * Sequence: seq-app-startup.md, seq-play-background-music.md
+     */
     async playBackgroundMusic(): Promise<void> {
         try {
             if (this.musicProviders.length === 0) {
@@ -227,16 +313,31 @@ export class AudioManager implements IAudioManager {
         }
     }
 
+    /**
+     * pauseBackgroundMusic implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     */
     pauseBackgroundMusic(): void {
         this.stopAllMusicTracks();
         this.clearCyclingTimeout();
     }
 
+    /**
+     * stopBackgroundMusic implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     */
     stopBackgroundMusic(): void {
         this.stopAllMusicTracks();
         this.clearCyclingTimeout();
     }
 
+    /**
+     * setMusicVolume implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     */
     setMusicVolume(volume: number): void {
         this.defaultVolume = Math.max(0, Math.min(1, volume));
         // Apply to all music providers
@@ -245,6 +346,11 @@ export class AudioManager implements IAudioManager {
         });
     }
 
+    /**
+     * isMusicPlaying implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     */
     isMusicPlaying(): boolean {
         return this.musicProviders.some(provider => provider.isPlaying());
     }
@@ -257,6 +363,12 @@ export class AudioManager implements IAudioManager {
         }
     }
 
+    /**
+     * playRandomGunshot implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     * Sequence: seq-play-sound-effect.md
+     */
     async playRandomGunshot(): Promise<void> {
         if (!this.gunshotSrc || !this.gunshotProvider) {
             console.warn('No gunshot sound available');
@@ -390,7 +502,12 @@ export class AudioManager implements IAudioManager {
         }
     }
 
-    // Enhanced cycling functionality implementation
+    /**
+     * skipToNextTrack implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     * Sequence: seq-play-background-music.md
+     */
     async skipToNextTrack(): Promise<void> {
         if (this.musicProviders.length <= 1) {
             console.log('Only one track available, cannot skip');
@@ -413,6 +530,12 @@ export class AudioManager implements IAudioManager {
         console.log(`Skipped to track ${this.currentTrackIndex + 1}: ${this.getCurrentTrackName()}`);
     }
 
+    /**
+     * skipToPreviousTrack implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     * Sequence: seq-play-background-music.md
+     */
     async skipToPreviousTrack(): Promise<void> {
         if (this.musicProviders.length <= 1) {
             console.log('Only one track available, cannot skip');
@@ -437,6 +560,11 @@ export class AudioManager implements IAudioManager {
         console.log(`Skipped to previous track ${this.currentTrackIndex + 1}: ${this.getCurrentTrackName()}`);
     }
 
+    /**
+     * getCurrentTrackInfo implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     */
     getCurrentTrackInfo(): { index: number; name: string; total: number } | null {
         if (this.musicProviders.length === 0) {
             return null;
@@ -449,6 +577,11 @@ export class AudioManager implements IAudioManager {
         };
     }
 
+    /**
+     * setCyclingEnabled implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     */
     setCyclingEnabled(enabled: boolean): void {
         this.isCycling = enabled;
         if (!enabled) {
@@ -471,6 +604,11 @@ export class AudioManager implements IAudioManager {
         console.log(`Music cycling ${enabled ? 'enabled' : 'disabled'}`);
     }
 
+    /**
+     * isCyclingEnabled implementation
+     *
+     * CRC: specs-crc/crc-AudioManager.md
+     */
     isCyclingEnabled(): boolean {
         return this.isCycling;
     }

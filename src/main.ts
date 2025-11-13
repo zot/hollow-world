@@ -1,3 +1,12 @@
+/**
+ * Application Entry Point - Main orchestrator for Hollow World
+ * Facade Pattern: Coordinates all subsystems (audio, P2P, views, routing)
+ *
+ * CRC: specs-crc/crc-Application.md
+ * Spec: specs/main.md
+ * Sequences: specs-crc/seq-app-startup.md, specs-crc/seq-view-transition.md
+ */
+
 console.log('Main.ts starting to load...');
 
 // Base URL is initialized in index.html at top of body
@@ -16,10 +25,13 @@ import { SettingsView } from './ui/SettingsView.js';
 import { EventNotificationButton } from './ui/EventNotificationButton.js';
 import { EventModal } from './ui/EventModal.js';
 import { GlobalAudioControl } from './ui/GlobalAudioControl.js';
-import { AdventureView } from './ui/AdventureView.js';
+import { AdventureMode } from './ui/AdventureMode.js';
 import { HollowPeer, LocalStorageProvider, P2PWebAppNetworkProvider } from './p2p/index.js';
+import { TemplateEngine } from './utils/TemplateEngine.js';
+import { getStorage } from './textcraft/model.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { router } from './utils/Router.js';
+import { ViewManager } from './utils/ViewManager.js';
 import { characterStorageService } from './services/CharacterStorageService.js';
 import { ICharacter } from './character/types.js';
 import { getProfileService } from './services/ProfileService.js';
@@ -34,12 +46,13 @@ console.log('📁 Profile service initialized. Current profile:', profileService
 let hollowPeer: HollowPeer | undefined;
 let audioManager: AudioManager | undefined;
 let globalAudioControl: GlobalAudioControl | undefined;
+let viewManager: ViewManager;
 let splashScreen: SplashScreen;
 let characterManager: CharacterManagerView;
 let characterEditor: CharacterEditorView;
 let friendsView: FriendsView;
 let settingsView: SettingsView;
-let adventureView: AdventureView | undefined;
+let adventureMode: AdventureMode | undefined;
 let eventNotificationButton: EventNotificationButton | undefined;
 let eventModal: EventModal | undefined;
 let appContainer: HTMLElement;
@@ -47,7 +60,12 @@ let appContainer: HTMLElement;
 // Current view components
 let currentView: 'splash' | 'characters' | 'editor' | 'friends' | 'game' | 'settings' | 'adventure' = 'splash';
 
-// Initialize audio manager in background (non-blocking)
+/**
+ * initializeAudio function - Initialize audio system in background (non-blocking)
+ *
+ * CRC: specs-crc/crc-Application.md
+ * Sequences: specs-crc/seq-app-startup.md
+ */
 async function initializeAudio(): Promise<void> {
     try {
         console.log('🎶 Initializing audio system (in background)...');
@@ -131,7 +149,12 @@ async function initializeAudio(): Promise<void> {
     }
 }
 
-// Initialize HollowPeer in background (non-blocking)
+/**
+ * initializeHollowPeer function - Initialize P2P system with retry logic (non-blocking)
+ *
+ * CRC: specs-crc/crc-Application.md
+ * Sequences: specs-crc/seq-app-startup.md
+ */
 async function initializeHollowPeer(): Promise<void> {
     try {
         console.log('🤝 Initializing HollowPeer (in background)...');
@@ -257,6 +280,12 @@ async function initializeHollowPeer(): Promise<void> {
     }
 }
 
+/**
+ * createApp function - Initialize application and all views
+ *
+ * CRC: specs-crc/crc-Application.md
+ * Sequences: specs-crc/seq-app-startup.md
+ */
 async function createApp(): Promise<void> {
     console.log('createApp called');
 
@@ -309,7 +338,42 @@ async function createApp(): Promise<void> {
         setupRoutes();
         setupComponentCallbacks();
 
-        // Initialize router
+        // Create ViewManager before initializing views
+        console.log('🪟 Creating ViewManager...');
+        viewManager = new ViewManager();
+        viewManager.registerView('splash', splashScreen);
+        viewManager.registerView('characters', characterManager);
+        viewManager.registerView('character-editor', characterEditor);
+        viewManager.registerView('friends', friendsView);
+        viewManager.registerView('settings', settingsView);
+        console.log('🪟 ViewManager created with basic views registered');
+
+        // Initialize Adventure Mode coordinator (with viewManager)
+        // IMPORTANT: Must happen BEFORE router.initialize() so adventure routes are registered
+        await initializeAdventureMode();
+
+        // Register adventure mode with ViewManager
+        if (adventureMode) {
+            viewManager.registerView('adventure', adventureMode);
+            console.log('🪟 Adventure Mode registered with ViewManager');
+        }
+
+        // Check if we should resume an active world before router handles initial path
+        // If active world exists and we're at root path, navigate to it before router.initialize()
+        const currentPath = router.getCurrentPath();
+        if (currentPath === '/' && adventureMode) {
+            const defaultRoute = adventureMode.getDefaultRoute();
+            if (defaultRoute !== '/worlds') {
+                // Active world exists - update path before router.initialize()
+                console.log('🔄 Resuming active world before router init:', defaultRoute);
+                window.history.replaceState({ path: defaultRoute }, document.title, defaultRoute);
+                // Update router's internal currentPath to match
+                (router as any).currentPath = defaultRoute;
+            }
+        }
+
+        // Initialize router AFTER all routes (including adventure mode) are registered
+        // This ensures the router can properly handle the initial URL on page load
         router.initialize();
 
         // Note: Audio and P2P initialization happens in background
@@ -356,6 +420,43 @@ async function createApp(): Promise<void> {
     }
 }
 
+/**
+ * initializeAdventureMode function - Create and initialize Adventure Mode coordinator
+ *
+ * CRC: specs-crc/crc-Application.md
+ * Spec: specs/game-worlds.md
+ */
+async function initializeAdventureMode(): Promise<void> {
+    try {
+        console.log('🎮 Initializing Adventure Mode...');
+
+        const mudStorage = await getStorage();
+        const templateEngine = new TemplateEngine();
+
+        adventureMode = new AdventureMode(
+            mudStorage,
+            templateEngine,
+            router,
+            hollowPeer,
+            viewManager  // Pass viewManager so AdventureMode can notify it
+        );
+
+        // Register Adventure Mode routes (/worlds and /world/:worldId)
+        adventureMode.initialize();
+
+        console.log('✅ Adventure Mode initialized successfully');
+    } catch (error) {
+        console.error('❌ Failed to initialize Adventure Mode:', error);
+        // Non-fatal error - app can still function without adventure mode
+    }
+}
+
+/**
+ * setupRoutes function - Register all application routes
+ *
+ * CRC: specs-crc/crc-Application.md
+ * Sequences: specs-crc/seq-view-transition.md
+ */
 function setupRoutes(): void {
     // Add route definitions
     router.addRoute({
@@ -400,27 +501,16 @@ function setupRoutes(): void {
         handler: () => renderLogView()
     });
 
-    router.addRoute({
-        path: '/worlds',
-        title: "Don't Go Hollow - Select World",
-        handler: () => {
-            return renderAdventureWorldList();
-        }
-    });
-
-    router.addRoute({
-        path: '/world/:worldId',
-        title: "Don't Go Hollow - Adventure Mode",
-        handler: (params) => renderAdventureView(params?.worldId)
-    });
-
-    router.addRoute({
-        path: '/world',
-        title: "Don't Go Hollow - Adventure Mode",
-        handler: () => renderAdventureDefaultWorld()
-    });
+    // Adventure Mode routes are registered by AdventureMode.initialize()
+    // which handles /worlds and /world/:worldId internally
 }
 
+/**
+ * setupComponentCallbacks function - Wire up view navigation callbacks
+ *
+ * CRC: specs-crc/crc-Application.md
+ * Sequences: specs-crc/seq-navigate-from-splash.md
+ */
 function setupComponentCallbacks(): void {
     // Splash screen callbacks
     splashScreen.onJoinGame = () => {
@@ -437,7 +527,15 @@ function setupComponentCallbacks(): void {
     };
 
     splashScreen.onAdventure = () => {
-        router.navigate('/world');
+        // Delegate route selection to AdventureMode based on active world state
+        // Spec: specs/ui.splash.md (Adventure Mode Navigation)
+        if (adventureMode) {
+            const route = adventureMode.getDefaultRoute();
+            router.navigate(route);
+        } else {
+            // Fallback if adventure mode not initialized
+            router.navigate('/worlds');
+        }
     };
 
     splashScreen.onSettings = () => {
@@ -484,16 +582,45 @@ function setupComponentCallbacks(): void {
     };
 }
 
+/**
+ * renderSplashScreen function - Render main menu
+ *
+ * CRC: specs-crc/crc-Application.md
+ */
 async function renderSplashScreen(): Promise<void> {
     currentView = 'splash';
+
+    // Terminate active world when leaving adventure mode
+    if (adventureMode) {
+        adventureMode.terminateActiveWorld();
+    }
+
     await splashScreen.render(appContainer);
+    viewManager.showView('splash');
 }
 
+/**
+ * renderCharacterManager function - Render character list
+ *
+ * CRC: specs-crc/crc-Application.md
+ */
 async function renderCharacterManager(): Promise<void> {
     currentView = 'characters';
+
+    // Terminate active world when leaving adventure mode
+    if (adventureMode) {
+        adventureMode.terminateActiveWorld();
+    }
+
     characterManager.render(appContainer);
+    viewManager.showView('characters');
 }
 
+/**
+ * renderCharacterEditor function - Render character editor for specific character
+ *
+ * CRC: specs-crc/crc-Application.md
+ */
 async function renderCharacterEditor(characterId: string): Promise<void> {
     currentView = 'editor';
 
@@ -502,6 +629,7 @@ async function renderCharacterEditor(characterId: string): Promise<void> {
         if (character) {
             characterEditor.setCharacter(character);
             characterEditor.render(appContainer);
+            viewManager.showView('character-editor');
         } else {
             console.error('Character not found:', characterId);
             router.navigate('/characters'); // Redirect to character list
@@ -512,6 +640,11 @@ async function renderCharacterEditor(characterId: string): Promise<void> {
     }
 }
 
+/**
+ * renderGameView function - Render game view (placeholder)
+ *
+ * CRC: specs-crc/crc-Application.md
+ */
 async function renderGameView(): Promise<void> {
     currentView = 'game';
 
@@ -540,11 +673,22 @@ async function renderGameView(): Promise<void> {
     }
 }
 
+/**
+ * renderFriendsView function - Render friends management
+ *
+ * CRC: specs-crc/crc-Application.md
+ */
 async function renderFriendsView(): Promise<void> {
     currentView = 'friends';
 
+    // Terminate active world when leaving adventure mode
+    if (adventureMode) {
+        adventureMode.terminateActiveWorld();
+    }
+
     try {
         await friendsView.render(appContainer);
+        viewManager.showView('friends');
     } catch (error) {
         console.error('Failed to render friends view:', error);
         // Fallback: navigate back to splash on error
@@ -552,8 +696,18 @@ async function renderFriendsView(): Promise<void> {
     }
 }
 
+/**
+ * renderSettingsView function - Render settings with peer info
+ *
+ * CRC: specs-crc/crc-Application.md
+ */
 async function renderSettingsView(): Promise<void> {
     currentView = 'settings';
+
+    // Terminate active world when leaving adventure mode
+    if (adventureMode) {
+        adventureMode.terminateActiveWorld();
+    }
 
     try {
         // Update settings view with current peer ID if HollowPeer is available
@@ -570,6 +724,7 @@ async function renderSettingsView(): Promise<void> {
         }
 
         await settingsView.renderSettings(appContainer);
+        viewManager.showView('settings');
     } catch (error) {
         console.error('Failed to render settings view:', error);
         // Fallback: navigate back to splash on error
@@ -577,6 +732,11 @@ async function renderSettingsView(): Promise<void> {
     }
 }
 
+/**
+ * renderLogView function - Render log view
+ *
+ * CRC: specs-crc/crc-Application.md
+ */
 async function renderLogView(): Promise<void> {
     currentView = 'settings'; // Still settings context
 
@@ -589,124 +749,14 @@ async function renderLogView(): Promise<void> {
     }
 }
 
-async function renderAdventureDefaultWorld(): Promise<void> {
-    try {
-        // Get list of available worlds
-        const { getStorage } = await import('./textcraft/model.js');
-        const storage = await getStorage();
-        const worldNames = storage.worlds;
+// Adventure mode rendering is now handled by AdventureMode coordinator
+// Routes /worlds and /world/:worldId are registered in initializeAdventureMode()
 
-        if (worldNames.length === 0) {
-            // No worlds available - redirect to world list (which will show create world UI)
-            console.log('🌍 No worlds available, redirecting to world list');
-            router.replace('/worlds');
-        } else {
-            // Redirect to the first available world
-            const firstWorld = worldNames[0];
-            console.log('🌍 Redirecting to default world:', firstWorld);
-            router.replace(`/world/${encodeURIComponent(firstWorld)}`);
-        }
-    } catch (error) {
-        console.error('Failed to get default world:', error);
-        router.replace('/worlds');
-    }
-}
-
-async function renderAdventureWorldList(): Promise<void> {
-    currentView = 'adventure';
-
-    try {
-        // Create or reuse adventure view
-        if (!adventureView) {
-            adventureView = new AdventureView({
-                hollowPeer: hollowPeer || undefined,
-                onBack: () => {
-                    router.navigate('/');
-                },
-                router: router
-            });
-        }
-
-        const viewElement = await adventureView.render(undefined, true);
-        appContainer.innerHTML = '';
-        appContainer.appendChild(viewElement);
-
-        // Show world list view
-        await adventureView.showWorldListViewFromRoute();
-
-        console.log('✅ World list view rendered successfully');
-    } catch (error) {
-        console.error('Failed to render world list view:', error);
-        appContainer.innerHTML = `
-            <div style="padding: 20px; text-align: center; color: #F5DEB3; background: #2C1810; height: 100vh;">
-                <h1 style="color: #D4AF37;">Error</h1>
-                <p>Failed to load world list: ${error}</p>
-                <button onclick="window.location.href='/';" style="padding: 10px 20px; font-size: 1rem;">
-                    Back to Menu
-                </button>
-            </div>
-        `;
-    }
-}
-
-async function renderAdventureView(worldId?: string): Promise<void> {
-    currentView = 'adventure';
-
-    try {
-        // Validate that the world exists
-        const { getStorage } = await import('./textcraft/model.js');
-        const storage = await getStorage();
-
-        if (!worldId) {
-            // No worldId provided - redirect to default world handler
-            console.warn('No worldId provided, redirecting to default');
-            await renderAdventureDefaultWorld();
-            return;
-        }
-
-        // Decode the world ID (URL may have encoded spaces, etc.)
-        const decodedWorldId = decodeURIComponent(worldId);
-
-        if (!storage.hasWorld(decodedWorldId)) {
-            // World doesn't exist - redirect to world list
-            console.warn('World not found:', decodedWorldId, '- redirecting to world list');
-            router.navigate('/worlds');
-            return;
-        }
-
-        console.log('🎮 Starting adventure mode with world:', decodedWorldId);
-
-        // Create or reuse adventure view
-        if (!adventureView) {
-            adventureView = new AdventureView({
-                hollowPeer: hollowPeer || undefined,
-                onBack: () => {
-                    router.navigate('/');
-                },
-                router: router
-            });
-        }
-
-        const viewElement = await adventureView.render(decodedWorldId);
-        appContainer.innerHTML = '';
-        appContainer.appendChild(viewElement);
-
-        console.log('✅ Adventure view rendered successfully');
-    } catch (error) {
-        console.error('Failed to render adventure view:', error);
-        appContainer.innerHTML = `
-            <div style="padding: 20px; text-align: center; color: #F5DEB3; background: #2C1810; height: 100vh;">
-                <h1 style="color: #D4AF37;">Error</h1>
-                <p>Failed to load adventure mode: ${error}</p>
-                <button onclick="window.location.href='/';" style="padding: 10px 20px; font-size: 1rem;">
-                    Back to Menu
-                </button>
-            </div>
-        `;
-    }
-}
-
-// Cleanup function for when the page is unloaded
+/**
+ * cleanup function - Clean up resources on page unload
+ *
+ * CRC: specs-crc/crc-Application.md
+ */
 function cleanup(): void {
     if (router) {
         router.destroy();
@@ -726,8 +776,8 @@ function cleanup(): void {
     if (eventModal) {
         eventModal.destroy();
     }
-    if (adventureView) {
-        adventureView.destroy();
+    if (adventureMode) {
+        adventureMode.cleanup();
     }
     if (globalAudioControl) {
         globalAudioControl.destroy();

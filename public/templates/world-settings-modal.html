@@ -1,0 +1,56 @@
+<!-- @layout: specs-ui/ui-world-settings-modal.md -->
+<div class="modal-overlay" data-modal="world-settings">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2>World Settings</h2>
+      <button class="modal-close" data-action="closeWorldSettingsModal">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form id="world-settings-form">
+        <!-- World name input -->
+        <div class="form-group">
+          <label for="edit-world-name">World Name:</label>
+          <input type="text"
+                 id="edit-world-name"
+                 name="name"
+                 required
+                 maxlength="100"
+                 value="{{world.name}}">
+        </div>
+
+        <!-- Description textarea -->
+        <div class="form-group">
+          <label for="edit-world-description">Description:</label>
+          <textarea id="edit-world-description"
+                    name="description"
+                    rows="4">{{world.description}}</textarea>
+        </div>
+
+        <!-- Allowed users list -->
+        <div class="form-group">
+          <label>Allowed Users (multiplayer):</label>
+          <div class="allowed-users-list">
+            {{#each world.allowedUsers}}
+            <div class="user-item">
+              <span class="peer-id">{{peerId}}</span>
+              <span class="user-name">({{userName}})</span>
+              <button class="btn-remove"
+                      data-action="removeAllowedUser"
+                      data-peer-id="{{peerId}}">×</button>
+            </div>
+            {{/each}}
+          </div>
+          <button type="button"
+                  class="btn-secondary"
+                  data-action="showAddUserDialog">Add Friend...</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" data-action="closeWorldSettingsModal">Cancel</button>
+      <button class="btn-primary" data-action="saveWorldSettings">Save Changes</button>
+    </div>
+  </div>
+</div>

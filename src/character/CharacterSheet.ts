@@ -1,3 +1,11 @@
+/**
+ * CharacterSheet - Character Sheet Component
+ *
+ * CRC: specs-crc/crc-CharacterSheet.md
+ * Spec: specs/ui.characters.md, specs/characters.md
+ * Sequences: specs-crc/seq-edit-character.md, specs-crc/seq-save-character-ui.md, specs-crc/seq-revert-character.md, specs-crc/seq-increment-attribute.md
+ */
+
 // Main CharacterSheet component following SOLID principles
 // Open/Closed: extensible through sub-components
 // Single Responsibility: manages overall character sheet state and layout
@@ -79,10 +87,20 @@ export class CharacterSheet implements ICharacterSheet {
         this.callbacks = this.createDefaultCallbacks(callbacks);
     }
 
+    /**
+     * getCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     getCharacter(): ICharacter {
         return { ...this.character };
     }
 
+    /**
+     * updateCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     updateCharacter(updates: Partial<ICharacter>): void {
         this.character = CharacterUpdater.updateCharacter(this.character, updates);
         // Fire-and-forget async refresh
@@ -104,6 +122,11 @@ export class CharacterSheet implements ICharacterSheet {
         this.applyStyles();
     }
 
+    /**
+     * destroy implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     destroy(): void {
         this.destroySubComponents();
         if (this.container) {
@@ -112,10 +135,20 @@ export class CharacterSheet implements ICharacterSheet {
         }
     }
 
+    /**
+     * exportCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     exportCharacter(): string {
         return JSON.stringify(this.character, null, 2);
     }
 
+    /**
+     * importCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     importCharacter(data: string): boolean {
         try {
             const importedCharacter = JSON.parse(data) as ICharacter;
@@ -137,6 +170,11 @@ export class CharacterSheet implements ICharacterSheet {
         }
     }
 
+    /**
+     * validateCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     validateCharacter(): string[] {
         const errors: string[] = [];
         errors.push(...CharacterValidation.validateCharacterCreation(this.character));
@@ -210,6 +248,7 @@ export class CharacterSheet implements ICharacterSheet {
         // For now, add placeholder content
         await this.initializePlaceholderContent();
         this.setupActionButtons();
+        this.setupHeaderInputHandlers();
 
         // Ensure proper appearance when first showing the editor
         this.updateDisplay();
@@ -280,6 +319,11 @@ export class CharacterSheet implements ICharacterSheet {
         }
     }
 
+    /**
+     * renderAttributes implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     private async renderAttributes(attributesEl: Element, templateEngine: any): Promise<void> {
         // Organize attributes by category and cost order per spec - group them in rows
         const physicalAttrs = [
@@ -386,6 +430,11 @@ export class CharacterSheet implements ICharacterSheet {
         }
     }
 
+    /**
+     * renderSkills implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     private async renderSkills(skillsEl: Element, templateEngine: any): Promise<void> {
         const hasFields = this.character.fields.length > 0;
         const noFields = !hasFields;
@@ -543,6 +592,47 @@ export class CharacterSheet implements ICharacterSheet {
         }
     }
 
+    /**
+     * Setup event handlers for character header inputs (name, rank)
+     * 
+     * @spec specs/ui.characters.md
+     * @crc specs-crc/crc-CharacterSheet.md
+     */
+    private setupHeaderInputHandlers(): void {
+        if (!this.container || this.config.readOnly) return;
+
+        // Character name input handler
+        const nameInput = this.container.querySelector<HTMLInputElement>('[data-field="name"]');
+        if (nameInput) {
+            nameInput.addEventListener('input', (e) => {
+                const target = e.target as HTMLInputElement;
+                this.updateCharacter({ name: target.value });
+            });
+        }
+
+        // Rank input handler
+        const rankInput = this.container.querySelector<HTMLInputElement>('[data-field="rank"]');
+        if (rankInput) {
+            rankInput.addEventListener('change', (e) => {
+                const target = e.target as HTMLInputElement;
+                const newRank = parseInt(target.value);
+                
+                // Clamp rank between 1 and 15 per spec
+                const clampedRank = Math.max(1, Math.min(15, newRank));
+                if (clampedRank !== newRank) {
+                    target.value = clampedRank.toString();
+                }
+                
+                this.updateCharacter({ rank: clampedRank });
+                
+                // Refresh header to update damage capacity and resource displays
+                this.refreshComponents().catch(error => {
+                    console.error('Failed to refresh components after rank change:', error);
+                });
+            });
+        }
+    }
+
     private downloadCharacterData(data: string): void {
         const blob = new Blob([data], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -590,6 +680,8 @@ export class CharacterSheet implements ICharacterSheet {
     private async refreshComponents(): Promise<void> {
         if (this.container) {
             await this.initializePlaceholderContent();
+            // Re-setup header input handlers after refresh since HTML was replaced
+            this.setupHeaderInputHandlers();
         }
     }
 
@@ -609,6 +701,12 @@ export class CharacterSheet implements ICharacterSheet {
         this.equipmentComponent = null;
     }
 
+    /**
+     * incrementAttribute implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     * Sequence: specs-crc/seq-increment-attribute.md (lines 14-96)
+     */
     private incrementAttribute(attribute: AttributeType, cost: number): void {
         const currentValue = this.character.attributes[attribute];
 
@@ -640,6 +738,11 @@ export class CharacterSheet implements ICharacterSheet {
         console.log(`After increment - Available chips: ${CharacterCalculations.calculateAvailableAttributeChips(this.character)}, Available XP: ${CharacterCalculations.calculateAvailableXP(this.character)}`);
     }
 
+    /**
+     * decrementAttribute implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     private decrementAttribute(attribute: AttributeType, cost: number): void {
         const currentValue = this.character.attributes[attribute];
 
@@ -696,6 +799,11 @@ export class CharacterSheet implements ICharacterSheet {
         }
     }
 
+    /**
+     * updateResourceDisplays implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     private updateResourceDisplays(): void {
         const availableXPEl = this.container?.querySelector('.available-xp');
         const availableChipsEl = this.container?.querySelector('.available-chips');
@@ -735,6 +843,11 @@ export class CharacterSheet implements ICharacterSheet {
         }
     }
 
+    /**
+     * updateAttributeButtonStates implementation
+     *
+     * CRC: specs-crc/crc-CharacterSheet.md
+     */
     private updateAttributeButtonStates(attributesEl: Element): void {
         attributesEl.querySelectorAll('.attr-btn').forEach(button => {
             const target = button as HTMLButtonElement;

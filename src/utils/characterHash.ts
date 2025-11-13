@@ -1,6 +1,10 @@
 /**
  * Character hashing utilities for integrity verification
  * Uses SHA-256 hashing with recursive key sorting for consistent hashes
+ *
+ * CRC: specs-crc/crc-CharacterHash.md
+ * Spec: specs/storage.md
+ * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-validate-character.md
  */
 
 import type { ICharacter } from '../character/types.js';
@@ -25,12 +29,21 @@ function sortedReplacer(key: string, value: any): any {
  * Calculate SHA-256 hash of a character for integrity verification
  * Uses normalized JSON with recursively sorted keys for consistent hashing
  *
+ * IMPORTANT: Excludes the characterHash field itself to prevent circular dependency
+ *
+ * Sequences:
+ * - specs-crc/seq-save-character.md (hash calculation for save optimization)
+ * - specs-crc/seq-load-character.md (lines 68-72, hash initialization)
+ *
  * @param character - Character to hash
  * @returns Promise that resolves to hex-encoded hash string
  */
 export async function calculateCharacterHash(character: ICharacter): Promise<string> {
+    // Exclude characterHash field to prevent circular dependency
+    const { characterHash, ...dataToHash } = character;
+
     // CRITICAL: Use replacer to recursively sort all object keys
-    const jsonString = JSON.stringify(character, sortedReplacer);
+    const jsonString = JSON.stringify(dataToHash, sortedReplacer);
 
     // Calculate SHA-256 hash using Web Crypto API
     const encoder = new TextEncoder();

@@ -1,6 +1,9 @@
 /**
  * TypeScript types for TextCraft World Connections and Characters
  * Implements Phase 2: World connections linking P2P peers with characters and things
+ *
+ * CRC: specs-crc/crc-WorldConnections.md
+ * Spec: specs/integrate-textcraft.md
  */
 
 import type { ICharacter } from '../character/types.js';

@@ -20,6 +20,7 @@ if the profile is not Default, display it in curly braces under the settings tit
 - make sure the "Peer ID" label isn't occluded by the value
 
 ## P2P Network Settings
+These should be in an "advanced" section which is collapsed by default
 
 ### Pubsub Topic
 - Text input field for the IPFS pubsub topic used for peer discovery

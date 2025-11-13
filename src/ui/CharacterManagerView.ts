@@ -1,3 +1,11 @@
+/**
+ * CharacterManagerView - Character List and Management Interface
+ *
+ * CRC: specs-crc/crc-CharacterManagerView.md
+ * Spec: specs/ui.characters.md, specs/ui.md
+ * Sequences: specs-crc/seq-render-character-list.md, specs-crc/seq-edit-character.md
+ */
+
 // Character Manager View following SOLID principles
 // Interface for managing multiple characters in the game
 
@@ -10,6 +18,11 @@ import { characterStorageService } from '../services/CharacterStorageService.js'
 import { IAudioManager } from '../audio/AudioManager.js';
 import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioControlUtils.js';
 
+/**
+ * ICharacterManager interface
+ *
+ * CRC: specs-crc/crc-CharacterManagerView.md
+ */
 export interface ICharacterManager extends IUIComponent {
     getCharacters(): ICharacter[];
     createNewCharacter(): void;
@@ -203,6 +216,26 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
     }
 ];
 
+/**
+ * CharacterManagerView - Display and manage list of characters
+ *
+ * Purpose: Show all characters as cards, support creation and deletion,
+ * navigate to character editor on card click.
+ *
+ * Specifications:
+ * - UI Structure: specs-ui/ui-characters-view.md
+ * - UI Concept: specs-wysiwid/concepts-ui.md → CharactersView
+ * - Character Operations: specs-wysiwid/synchronizations-character.md
+ *
+ * Template: public/templates/character-list.html
+ *
+ * Key Features:
+ * - Character cards with preview (name, rank, attributes summary)
+ * - Create new character button
+ * - Delete character with confirmation
+ * - Click card to edit character
+ * - Load more pagination for large character lists
+ */
 export class CharacterManagerView implements ICharacterManager, IEnhancedAudioControlSupport {
     private config: ICharacterManagerConfig;
     public container: HTMLElement | null = null;
@@ -225,6 +258,11 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
         this.loadCharacters();
     }
 
+    /**
+     * loadCharacters implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     */
     private async loadCharacters(): Promise<void> {
         try {
             this.characters = await characterStorageService.getAllCharacters();
@@ -237,6 +275,12 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
         }
     }
 
+    /**
+     * render implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     * Sequence: specs-crc/seq-render-character-list.md (lines 18-85)
+     */
     async render(container: HTMLElement): Promise<void> {
         if (!container) {
             throw new Error('Container element is required');
@@ -248,6 +292,11 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
 
     // CharacterManagerView now only handles character list (no async render needed)
 
+    /**
+     * debouncedRender implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     */
     private debouncedRender(): void {
         if (this.isRendering) {
             this.pendingUpdate = true;
@@ -353,6 +402,11 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
         }
     }
 
+    /**
+     * destroy implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     */
     destroy(): void {
         if (this.container) {
             this.container.innerHTML = '';
@@ -364,10 +418,51 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
         this.musicButtonElement = null;
     }
 
+    /**
+     * getContainer implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    getContainer(): HTMLElement | null {
+        return this.container;
+    }
+
+    /**
+     * show implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    show(): void {
+        if (this.container) {
+            this.container.style.display = 'block';
+        }
+    }
+
+    /**
+     * hide implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    hide(): void {
+        if (this.container) {
+            this.container.style.display = 'none';
+        }
+    }
+
+    /**
+     * getCharacters implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     */
     getCharacters(): ICharacter[] {
         return [...this.characters];
     }
 
+    /**
+     * createNewCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     */
     async createNewCharacter(): Promise<void> {
         try {
             const newCharacter = characterStorageService.createNewCharacter();
@@ -388,6 +483,11 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
 
     // editCharacter removed - now handled by separate CharacterEditorView
 
+    /**
+     * deleteCharacter implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     */
     async deleteCharacter(characterId: string): Promise<void> {
         if (confirm('Are you sure you want to delete this character? This action cannot be undone.')) {
             try {
@@ -449,6 +549,13 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
         }, 5000);
     }
 
+    /**
+     * renderCharacterList implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     * Sequences:
+     * - specs-crc/seq-render-character-list.md (lines 45-75)
+     */
     private async renderCharacterList(): Promise<void> {
         if (!this.container) return;
 
@@ -494,6 +601,12 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
         }
     }
 
+    /**
+     * renderCharacterCard implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     * Sequence: specs-crc/seq-render-character-list.md (lines 51-71)
+     */
     private async renderCharacterCard(character: ICharacter): Promise<string> {
         // Create a cache key based on character data
         const cacheKey = this.createCharacterCacheKey(character);
@@ -753,6 +866,11 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
 
     // renderCharacterEditor method removed - handled by separate CharacterEditorView
 
+    /**
+     * setupListEventListeners implementation
+     *
+     * CRC: specs-crc/crc-CharacterManagerView.md
+     */
     private setupListEventListeners(): void {
         if (!this.container) return;
 

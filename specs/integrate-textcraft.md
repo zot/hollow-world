@@ -9,11 +9,11 @@
 
 ## Executive Summary
 
-This plan integrates Textcraft's proven P2P text-based MUD engine into Hollow World RPG to add a **text-based adventure mode** alongside the existing graphical character sheet interface. The integration leverages Textcraft's `IPeer` abstraction to replace libp2p direct streams with Hollow's existing LibP2P infrastructure.
+This plan integrates Textcraft's proven P2P text-based MUD engine into Hollow World RPG to add a **text-based adventure mode** alongside the existing graphical character sheet interface. The integration leverages Textcraft's `IPeer` abstraction to replace libp2p direct streams with Hollow's existing p2p-webapp infrastructure.
 
 ### Key Integration Points
 
-1. **Network Layer**: Implement Textcraft's `IPeer` interface using Hollow's `LibP2PNetworkProvider`
+1. **Network Layer**: Implement Textcraft's `IPeer` interface using Hollow's `P2PWebAppNetworkProvider`
 2. **MUD Engine**: Import Textcraft's `MudConnection`, `World`, and `Thing` model as-is
 3. **UI Mode**: Add "Adventure Mode" toggle to switch between character sheet and text MUD
 4. **World Sync**: Sync Hollow character stats with Textcraft Thing properties
@@ -49,7 +49,8 @@ This plan integrates Textcraft's proven P2P text-based MUD engine into Hollow Wo
 
 **Hollow World:**
 - TypeScript RPG with graphical character sheets
-- Uses LibP2P for P2P networking via `HollowPeer` and `LibP2PNetworkProvider`
+- Uses p2p-webapp for P2P networking via `HollowPeer` and `P2PWebAppNetworkProvider`
+- p2p-webapp provides libp2p capabilities through WebSocket connection to Go server
 - Components:
   - Character management
   - Dice rolling
@@ -80,7 +81,8 @@ flowchart TD
     end
 
     subgraph "Network Layer"
-        LibP2P[LibP2PNetworkProvider<br/>Existing Hollow networking]
+        P2PWebApp[P2PWebAppNetworkProvider<br/>p2p-webapp client]
+        P2PServer[p2p-webapp Server<br/>WebSocket + libp2p]
     end
 
     ModeToggle --> CharSheet
@@ -91,7 +93,8 @@ flowchart TD
     MudConn --> World
 
     HollowPeer --> HollowIPeer
-    HollowIPeer --> LibP2P
+    HollowIPeer --> P2PWebApp
+    P2PWebApp --> P2PServer
 
     MudControl --> HollowIPeer
 
@@ -100,7 +103,8 @@ flowchart TD
 
     style HollowIPeer fill:#ffd6d6,stroke:#333,color:#000
     style World fill:#d4edda,stroke:#333,color:#000
-    style LibP2P fill:#fff3cd,stroke:#333,color:#000
+    style P2PWebApp fill:#fff3cd,stroke:#333,color:#000
+    style P2PServer fill:#e3f2fd,stroke:#333,color:#000
 ```
 
 ---
@@ -110,7 +114,7 @@ flowchart TD
 ### Approach: Clean Layer Integration
 
 **DO:**
-- ✅ Implement `IPeer` interface using Hollow's existing LibP2P infrastructure
+- ✅ Implement `IPeer` interface using Hollow's existing p2p-webapp infrastructure
 - ✅ Import Textcraft's core engine (`model.ts`, `mudcontrol.ts`) as separate modules
 - ✅ Create new "Adventure Mode" UI component
 - ✅ Sync Hollow character data with Textcraft Thing properties
@@ -118,16 +122,40 @@ flowchart TD
 
 **DON'T:**
 - ❌ Modify Textcraft's core engine code (keep it pristine for updates)
-- ❌ Replace Hollow's existing LibP2P setup
+- ❌ Replace Hollow's existing p2p-webapp setup
 - ❌ Mix Textcraft GUI directly into character sheet
-- ❌ Duplicate P2P infrastructure
+- ❌ Duplicate P2P infrastructure - **CRITICAL**: HollowIPeer MUST use Hollow World's existing `P2PWebAppNetworkProvider` instance (same peer as the rest of the app), NOT create a new one
 
 ### Why This Approach Works
 
 1. **Textcraft's IPeer abstraction** was designed for exactly this - custom protocol implementations
-2. **Hollow already has LibP2P** - we just need to adapt it to IPeer interface
+2. **Hollow already has p2p-webapp** - we just need to adapt it to IPeer interface
 3. **Separate concerns** - Character sheet and text adventure are distinct modes
 4. **Data sync** - Hollow character stats flow into Textcraft Things as properties
+
+### Peer Instance Usage
+
+**CRITICAL**: HollowIPeer must use Hollow World's existing peer instance:
+
+```typescript
+// ✅ CORRECT: Use existing network provider from HollowPeer
+import { hollowPeer } from './p2p/HollowPeer'
+import { HollowIPeer } from './textcraft/hollow-peer'
+
+// Get the EXISTING network provider (do this once at app startup)
+const networkProvider = hollowPeer.getNetworkProvider()
+const hollowIPeer = new HollowIPeer(networkProvider)
+
+// ❌ WRONG: Creating a new network provider
+const wrongProvider = new P2PWebAppNetworkProvider() // DON'T DO THIS!
+const wrongPeer = new HollowIPeer(wrongProvider)     // Creates duplicate peer!
+```
+
+**Why this matters:**
+- Each `P2PWebAppNetworkProvider` instance = separate peer ID
+- Creating multiple instances breaks friend connections and P2P messaging
+- TextCraft must share the same peer ID as the rest of the application
+- The app should only have ONE peer ID per profile
 
 ---
 
@@ -154,10 +182,12 @@ flowchart TD
    ```typescript
    // src/textcraft/hollow-peer.ts
    import { IPeer } from './peer'
-   import { LibP2PNetworkProvider } from '../p2p/LibP2PNetworkProvider'
+   import { P2PWebAppNetworkProvider } from '../p2p/P2PWebAppNetworkProvider'
 
    export class HollowIPeer implements IPeer {
-     constructor(private networkProvider: LibP2PNetworkProvider) {}
+     // IMPORTANT: networkProvider should be the EXISTING instance from HollowPeer
+     // Do NOT create a new P2PWebAppNetworkProvider - use the app's existing peer
+     constructor(private networkProvider: P2PWebAppNetworkProvider) {}
 
      // Implement all 12 IPeer methods...
    }
@@ -577,11 +607,11 @@ flowchart TD
 
 ### Phase 3: Network Integration (Week 3)
 
-**Goal:** Wire up HollowIPeer to actually work over LibP2P
+**Goal:** Wire up HollowIPeer to actually work over p2p-webapp
 
 #### Tasks:
 
-1. **Implement IPeer Methods Using LibP2P**
+1. **Implement IPeer Methods Using p2p-webapp**
    ```typescript
    class HollowIPeer implements IPeer {
      async startHosting() {
@@ -768,7 +798,7 @@ HollowWorld/
 │   │       └── adventure-view.test.ts  # Tests
 │   │
 │   ├── p2p/
-│   │   ├── LibP2PNetworkProvider.ts    # Existing (unchanged)
+│   │   ├── P2PWebAppNetworkProvider.ts    # Existing (unchanged)
 │   │   └── protocols/
 │   │       └── mud-protocol.ts         # /hollow-mud/1.0.0 handler
 │   │
@@ -799,18 +829,24 @@ HollowWorld/
 import { IPeer, PeerID } from './peer'
 import { Thing, MudStorage } from './model'
 import { createConnection, MudConnection } from './mudcontrol'
-import { LibP2PNetworkProvider } from '../p2p/LibP2PNetworkProvider'
+import { P2PWebAppNetworkProvider } from '../p2p/P2PWebAppNetworkProvider'
 
 export class HollowIPeer implements IPeer {
   currentVersionID: string = '1.0.0'
   versionID: string = '1.0.0'
 
-  private networkProvider: LibP2PNetworkProvider
+  private networkProvider: P2PWebAppNetworkProvider
   private mudConnections: Map<PeerID, MudConnection> = new Map()
   private isHost: boolean = false
   private hostPeerID: PeerID | null = null
 
-  constructor(networkProvider: LibP2PNetworkProvider) {
+  /**
+   * @param networkProvider - MUST be Hollow World's existing P2PWebAppNetworkProvider instance
+   *                          from HollowPeer. Do NOT create a new instance.
+   *                          This ensures TextCraft uses the same peer ID and connections
+   *                          as the rest of the application.
+   */
+  constructor(networkProvider: P2PWebAppNetworkProvider) {
     this.networkProvider = networkProvider
   }
 
@@ -1075,21 +1111,21 @@ sequenceDiagram
     participant Guest
     participant GuestAdv as Guest Adventure View
     participant HollowIPeer
-    participant LibP2P
+    participant P2PWebApp as p2p-webapp Network
     participant HostIPeer as Host HollowIPeer
     participant HostMudConn as Host MudConnection
     participant World
 
     Guest->>GuestAdv: Type "look"
     GuestAdv->>HollowIPeer: command("look")
-    HollowIPeer->>LibP2P: Send via /hollow-mud/1.0.0
-    LibP2P->>HostIPeer: Receive command
+    HollowIPeer->>P2PWebApp: Send via /hollow-mud/1.0.0
+    P2PWebApp->>HostIPeer: Receive command
     HostIPeer->>HostMudConn: toplevelCommand("look")
     HostMudConn->>World: Query room
     World-->>HostMudConn: Description
     HostMudConn->>HostIPeer: output(text)
-    HostIPeer->>LibP2P: Send output
-    LibP2P->>HollowIPeer: Receive output
+    HostIPeer->>P2PWebApp: Send output
+    P2PWebApp->>HollowIPeer: Receive output
     HollowIPeer->>GuestAdv: Display output
     GuestAdv->>Guest: Show text
 ```
@@ -1362,7 +1398,7 @@ describe('Adventure Mode - Multiplayer', () => {
 ### High Risk
 
 **Network Protocol Mismatch**
-- **Risk:** LibP2P stream handling differs from Textcraft expectations
+- **Risk:** p2p-webapp stream handling differs from Textcraft expectations
 - **Mitigation:** Thorough testing, protocol abstraction layer
 - **Contingency:** Fallback to simplified command/response model
 
@@ -1403,7 +1439,7 @@ describe('Adventure Mode - Multiplayer', () => {
   - `index.md` - Project overview
 
 - **Hollow Documentation:**
-  - `specs/p2p.md` - LibP2P networking specification
+  - `specs/p2p.md` - p2p-webapp networking specification
   - `specs/main.md` - Architecture overview
 
 ### Glossary

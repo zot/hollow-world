@@ -1,9 +1,10 @@
 /**
  * HollowIPeer - Adapter implementing Textcraft's IPeer interface using Hollow's P2P infrastructure
+ * Adapter Pattern: Bridges TextCraft MUD engine to Hollow's P2P infrastructure
  *
- * This adapter bridges Textcraft's MUD engine with Hollow World's existing P2P networking layer.
- * It implements the IPeer interface to provide MUD networking capabilities without duplicating
- * the P2P setup.
+ * CRC: specs-crc/crc-HollowIPeer.md
+ * Spec: specs/integrate-textcraft.md
+ * Sequences: specs-crc/seq-textcraft-multiplayer-command.md
  */
 
 import { IPeer, PeerID, UserInfo } from './peer.js'
@@ -59,6 +60,10 @@ export class HollowIPeer implements IPeer {
     this.networkProvider = networkProvider || null
   }
 
+  /**
+   * Initialize peer with application context
+   * CRC: crc-HollowIPeer.md → init()
+   */
   init(app: any): void {
     console.log(
       '🎮 HollowIPeer initialized (solo mode:',
@@ -68,6 +73,10 @@ export class HollowIPeer implements IPeer {
     this.app = app
   }
 
+  /**
+   * Start peer with MUD storage and register message handlers
+   * CRC: crc-HollowIPeer.md → start()
+   */
   async start(storage: MudStorage): Promise<void> {
     console.log('🎮 HollowIPeer starting with MUD storage')
     this.storage = storage
@@ -85,6 +94,10 @@ export class HollowIPeer implements IPeer {
     }
   }
 
+  /**
+   * Reset peer state and close all connections
+   * CRC: crc-HollowIPeer.md → reset()
+   */
   reset(): void {
     console.log('🔄 Resetting HollowIPeer')
 
@@ -117,6 +130,10 @@ export class HollowIPeer implements IPeer {
     console.log('✅ HollowIPeer reset complete')
   }
 
+  /**
+   * Get connection string (peer ID) for joining
+   * CRC: crc-HollowIPeer.md → connectString()
+   */
   connectString(): string {
     if (!this.networkProvider) {
       return 'solo-mode'
@@ -128,11 +145,20 @@ export class HollowIPeer implements IPeer {
     return peerId
   }
 
+  /**
+   * Get relay connection string (same as connectString in Hollow)
+   * CRC: crc-HollowIPeer.md → relayConnectString()
+   */
   relayConnectString(): string {
     // Hollow uses circuit relay by default, so the connect string is the same
     return this.connectString()
   }
 
+  /**
+   * Start hosting a MUD world
+   * CRC: crc-HollowIPeer.md → startHosting()
+   * Seq: seq-textcraft-multiplayer-command.md
+   */
   startHosting(): void {
     if (!this.networkProvider) {
       throw new Error(
@@ -157,6 +183,11 @@ export class HollowIPeer implements IPeer {
     console.log('📋 Share this peer ID with guests to allow them to join')
   }
 
+  /**
+   * Join a hosted MUD session as guest
+   * CRC: crc-HollowIPeer.md → joinSession()
+   * Seq: seq-textcraft-multiplayer-command.md
+   */
   async joinSession(session: string): Promise<void> {
     if (!this.networkProvider) {
       throw new Error(
@@ -178,18 +209,31 @@ export class HollowIPeer implements IPeer {
     console.log('✅ Login message sent to host')
   }
 
+  /**
+   * Start relay mode (not supported - circuit relay is built-in)
+   * CRC: crc-HollowIPeer.md → startRelay()
+   */
   startRelay(): void {
     throw new Error(
       'Relay mode not supported in Hollow (circuit relay is built-in)'
     )
   }
 
+  /**
+   * Host via relay mode (not needed - circuit relay is built-in)
+   * CRC: crc-HollowIPeer.md → hostViaRelay()
+   */
   hostViaRelay(sessionID: string): void {
     throw new Error(
       'Relay hosting not needed in Hollow (circuit relay is built-in)'
     )
   }
 
+  /**
+   * Broadcast user Thing changes to all peers
+   * CRC: crc-HollowIPeer.md → userThingChanged()
+   * Seq: seq-textcraft-character-sync.md
+   */
   userThingChanged(thing: Thing): void {
     if (!this.isHost) return
 
@@ -223,6 +267,11 @@ export class HollowIPeer implements IPeer {
     console.log('📢 User update broadcasted for:', thing.name)
   }
 
+  /**
+   * Execute MUD command (solo/host/guest modes)
+   * CRC: crc-HollowIPeer.md → command()
+   * Seq: seq-textcraft-solo-command.md, seq-textcraft-multiplayer-command.md
+   */
   command(cmd: string): void {
     // Solo mode - handle locally
     if (!this.networkProvider) {
@@ -269,6 +318,7 @@ export class HollowIPeer implements IPeer {
 
   /**
    * Handle basic commands locally when network is available but not in a session
+   * CRC: crc-HollowIPeer.md → handleLocalCommand()
    */
   private handleLocalCommand(cmd: string): void {
     const lower = cmd.toLowerCase().trim()
@@ -317,6 +367,8 @@ Network: Connected
 
   /**
    * Handle incoming MUD message from a peer
+   * CRC: crc-HollowIPeer.md → handleMudMessage()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private handleMudMessage(peerId: string, message: MudMessage): void {
     console.log('📨 Received MUD message from', peerId, ':', message.type)
@@ -330,6 +382,8 @@ Network: Connected
 
   /**
    * Handle messages received by the host
+   * CRC: crc-HollowIPeer.md → handleHostMessage()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private handleHostMessage(peerId: string, message: MudMessage): void {
     switch (message.type) {
@@ -348,6 +402,8 @@ Network: Connected
 
   /**
    * Handle messages received by a guest
+   * CRC: crc-HollowIPeer.md → handleGuestMessage()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private handleGuestMessage(peerId: string, message: MudMessage): void {
     switch (message.type) {
@@ -370,6 +426,8 @@ Network: Connected
 
   /**
    * Handle a guest logging in (host side)
+   * CRC: crc-HollowIPeer.md → handleGuestLogin()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private handleGuestLogin(peerId: string): void {
     console.log('👤 Guest logging in:', peerId)
@@ -408,6 +466,8 @@ Network: Connected
 
   /**
    * Handle a command from a guest (host side)
+   * CRC: crc-HollowIPeer.md → handleGuestCommand()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private handleGuestCommand(peerId: string, cmd: string): void {
     console.log('⚙️  Processing guest command:', cmd, 'from', peerId)
@@ -428,6 +488,8 @@ Network: Connected
 
   /**
    * Handle output from host (guest side)
+   * CRC: crc-HollowIPeer.md → handleHostOutput()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private handleHostOutput(text: string): void {
     console.log('📜 Received output from host:', text)
@@ -441,6 +503,8 @@ Network: Connected
 
   /**
    * Handle user update from host (guest side)
+   * CRC: crc-HollowIPeer.md → handleUserUpdate()
+   * Seq: seq-textcraft-character-sync.md
    */
   private handleUserUpdate(message: MudMessage): void {
     console.log('👤 User update:', message.name)
@@ -454,6 +518,8 @@ Network: Connected
 
   /**
    * Send output text to a specific guest
+   * CRC: crc-HollowIPeer.md → sendOutputToGuest()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private sendOutputToGuest(peerId: string, text: string): void {
     const message: MudMessage = {
@@ -466,6 +532,8 @@ Network: Connected
 
   /**
    * Send a MUD message to a specific peer
+   * CRC: crc-HollowIPeer.md → sendMessageToPeer()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private sendMessageToPeer(peerId: string, message: MudMessage): void {
     if (!this.networkProvider) {
@@ -485,6 +553,8 @@ Network: Connected
 
   /**
    * Send a message to the host (guest side)
+   * CRC: crc-HollowIPeer.md → sendToHost()
+   * Seq: seq-textcraft-multiplayer-command.md
    */
   private sendToHost(message: MudMessage): void {
     if (!this.hostPeerID) {
@@ -497,6 +567,8 @@ Network: Connected
 
   /**
    * Broadcast a message to all connected guests except one
+   * CRC: crc-HollowIPeer.md → broadcast()
+   * Seq: seq-textcraft-character-sync.md
    */
   private broadcast(message: MudMessage, excludePeerID?: PeerID): void {
     const peerIDs = Array.from(this.mudConnections.keys())
@@ -509,6 +581,7 @@ Network: Connected
 
   /**
    * Find which peer owns a specific Thing
+   * CRC: crc-HollowIPeer.md → findPeerIDForThing()
    */
   private findPeerIDForThing(thing: Thing): PeerID | null {
     return this.thingToPeerMap.get(thing) || null
@@ -516,6 +589,7 @@ Network: Connected
 
   /**
    * Set the current world (called by host when loading a world)
+   * CRC: crc-HollowIPeer.md → setWorld()
    */
   setWorld(world: any): void {
     this.currentWorld = world
@@ -524,6 +598,7 @@ Network: Connected
 
   /**
    * Get the current world
+   * CRC: crc-HollowIPeer.md → getWorld()
    */
   getWorld(): any {
     return this.currentWorld
@@ -531,6 +606,8 @@ Network: Connected
 
   /**
    * Initialize solo mode - creates a local MudConnection without networking
+   * CRC: crc-HollowIPeer.md → startSoloMode()
+   * Seq: seq-textcraft-solo-command.md
    */
   startSoloMode(world: any): void {
     console.log('🎮 Starting solo mode...')

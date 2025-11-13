@@ -1,3 +1,10 @@
+/**
+ * Unit tests for SplashScreen (Main Menu)
+ *
+ * CRC: specs-crc/crc-SplashScreen.md
+ * Spec: specs/ui.splash.md
+ */
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SplashScreen, ISplashScreenConfig } from './SplashScreen.js';
 import { INetworkProvider } from '../p2p.js';

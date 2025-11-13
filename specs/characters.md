@@ -46,6 +46,8 @@ interface ICharacter {
     createdAt: Date;
     updatedAt: Date;
     isFrozen: boolean;         // Lock character from edits
+    characterHash: string;     // SHA-256 hash of character data (excludes characterHash field itself)
+                               // Updated on save/load; used to skip unnecessary storage writes
 }
 ```
 
@@ -155,7 +157,8 @@ const availableChips = totalChips - spentChips;
   "dust": 10,
   "createdAt": "2025-10-31T12:00:00Z",
   "updatedAt": "2025-10-31T12:00:00Z",
-  "isFrozen": false
+  "isFrozen": false,
+  "characterHash": "a1b2c3d4e5f6..."
 }
 ```
 
@@ -203,6 +206,64 @@ function upgradeCharacter(character: any): ICharacter {
     return current;
 }
 ```
+
+### Hash-Based Save Optimization
+
+**Purpose**: Avoid unnecessary IndexedDB writes by only saving when character data has actually changed.
+
+**Algorithm**:
+
+```typescript
+async function saveCharacter(character: ICharacter): Promise<void> {
+    // Calculate hash of current character state (excluding characterHash field)
+    const currentHash = calculateCharacterHash(character);
+
+    // Compare with stored hash
+    if (currentHash === character.characterHash) {
+        // No changes - skip save
+        return;
+    }
+
+    // Character has changed - save with new hash
+    const originalHash = character.characterHash;
+    character.characterHash = currentHash;
+
+    try {
+        await storageService.save(`hollow-character-${character.id}`, character);
+        // Hash successfully updated in storage
+    } catch (error) {
+        // Restore original hash on error
+        character.characterHash = originalHash;
+        throw error;
+    }
+}
+
+function calculateCharacterHash(character: ICharacter): string {
+    // Create copy without characterHash field
+    const { characterHash, ...dataToHash } = character;
+
+    // Normalize and stringify
+    const normalized = JSON.stringify(dataToHash, Object.keys(dataToHash).sort());
+
+    // Calculate SHA-256 hash
+    return sha256(normalized);
+}
+```
+
+**Behavior**:
+- **On Load**: Character loaded from storage includes its `characterHash` from last save
+- **On Save Attempt**: Calculate current hash and compare to `character.characterHash`
+  - If hashes match → Skip write (no changes)
+  - If hashes differ → Update `characterHash` field and save
+- **On Save Error**: Restore original `characterHash` value (rollback)
+- **Hash Calculation**: Excludes `characterHash` field itself to avoid circular dependency
+
+**Benefits**:
+- Reduces IndexedDB write operations (performance optimization)
+- Prevents unnecessary disk I/O for unchanged characters
+- Maintains consistency - hash always represents last saved state
+
+**See**: [`storage.md`](storage.md#hash-based-save-optimization) for storage service implementation
 
 ## 🔄 Character Lifecycle
 

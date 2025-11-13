@@ -1,3 +1,13 @@
+/**
+ * SplashScreen - Main Menu Interface
+ *
+ * CRC: specs-crc/crc-SplashScreen.md
+ * Spec: specs/ui.splash.md
+ * Sequences: seq-app-startup.md, seq-navigate-from-splash.md
+ *
+ * @template public/templates/splash-screen.html
+ */
+
 import { IAudioManager } from '../audio/AudioManager.js';
 import { templateEngine } from '../utils/TemplateEngine.js';
 import { VERSION } from '../version.js';
@@ -11,7 +21,11 @@ export interface IUIComponent {
     destroy(): void;
 }
 
-// Interface for splash screen specific functionality
+/**
+ * ISplashScreen interface
+ *
+ * CRC: specs-crc/crc-SplashScreen.md
+ */
 export interface ISplashScreen extends IUIComponent {
     updatePeerId(peerId: string): void;
     onPeerIdClick?: () => void;
@@ -54,7 +68,24 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
     settingsButtonClass: 'splash-settings-button'
 };
 
-// Splash screen implementation following SOLID principles
+/**
+ * SplashScreen - Main menu with navigation to all app sections
+ *
+ * CRC: specs-crc/crc-SplashScreen.md
+ * Spec: specs/ui.splash.md
+ * Sequences: seq-app-startup.md, seq-navigate-from-splash.md
+ *
+ * Purpose: Display application title, peer ID, and navigation buttons to access
+ * characters, friends, settings, and adventure modes.
+ *
+ * Template: public/templates/splash-screen.html
+ *
+ * Key Features:
+ * - Displays peer ID (clickable for settings)
+ * - Navigation buttons to all major views
+ * - Credits popup
+ * - Application version display
+ */
 export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport {
     public audioManager?: IAudioManager;
     private config: ISplashScreenConfig;
@@ -90,6 +121,12 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         // Peer ID will be set by main.ts after HollowPeer initializes
     }
 
+    /**
+     * render implementation
+     *
+     * CRC: specs-crc/crc-SplashScreen.md
+     * Sequence: seq-app-startup.md
+     */
     async render(container: HTMLElement): Promise<void> {
         if (!container) {
             throw new Error('Container element is required');
@@ -172,6 +209,11 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         this.applyStyles();
     }
 
+    /**
+     * updatePeerId implementation
+     *
+     * CRC: specs-crc/crc-SplashScreen.md
+     */
     updatePeerId(peerId: string): void {
         console.log('📍 updatePeerId called with:', peerId);
         console.log('📍 peerIdElement exists:', !!this.peerIdElement);
@@ -190,6 +232,11 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         }
     }
 
+    /**
+     * destroy implementation
+     *
+     * CRC: specs-crc/crc-SplashScreen.md
+     */
     destroy(): void {
         if (this.container) {
             this.container.innerHTML = '';
@@ -202,6 +249,37 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         this.adventureButtonElement = null;
         this.settingsButtonElement = null;
         this.musicButtonElement = null;
+    }
+
+    /**
+     * getContainer implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    getContainer(): HTMLElement | null {
+        return this.container;
+    }
+
+    /**
+     * show implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    show(): void {
+        if (this.container) {
+            this.container.style.display = 'block';
+        }
+    }
+
+    /**
+     * hide implementation - IView interface
+     *
+     * Spec: specs/view-management.md
+     */
+    hide(): void {
+        if (this.container) {
+            this.container.style.display = 'none';
+        }
     }
 
     private async createSplashHTMLFallback(): Promise<string> {
@@ -245,6 +323,11 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         }
     }
 
+    /**
+     * setupPeerIdInteraction implementation
+     *
+     * CRC: specs-crc/crc-SplashScreen.md
+     */
     private setupPeerIdInteraction(): void {
         if (!this.peerIdElement) return;
 
@@ -260,6 +343,12 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         });
     }
 
+    /**
+     * setupButtonInteractions implementation
+     *
+     * CRC: specs-crc/crc-SplashScreen.md
+     * Sequence: seq-navigate-from-splash.md
+     */
     private setupButtonInteractions(): void {
         if (this.joinButtonElement) {
             this.joinButtonElement.addEventListener('click', async () => {
@@ -326,12 +415,22 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
 
     
 
-    
 
+
+    /**
+     * refreshMusicButtonState implementation
+     *
+     * CRC: specs-crc/crc-SplashScreen.md
+     */
     refreshMusicButtonState(): void {
         AudioControlUtils.updateMusicButtonState(this);
     }
 
+    /**
+     * copyPeerIdToClipboard implementation
+     *
+     * CRC: specs-crc/crc-SplashScreen.md
+     */
     private async copyPeerIdToClipboard(): Promise<void> {
         if (!this.peerIdElement) return;
 
@@ -375,6 +474,11 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
         }
     }
 
+    /**
+     * showCreditsPopup implementation
+     *
+     * CRC: specs-crc/crc-SplashScreen.md
+     */
     private async showCreditsPopup(): Promise<void> {
         try {
             // Define credits data based on actual audio assets from README.md

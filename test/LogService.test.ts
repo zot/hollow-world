@@ -1,3 +1,11 @@
+/**
+ * Unit tests for LogService - Application logging with automatic trimming
+ *
+ * CRC: specs-crc/crc-LogService.md
+ * Spec: specs/logging.md
+ * Sequences: specs-crc/seq-log-message.md
+ */
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { LogService } from '../src/services/LogService.js';
 import { getProfileService } from '../src/services/ProfileService.js';

@@ -1,5 +1,11 @@
-// Character Sheet Data Models and Types for Hollow RPG System
-// Following SOLID principles with clear interfaces
+/**
+ * Character Sheet Data Models and Types for Hollow RPG System
+ * Following SOLID principles with clear interfaces
+ *
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md, specs-crc/seq-validate-character.md
+ */
 
 export enum AttributeCategory {
     PHYSICAL = 'Physical',
@@ -13,6 +19,10 @@ export enum AttributeCostMultiplier {
     X4 = 4
 }
 
+/**
+ * AttributeType - Eight core attributes organized by category
+ * CRC: specs-crc/crc-Character.md
+ */
 export enum AttributeType {
     // Physical
     DEX = 'Dex',
@@ -35,6 +45,11 @@ export interface IAttributeDefinition {
     description: string;
 }
 
+/**
+ * IAttributes - Character attribute values
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ */
 export interface IAttributes {
     [AttributeType.DEX]: number;
     [AttributeType.STR]: number;
@@ -46,6 +61,11 @@ export interface IAttributes {
     [AttributeType.PER]: number;
 }
 
+/**
+ * ISkill - Character skill definition
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ */
 export interface ISkill {
     id: string;
     name: string;
@@ -57,11 +77,21 @@ export interface ISkill {
     description?: string;
 }
 
+/**
+ * IFieldSkillEntry - Skill entry within a field with experience tracking
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ */
 export interface IFieldSkillEntry {
     skillId: string;
     hasExperience: boolean; // Checkbox for experience which adds 1 to skill level
 }
 
+/**
+ * IField - Character field with skills and progression
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ */
 export interface IField {
     id: string;
     name: string;
@@ -86,6 +116,11 @@ export interface IDrawback {
     description: string;
 }
 
+/**
+ * IItem - Equipment item (weapons, gadgets, ordinary gear)
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ */
 export interface IItem {
     id: string;
     name: string;
@@ -106,6 +141,11 @@ export interface ICompanion {
     training?: string[]; // For animals
 }
 
+/**
+ * IHollowData - Hollow-specific character data (dust, debt, marks)
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ */
 export interface IHollowData {
     dust: number; // Current dust grains
     burned: number; // Total burned dust
@@ -115,6 +155,12 @@ export interface IHollowData {
     newMoonMarks: number; // X marks for failed resistance (0-3)
 }
 
+/**
+ * ICharacter - Complete character data model
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md, specs-crc/seq-validate-character.md
+ */
 export interface ICharacter {
     // Basic Info
     id: string;
@@ -156,6 +202,9 @@ export interface ICharacter {
     // Timestamps
     createdAt: Date;
     updatedAt: Date;
+
+    // Hash-based change detection (for save optimization)
+    characterHash?: string; // SHA-256 hash of character data (excluding this field)
 }
 
 // Validation interfaces
@@ -200,7 +249,11 @@ export interface ICharacterSheetCallbacks {
     onImport: (data: string) => boolean;
 }
 
-// Default attribute definitions for the system
+/**
+ * ATTRIBUTE_DEFINITIONS - System-wide attribute definitions with costs and descriptions
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ */
 export const ATTRIBUTE_DEFINITIONS: Record<AttributeType, IAttributeDefinition> = {
     [AttributeType.DEX]: {
         type: AttributeType.DEX,
@@ -411,6 +464,11 @@ export const STANDARD_SKILLS: Record<string, ISkill> = {
     }
 };
 
+/**
+ * CHARACTER_CREATION_RULES - Character creation constraints and starting values
+ * CRC: specs-crc/crc-Character.md
+ * Spec: specs/characters.md
+ */
 export const CHARACTER_CREATION_RULES: ICharacterCreationRules = {
     startingAttributeChips: 16,
     startingXP: 10,

@@ -58,7 +58,7 @@ Your HollowWorld application has been successfully built and packaged for itch.i
 
 - **Platform**: HTML5 (Web Browser)
 - **Framework**: Vite + TypeScript
-- **Networking**: LibP2P (WebRTC)
+- **Networking**: LibP2P via p2p-webapp
 - **Audio**: Native Web Audio API
 - **Storage**: LocalStorage
 - **Size**: ~38MB (includes 8 music tracks)

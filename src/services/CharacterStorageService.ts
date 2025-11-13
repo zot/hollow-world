@@ -1,11 +1,22 @@
-// Character Storage Service - Handles character persistence
-// Following Single Responsibility Principle
+/**
+ * Character Storage Service - Handles character persistence
+ * Following Single Responsibility Principle
+ *
+ * CRC: specs-crc/crc-CharacterStorageService.md
+ * Spec: specs/characters.md, specs/storage.md
+ * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md
+ */
 
 import { ICharacter, AttributeType } from '../character/types.js';
 import { CharacterCalculations, CharacterFactory } from '../character/CharacterUtils.js';
 import { CharacterVersioning } from '../character/CharacterVersioning.js';
 import { getProfileService } from './ProfileService.js';
+import { calculateCharacterHash } from '../utils/characterHash.js';
 
+/**
+ * ICharacterStorageService - Character persistence interface
+ * CRC: specs-crc/crc-CharacterStorageService.md
+ */
 export interface ICharacterStorageService {
     getAllCharacters(): Promise<ICharacter[]>;
     getCharacter(id: string): Promise<ICharacter | null>;
@@ -14,25 +25,39 @@ export interface ICharacterStorageService {
     createNewCharacter(name?: string): ICharacter;
 }
 
+/**
+ * CharacterStorageService - Manages character persistence with hash-based optimization
+ * CRC: specs-crc/crc-CharacterStorageService.md
+ * Spec: specs/characters.md, specs/storage.md
+ * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md
+ */
 export class CharacterStorageService implements ICharacterStorageService {
     private readonly STORAGE_KEY = 'hollow-world-characters';
 
+    /**
+     * Load all characters with version migration and hash initialization
+     * Sequence: specs-crc/seq-load-character.md (lines 26-78)
+     */
     async getAllCharacters(): Promise<ICharacter[]> {
         try {
             const stored = getProfileService().getItem(this.STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (Array.isArray(parsed)) {
-                    return parsed.map(char => this.validateAndFixCharacter(char));
+                    // Use Promise.all since validateAndFixCharacter is now async (for hash initialization)
+                    return await Promise.all(parsed.map(char => this.validateAndFixCharacter(char)));
                 }
             }
-            return this.getDefaultCharacters();
+            return await this.getDefaultCharacters();
         } catch (error) {
             console.error('Failed to load characters from storage:', error);
-            return this.getDefaultCharacters();
+            return await this.getDefaultCharacters();
         }
     }
 
+    /**
+     * Get single character by ID
+     */
     async getCharacter(id: string): Promise<ICharacter | null> {
         try {
             const characters = await this.getAllCharacters();
@@ -43,12 +68,32 @@ export class CharacterStorageService implements ICharacterStorageService {
         }
     }
 
+    /**
+     * Save character with hash-based optimization
+     * Spec: specs/storage.md "Hash-based save optimization"
+     * Sequence: specs-crc/seq-save-character.md (lines 46-57)
+     */
     async saveCharacter(character: ICharacter): Promise<void> {
         try {
+            // Calculate current hash to detect changes
+            const currentHash = await calculateCharacterHash(character);
+
+            // Hash-based save optimization: skip save if character hasn't changed
+            if (currentHash === character.characterHash) {
+                // No changes detected - skip storage write
+                return;
+            }
+
             const characters = await this.getAllCharacters();
             const existingIndex = characters.findIndex(c => c.id === character.id);
 
-            const updatedCharacter = { ...character, updatedAt: new Date() };
+            // Update character with new hash and timestamps
+            const updatedCharacter = {
+                ...character,
+                characterHash: currentHash,
+                createdAt: character.createdAt || new Date(),
+                updatedAt: new Date()
+            };
 
             if (existingIndex >= 0) {
                 characters[existingIndex] = updatedCharacter;
@@ -67,6 +112,9 @@ export class CharacterStorageService implements ICharacterStorageService {
         }
     }
 
+    /**
+     * Delete character by ID
+     */
     async deleteCharacter(id: string): Promise<boolean> {
         try {
             const characters = await this.getAllCharacters();
@@ -84,11 +132,18 @@ export class CharacterStorageService implements ICharacterStorageService {
         }
     }
 
+    /**
+     * Create new character with default values
+     */
     createNewCharacter(name: string = 'New Character'): ICharacter {
         return CharacterFactory.createNewCharacter(name, 'A mysterious newcomer to the frontier');
     }
 
-    private validateAndFixCharacter(character: any): ICharacter {
+    /**
+     * Upgrade character to latest version and initialize hash
+     * Sequence: specs-crc/seq-load-character.md (lines 45-76)
+     */
+    private async validateAndFixCharacter(character: any): Promise<ICharacter> {
         try {
             // First, upgrade character to latest version if needed
             const upgradedCharacter = CharacterVersioning.upgradeCharacterToLatest(character);
@@ -127,8 +182,16 @@ export class CharacterStorageService implements ICharacterStorageService {
                 companions: Array.isArray(upgradedCharacter.companions) ? upgradedCharacter.companions : [],
                 attributeChipsSpent: upgradedCharacter.attributeChipsSpent || { positive: 0, negative: 0 },
                 createdAt: upgradedCharacter.createdAt ? new Date(upgradedCharacter.createdAt) : new Date(),
-                updatedAt: new Date()
+                updatedAt: upgradedCharacter.updatedAt ? new Date(upgradedCharacter.updatedAt) : new Date(),
+                // Preserve existing hash from storage, or undefined if not present
+                characterHash: upgradedCharacter.characterHash
             };
+
+            // Initialize characterHash if not present (for existing characters)
+            if (!validatedCharacter.characterHash) {
+                validatedCharacter.characterHash = await calculateCharacterHash(validatedCharacter);
+            }
+
             return validatedCharacter;
         } catch (error) {
             console.error('Failed to validate character:', error);
@@ -136,7 +199,7 @@ export class CharacterStorageService implements ICharacterStorageService {
         }
     }
 
-    private getDefaultCharacters(): ICharacter[] {
+    private async getDefaultCharacters(): Promise<ICharacter[]> {
         return [
             {
                 id: 'char-1',

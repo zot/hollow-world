@@ -1,17 +1,38 @@
+/**
+ * Log Service - Application logging with profile-scoped persistence
+ * Handles log entries with serial numbers and automatic trimming
+ *
+ * CRC: specs-crc/crc-LogService.md
+ * Spec: specs/logging.md
+ * Sequences: specs-crc/seq-log-message.md
+ */
+
 import { getProfileService } from './ProfileService.js';
 
+/**
+ * ILogEntry - Single log entry with serial number and timestamp
+ * CRC: specs-crc/crc-LogService.md
+ */
 export interface ILogEntry {
     serial: number;
     date: Date;
     message: string;
 }
 
+/**
+ * ILogData - Log storage structure with metadata
+ * CRC: specs-crc/crc-LogService.md
+ */
 export interface ILogData {
     nextSerial: number;
     totalChars: number;
     entries: ILogEntry[];
 }
 
+/**
+ * ILogService - Logging service interface
+ * CRC: specs-crc/crc-LogService.md
+ */
 export interface ILogService {
     log(message: string): void;
     getEntries(): ILogEntry[];
@@ -23,6 +44,12 @@ const MAX_LOG_SIZE = 512 * 1024; // 512K characters
 const TRIM_TO_SIZE = 256 * 1024; // 256K characters
 const STORAGE_KEY = 'hollowWorldLog';
 
+/**
+ * LogService - Application logging with automatic trimming and persistence
+ * CRC: specs-crc/crc-LogService.md
+ * Spec: specs/logging.md
+ * Sequences: specs-crc/seq-log-message.md
+ */
 export class LogService implements ILogService {
     private logData: ILogData;
 
@@ -30,6 +57,9 @@ export class LogService implements ILogService {
         this.logData = this.loadFromStorage();
     }
 
+    /**
+     * Load log data from profile-scoped storage
+     */
     private loadFromStorage(): ILogData {
         try {
             const stored = getProfileService().getItem(STORAGE_KEY);
@@ -53,6 +83,10 @@ export class LogService implements ILogService {
         };
     }
 
+    /**
+     * Persist log data to profile-scoped storage
+     * Sequence: specs-crc/seq-log-message.md (lines 51-61)
+     */
     private saveToStorage(): void {
         try {
             getProfileService().setItem(STORAGE_KEY, JSON.stringify(this.logData));
@@ -61,6 +95,10 @@ export class LogService implements ILogService {
         }
     }
 
+    /**
+     * Trim log to 256KB when exceeding 512KB (keeps at least one entry)
+     * Sequence: specs-crc/seq-log-message.md (lines 39-49)
+     */
     private trimLog(): void {
         // Only trim if we exceed MAX_LOG_SIZE
         if (this.logData.totalChars <= MAX_LOG_SIZE) {
@@ -85,6 +123,10 @@ export class LogService implements ILogService {
         console.log(`Log trimmed to ${this.logData.totalChars} characters`);
     }
 
+    /**
+     * Add log entry with serial number and automatic trimming
+     * Sequence: specs-crc/seq-log-message.md (lines 19-64)
+     */
     log(message: string): void {
         const entry: ILogEntry = {
             serial: this.logData.nextSerial++,
@@ -101,6 +143,9 @@ export class LogService implements ILogService {
         this.saveToStorage();
     }
 
+    /**
+     * Retrieve all log entries
+     */
     getEntries(): ILogEntry[] {
         // Return a deep copy to prevent external modifications
         return this.logData.entries.map(entry => ({
@@ -110,6 +155,9 @@ export class LogService implements ILogService {
         }));
     }
 
+    /**
+     * Clear all log entries
+     */
     clear(): void {
         this.logData = {
             nextSerial: 1,
@@ -119,6 +167,9 @@ export class LogService implements ILogService {
         this.saveToStorage();
     }
 
+    /**
+     * Get total character count of all log entries
+     */
     getTotalChars(): number {
         return this.logData.totalChars;
     }

@@ -1,8 +1,17 @@
-import { World, Thing, getStorage } from './model.js';
-
 /**
  * WorldLoader creates and loads worlds programmatically
  * Phase 2.5 implementation for solo mode
+ *
+ * CRC: specs-crc/crc-WorldLoader.md
+ * Spec: specs/integrate-textcraft.md
+ */
+
+import { World, Thing, getStorage } from './model.js';
+
+/**
+ * WorldLoader - Factory for creating and loading TextCraft worlds
+ *
+ * CRC: specs-crc/crc-WorldLoader.md
  *
  * For now, this creates simple worlds.
  * Full world loading from files will be implemented in Phase 3.
@@ -10,6 +19,8 @@ import { World, Thing, getStorage } from './model.js';
 export class WorldLoader {
     /**
      * Create a simple test world programmatically (default world)
+     * CRC: crc-WorldLoader.md → createTestWorld()
+     * Seq: seq-textcraft-solo-command.md
      */
     async createTestWorld(): Promise<World> {
         // Get the MudStorage (creates IndexedDB connection if needed)
@@ -30,6 +41,7 @@ export class WorldLoader {
 
     /**
      * Create a new world with a given name
+     * CRC: crc-WorldLoader.md → createWorld()
      */
     async createWorld(worldName: string): Promise<World> {
         // Get the MudStorage (creates IndexedDB connection if needed)
@@ -49,6 +61,8 @@ export class WorldLoader {
 
     /**
      * Load an existing world by name
+     * CRC: crc-WorldLoader.md → loadWorld()
+     * Seq: seq-textcraft-solo-command.md, seq-textcraft-multiplayer-command.md
      */
     async loadWorld(worldName: string): Promise<World> {
         // Get the MudStorage
@@ -72,6 +86,7 @@ export class WorldLoader {
     /**
      * Placeholder for future JSON loading
      * Currently just returns a test world
+     * CRC: crc-WorldLoader.md → loadFromJSON()
      */
     async loadFromJSON(jsonText: string): Promise<World> {
         console.log('JSON world loading not yet implemented - using test world');

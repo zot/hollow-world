@@ -117,6 +117,89 @@ await world.doTransaction(async (store, users, txn) => {
   5. Add newly saved character to history
   6. Advance internal history for proper back button behavior
 
+#### Hash-Based Save Optimization
+
+**Purpose**: Skip unnecessary IndexedDB writes when character data hasn't changed.
+
+**Implementation in CharacterStorageService**:
+
+```typescript
+class CharacterStorageService {
+    async saveCharacter(character: ICharacter): Promise<void> {
+        // Calculate hash of current state (excluding characterHash field)
+        const currentHash = this.calculateCharacterHash(character);
+
+        // Skip save if hash hasn't changed
+        if (currentHash === character.characterHash) {
+            return; // No changes - skip write
+        }
+
+        // Save original hash for rollback on error
+        const originalHash = character.characterHash;
+        character.characterHash = currentHash;
+
+        try {
+            // Perform actual save to IndexedDB
+            await this.storage.save(
+                `hollow-character-${character.id}`,
+                character
+            );
+            // Success - new hash is now persisted
+        } catch (error) {
+            // Error - restore original hash
+            character.characterHash = originalHash;
+            throw error;
+        }
+    }
+
+    async loadCharacter(characterId: string): Promise<ICharacter | null> {
+        const character = await this.storage.load<ICharacter>(
+            `hollow-character-${characterId}`
+        );
+
+        if (!character) {
+            return null;
+        }
+
+        // Character loaded with characterHash from last save
+        // Hash represents the character's state in storage
+        return character;
+    }
+
+    private calculateCharacterHash(character: ICharacter): string {
+        // Exclude characterHash from hash calculation
+        const { characterHash, ...dataToHash } = character;
+
+        // Normalize and stringify for consistent hashing
+        const normalized = JSON.stringify(
+            dataToHash,
+            Object.keys(dataToHash).sort()
+        );
+
+        // Calculate SHA-256 hash
+        return sha256(normalized);
+    }
+}
+```
+
+**Behavior**:
+- **On Load**: Character includes `characterHash` field from storage
+  - Hash represents character's state at last successful save
+- **On Save**: Calculate current hash and compare to stored hash
+  - If `currentHash === character.characterHash` → Skip write (optimization)
+  - If `currentHash !== character.characterHash` → Update hash and save
+- **On Error**: Rollback `characterHash` to original value
+  - Maintains consistency: hash always matches last successful save
+- **Hash Calculation**: Excludes `characterHash` field to avoid circular dependency
+
+**Benefits**:
+- Reduces IndexedDB write operations (significant performance gain)
+- Prevents unnecessary disk I/O for unchanged characters
+- Example: Clicking "Yep" multiple times without edits doesn't write to disk
+- Hash always represents last persisted state (consistency guarantee)
+
+**See Also**: [`characters.md`](characters.md#hash-based-save-optimization) for character schema
+
 ### Error Handling
 - **LocalStorage failures**: Graceful degradation when storage is unavailable
 - **Character validation**: Validate data structure before loading
@@ -131,7 +214,7 @@ await world.doTransaction(async (store, users, txn) => {
 - Selecting a profile:
   - Chooses which storage profile the app uses
   - Applies only to the current tab (selection is not persisted)
-  - Reconnects to libp2p using profile's peerID
+  - Reconnects to p2p-webapp using profile's peerID
 
 ### Profile Initialization
 - At startup:

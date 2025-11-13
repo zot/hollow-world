@@ -1,4 +1,8 @@
-// Unit tests for TemplateEngine utility
+/**
+ * Unit tests for TemplateEngine
+ *
+ * CRC: specs-crc/crc-TemplateEngine.md
+ */
 
 import { TemplateEngine } from './TemplateEngine.js';
 import { vi } from 'vitest';

@@ -1,5 +1,15 @@
-// Character utility functions and validation logic
-// Following Single Responsibility Principle
+/**
+ * Character utility functions and validation logic
+ * Following Single Responsibility Principle
+ *
+ * Contains:
+ * - CharacterCalculations (CRC: specs-crc/crc-CharacterCalculations.md)
+ * - CharacterValidation (CRC: specs-crc/crc-CharacterValidation.md)
+ * - CharacterFactory (CRC: specs-crc/crc-CharacterFactory.md)
+ *
+ * Spec: specs/characters.md
+ * Sequences: specs-crc/seq-validate-character.md
+ */
 
 import {
     ICharacter,
@@ -16,24 +26,40 @@ import {
 } from './types.js';
 import { CharacterVersioning } from './CharacterVersioning.js';
 
+/**
+ * CharacterCalculations - Pure calculation functions for character statistics
+ * CRC: specs-crc/crc-CharacterCalculations.md
+ * Spec: specs/characters.md (Calculations section)
+ */
 export class CharacterCalculations {
-    // Note: Rank is now the primary stat, not calculated from XP
-    // This function is kept for backward compatibility with existing code
+    /**
+     * Calculate rank from total XP (backward compatibility)
+     * CRC: specs-crc/crc-CharacterCalculations.md
+     */
     static calculateRank(totalXP: number): number {
         return 1 + Math.floor(totalXP / 10);
     }
 
-    // Calculate rank from earned XP (for advancement system)
+    /**
+     * Calculate rank from earned XP (for advancement system)
+     * CRC: specs-crc/crc-CharacterCalculations.md
+     */
     static calculateRankFromEarnedXP(earnedXP: number): number {
         return 1 + Math.floor(earnedXP / 10);
     }
 
-    // Calculate damage capacity (10 + CON)
+    /**
+     * Calculate damage capacity (10 + CON)
+     * CRC: specs-crc/crc-CharacterCalculations.md
+     */
     static calculateDamageCapacity(constitution: number): number {
         return 10 + constitution;
     }
 
-    // Calculate total XP for a given rank
+    /**
+     * Calculate total XP for a given rank
+     * CRC: specs-crc/crc-CharacterCalculations.md
+     */
     static calculateTotalXPForRank(rank: number): number {
         return 10 + (rank - 1) * 10;
     }
@@ -294,8 +320,16 @@ export class CharacterCalculations {
     }
 }
 
+/**
+ * CharacterValidation - Character validation logic and rule checking
+ * CRC: specs-crc/crc-CharacterValidation.md
+ * Spec: specs/characters.md (Validation section)
+ */
 export class CharacterValidation {
-    // Validate character creation rules
+    /**
+     * Validate character creation rules
+     * Sequence: specs-crc/seq-validate-character.md (lines 18-58), specs-crc/seq-save-character.md (lines 25-33)
+     */
     static validateCharacterCreation(character: ICharacter): string[] {
         const errors: string[] = [];
 
@@ -327,7 +361,11 @@ export class CharacterValidation {
         return errors;
     }
 
-    // Validate skill prerequisites
+    /**
+     * Validate skill prerequisites
+     * CRC: specs-crc/crc-CharacterValidation.md
+     * Sequence: specs-crc/seq-validate-character.md (lines 40-41)
+     */
     static validateSkillPrerequisites(character: ICharacter): string[] {
         const errors: string[] = [];
 
@@ -354,7 +392,11 @@ export class CharacterValidation {
         return errors;
     }
 
-    // Validate field rules
+    /**
+     * Validate field rules
+     * CRC: specs-crc/crc-CharacterValidation.md
+     * Sequence: specs-crc/seq-validate-character.md (lines 43-45)
+     */
     static validateFields(character: ICharacter): string[] {
         const errors: string[] = [];
 
@@ -549,8 +591,16 @@ export class FieldManager {
     }
 }
 
+/**
+ * CharacterFactory - Factory for creating new characters with default values
+ * CRC: specs-crc/crc-CharacterFactory.md
+ * Spec: specs/characters.md (Creation workflow)
+ */
 export class CharacterFactory {
-    // Create a new character with default values
+    /**
+     * Create a new character with default values
+     * CRC: specs-crc/crc-CharacterFactory.md
+     */
     static createNewCharacter(name: string, description: string = ''): ICharacter {
         return {
             id: crypto.randomUUID(),
@@ -594,7 +644,10 @@ export class CharacterFactory {
         };
     }
 
-    // Create a template character with starting benefits/drawbacks
+    /**
+     * Create a template character with starting benefits/drawbacks
+     * CRC: specs-crc/crc-CharacterFactory.md
+     */
     static createTemplateCharacter(name: string): ICharacter {
         const character = this.createNewCharacter(name);
 

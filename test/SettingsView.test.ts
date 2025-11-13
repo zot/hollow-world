@@ -1,3 +1,10 @@
+/**
+ * Unit tests for SettingsView
+ *
+ * CRC: specs-crc/crc-SettingsView.md
+ * Spec: specs/ui.settings.md, specs/logging.md
+ */
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LogService } from '../src/services/LogService.js';
 

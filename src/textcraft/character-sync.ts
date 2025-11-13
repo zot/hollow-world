@@ -2,6 +2,10 @@
  * Character Access System (Phase 3)
  * Provides access to Hollow World character data from TextCraft Things
  *
+ * CRC: specs-crc/crc-CharacterSync.md
+ * Spec: specs/integrate-textcraft.md
+ * Sequences: specs-crc/seq-textcraft-character-sync.md
+ *
  * Design principle: Things only store characterId, NOT character data
  * Character data is retrieved from the world's characters store when needed
  */
@@ -17,6 +21,9 @@ import { getWorldCharacter, updateWorldCharacter } from './world-connections.js'
  * Get character data for a thing
  * The thing's character property holds the characterId
  * Character data is retrieved from the world's characters store
+ *
+ * CRC: crc-CharacterSync.md → getCharacterForThing()
+ * Seq: seq-textcraft-character-sync.md
  *
  * @param world - The world instance
  * @param thing - The thing (must have character property)
@@ -38,6 +45,9 @@ export async function getCharacterForThing(
  * Create thing for character
  * The thing only stores the characterId in its character property
  * All character data remains in the characters store
+ *
+ * CRC: crc-CharacterSync.md → createThingForCharacter()
+ * Seq: seq-textcraft-character-sync.md
  *
  * @param world - The world instance
  * @param characterId - UUID of the character
@@ -62,6 +72,9 @@ export function createThingForCharacter(
  * Update character data in world store
  * Called when character is modified (e.g., from character sheet)
  *
+ * CRC: crc-CharacterSync.md → updateCharacterInWorld()
+ * Seq: seq-textcraft-character-sync.md
+ *
  * @param world - The world instance
  * @param character - Updated character data
  * @returns Promise resolving to updated world character
@@ -76,6 +89,8 @@ export async function updateCharacterInWorld(
 /**
  * Get all character things in world
  * Returns things that have the character property set
+ *
+ * CRC: crc-CharacterSync.md → getAllCharacterThings()
  *
  * @param world - The world instance
  * @returns Array of character things
@@ -95,6 +110,8 @@ export function getAllCharacterThings(world: World): Thing[] {
 /**
  * Find thing by character ID
  * Searches for a thing with the given characterId
+ *
+ * CRC: crc-CharacterSync.md → findThingByCharacterId()
  *
  * @param world - The world instance
  * @param characterId - Character UUID to search for

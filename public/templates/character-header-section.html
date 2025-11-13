@@ -1,7 +1,19 @@
-<h1>{{name}}</h1>
+<!-- @layout specs-ui/ui-character-editor-view.md → Character Header Section -->
+<!-- @spec specs/ui.characters.md -->
+<!-- Full character header section with stats -->
+<!-- Used by: src/character/CharacterSheet.ts -->
+<div class="character-name-section">
+    <input type="text" class="character-name-input"
+           data-field="name"
+           value="{{name}}"
+           data-action="updateField">
+</div>
 <p class="character-description">{{description}}</p>
 <div class="character-stats">
-    <span class="rank">Rank {{rank}}</span>
+    <span class="rank-stat">Rank: <input type="number" min="1" max="15"
+           value="{{rank}}"
+           data-field="rank"
+           data-action="updateRank"></span>
     <span class="damage-capacity">Damage Capacity: {{damageCapacity}}</span>
     <span class="dust">Dust: {{dust}}</span>
 </div>
