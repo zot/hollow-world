@@ -22,7 +22,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SPECS_CRC_DIR="$PROJECT_ROOT/specs-crc"
+SPECS_CRC_DIR="$PROJECT_ROOT/design"
 SCRATCH_DIR="$PROJECT_ROOT/.claude/scratch"
 
 echo "=== Converting P2P Sequence Diagrams to PlantUML ASCII ==="

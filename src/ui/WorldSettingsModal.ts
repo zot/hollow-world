@@ -1,11 +1,11 @@
 /**
  * World Settings Modal - Dialog for editing world settings
  *
- * CRC: specs-crc/crc-WorldSettingsModal.md
- * Spec: specs/game-worlds.md (line 127)
+ * CRC: crc-WorldSettingsModal.md
+ * Spec: game-worlds.md (line 127)
  * Sequences:
- * - specs-crc/seq-edit-world-settings.md
- * UI Spec: specs-ui/ui-world-settings-modal.md
+ * - seq-edit-world-settings.md
+ * UI Spec: ui-world-settings-modal.md
  */
 
 import type { MudStorage, World } from '../textcraft/model.js';
@@ -13,7 +13,7 @@ import type { TemplateEngine } from '../utils/TemplateEngine.js';
 
 /**
  * IWorldSettingsModal interface
- * CRC: specs-crc/crc-WorldSettingsModal.md
+ * CRC: crc-WorldSettingsModal.md
  */
 export interface IWorldSettingsModal {
     show(worldId: string): Promise<void>;
@@ -23,7 +23,7 @@ export interface IWorldSettingsModal {
 
 /**
  * WorldSettingsModal class - World settings editing dialog
- * CRC: specs-crc/crc-WorldSettingsModal.md
+ * CRC: crc-WorldSettingsModal.md
  */
 export class WorldSettingsModal implements IWorldSettingsModal {
     private modal: HTMLDivElement | null = null;
@@ -46,9 +46,9 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * show implementation - Display settings modal for specified world
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      * Sequences:
-     * - specs-crc/seq-edit-world-settings.md
+     * - seq-edit-world-settings.md
      */
     async show(worldId: string): Promise<void> {
         this.worldId = worldId;
@@ -77,9 +77,9 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * hide implementation - Close modal and remove overlay
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      * Sequences:
-     * - specs-crc/seq-edit-world-settings.md
+     * - seq-edit-world-settings.md
      */
     hide(): void {
         if (this.modal) {
@@ -99,9 +99,9 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * render implementation - Display form with name, description, user access controls
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      * Sequences:
-     * - specs-crc/seq-edit-world-settings.md
+     * - seq-edit-world-settings.md
      */
     private async render(): Promise<void> {
         if (!this.world) {
@@ -135,9 +135,9 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * loadWorld implementation - Fetch world data from storage
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      * Sequences:
-     * - specs-crc/seq-edit-world-settings.md
+     * - seq-edit-world-settings.md
      */
     private async loadWorld(worldId: string): Promise<void> {
         // Open world from storage
@@ -157,7 +157,7 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * attachEventListeners implementation - Attach handlers for modal actions
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      */
     private attachEventListeners(): void {
         if (!this.modal) return;
@@ -213,9 +213,9 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * handleSave implementation - Validate and persist changes to world
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      * Sequences:
-     * - specs-crc/seq-edit-world-settings.md
+     * - seq-edit-world-settings.md
      */
     private async handleSave(): Promise<void> {
         if (!this.modal || !this.world) return;
@@ -266,9 +266,9 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * handleCancel implementation - Close modal without saving changes
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      * Sequences:
-     * - specs-crc/seq-edit-world-settings.md
+     * - seq-edit-world-settings.md
      */
     private handleCancel(): void {
         this.hide();
@@ -277,7 +277,7 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * handleAddUser implementation - Add peer to allowed users list
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      */
     private async handleAddUser(): Promise<void> {
         // TODO: Show friend picker dialog
@@ -297,7 +297,7 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * handleRemoveUser implementation - Remove peer from allowed users list
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      */
     private async handleRemoveUser(peerId: string): Promise<void> {
         const index = this.allowedUsers.indexOf(peerId);
@@ -315,9 +315,9 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * validateSettings implementation - Ensure name is non-empty and unique
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      * Sequences:
-     * - specs-crc/seq-edit-world-settings.md
+     * - seq-edit-world-settings.md
      */
     private validateSettings(): string | null {
         // Check if name is empty
@@ -336,7 +336,7 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * getUserName implementation - Get friend name for peer ID
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      */
     private getUserName(peerId: string): string {
         // TODO: Look up friend name from FriendsManager
@@ -347,7 +347,7 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * showError implementation - Display inline error message
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      */
     private showError(message: string): void {
         if (!this.modal) return;
@@ -371,7 +371,7 @@ export class WorldSettingsModal implements IWorldSettingsModal {
     /**
      * destroy implementation - Cleanup resources
      *
-     * CRC: specs-crc/crc-WorldSettingsModal.md
+     * CRC: crc-WorldSettingsModal.md
      */
     destroy(): void {
         this.hide();

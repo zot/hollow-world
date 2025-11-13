@@ -196,9 +196,9 @@ Views destroyed only when:
 - **[`main.md`](main.md)** - Main project specification
 - **[`ui.md`](ui.md)** - UI principles and patterns
 - **[`game-worlds.md`](game-worlds.md)** - Adventure mode coordination
-- **CRC Cards**: `specs-crc/crc-ViewManager.md`, `specs-crc/crc-IView.md`
-- **Sequences**: View transition flows in `specs-crc/seq-*.md`
-- **UI Specs**: View-specific implementations in `specs-ui/*.md`
+- **CRC Cards**: `design/crc-ViewManager.md`, `design/crc-IView.md`
+- **Sequences**: View transition flows in `design/seq-*.md`
+- **UI Specs**: View-specific implementations in `design/*.md`
 
 ---
 

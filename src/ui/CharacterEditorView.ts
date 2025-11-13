@@ -1,9 +1,9 @@
 /**
  * CharacterEditorView - Individual Character Editing Interface
  *
- * CRC: specs-crc/crc-CharacterEditorView.md
- * Spec: specs/ui.characters.md, specs/ui.md
- * Sequences: specs-crc/seq-edit-character.md, specs-crc/seq-save-character-ui.md, specs-crc/seq-revert-character.md
+ * CRC: crc-CharacterEditorView.md
+ * Spec: ui.characters.md, ui.md
+ * Sequences: seq-edit-character.md, seq-save-character-ui.md, seq-revert-character.md
  */
 
 // Character Editor View - Separate component for editing individual characters
@@ -22,7 +22,7 @@ import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioC
 /**
  * ICharacterEditor interface
  *
- * CRC: specs-crc/crc-CharacterEditorView.md
+ * CRC: crc-CharacterEditorView.md
  */
 export interface ICharacterEditor extends IUIComponent {
     setCharacter(character: ICharacter): void;
@@ -54,11 +54,11 @@ const DEFAULT_CONFIG: ICharacterEditorConfig = {
  * equipment, and all character data. Supports both creation and editing modes.
  *
  * Specifications:
- * - UI Structure: specs-ui/ui-character-editor-view.md
+ * - UI Structure: ui-character-editor-view.md
  * - UI Concept: specs-wysiwid/concepts-ui.md → CharacterEditorView
  * - Character Operations: specs-wysiwid/synchronizations-character.md
- * - Save Behavior: specs-ui/manifest.md → Save Behavior (never block saves)
- * - Change Detection: specs-ui/manifest.md → Hash-based with 250ms polling
+ * - Save Behavior: manifest-ui.md → Save Behavior (never block saves)
+ * - Change Detection: manifest-ui.md → Hash-based with 250ms polling
  *
  * Template: public/templates/character-editor.html
  *
@@ -91,7 +91,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * setCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
+     * CRC: crc-CharacterEditorView.md
      */
     async setCharacter(character: ICharacter): Promise<void> {
         this.character = { ...character };
@@ -113,7 +113,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * getCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
+     * CRC: crc-CharacterEditorView.md
      */
     getCharacter(): ICharacter | null {
         return this.character ? { ...this.character } : null;
@@ -122,8 +122,8 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * render implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
-     * Sequence: specs-crc/seq-edit-character.md (lines 26-45)
+     * CRC: crc-CharacterEditorView.md
+     * Sequence: seq-edit-character.md (lines 26-45)
      */
     async render(container: HTMLElement): Promise<void> {
         if (!container) {
@@ -217,7 +217,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * setupEventListeners implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
+     * CRC: crc-CharacterEditorView.md
      */
     private setupEventListeners(): void {
         if (!this.container) return;
@@ -249,7 +249,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * setupChangeTracking implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
+     * CRC: crc-CharacterEditorView.md
      */
     private setupChangeTracking(): void {
         if (!this.characterSheet) return;
@@ -267,7 +267,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * detectChanges implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
+     * CRC: crc-CharacterEditorView.md
      */
     private async detectChanges(): Promise<boolean> {
         if (!this.character || !this.originalCharacterHash || !this.characterSheet) {
@@ -294,7 +294,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * updateButtonStates implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
+     * CRC: crc-CharacterEditorView.md
      */
     private updateButtonStates(): void {
         if (!this.container) return;
@@ -318,8 +318,8 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * revertChanges implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
-     * Sequence: specs-crc/seq-revert-character.md (lines 14-42)
+     * CRC: crc-CharacterEditorView.md
+     * Sequence: seq-revert-character.md (lines 14-42)
      */
     private async revertChanges(): Promise<void> {
         if (!this.character) return;
@@ -358,8 +358,8 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * saveCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
-     * Sequence: specs-crc/seq-save-character-ui.md (lines 14-67)
+     * CRC: crc-CharacterEditorView.md
+     * Sequence: seq-save-character-ui.md (lines 14-67)
      */
     private async saveCharacter(): Promise<void> {
         if (!this.characterSheet || !this.character) return;
@@ -501,7 +501,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * destroy implementation
      *
-     * CRC: specs-crc/crc-CharacterEditorView.md
+     * CRC: crc-CharacterEditorView.md
      */
     destroy(): void {
         if (this.characterSheet) {
@@ -521,7 +521,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * getContainer implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     getContainer(): HTMLElement | null {
         return this.container;
@@ -530,7 +530,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * show implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     show(): void {
         if (this.container) {
@@ -541,7 +541,7 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
     /**
      * hide implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     hide(): void {
         if (this.container) {

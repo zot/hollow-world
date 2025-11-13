@@ -1,14 +1,14 @@
 /**
  * Adventure View - Text-based MUD adventure gameplay interface
  *
- * CRC: specs-crc/crc-AdventureView.md
- * Spec: specs/game-worlds.md (lines 75-108)
+ * CRC: crc-AdventureView.md
+ * Spec: game-worlds.md (lines 75-108)
  * Sequences:
- * - specs-crc/seq-select-world.md
- * - specs-crc/seq-send-command.md
- * - specs-crc/seq-host-session.md
- * - specs-crc/seq-join-session.md
- * UI Spec: specs-ui/ui-adventure-view.md
+ * - seq-select-world.md
+ * - seq-send-command.md
+ * - seq-host-session.md
+ * - seq-join-session.md
+ * UI Spec: ui-adventure-view.md
  *
  * This component provides the UI for TextCraft MUD integration,
  * supporting both solo and multiplayer (host/guest) modes.
@@ -27,8 +27,8 @@ import { getProfileService } from '../services/ProfileService.js';
 
 /**
  * OutputEntry interface
- * CRC: specs-crc/crc-AdventureView.md
- * Spec: specs/game-worlds.md (Adventure Output History Persistence)
+ * CRC: crc-AdventureView.md
+ * Spec: game-worlds.md (Adventure Output History Persistence)
  */
 interface OutputEntry {
     type: 'command' | 'output' | 'system' | 'error';
@@ -41,7 +41,7 @@ const MAX_HISTORY_LINES = 1000;
 
 /**
  * IAdventureViewConfig interface
- * CRC: specs-crc/crc-AdventureView.md
+ * CRC: crc-AdventureView.md
  */
 export interface IAdventureViewConfig {
     hollowPeer?: HollowPeer;
@@ -51,7 +51,7 @@ export interface IAdventureViewConfig {
 
 /**
  * AdventureView class - Adventure gameplay view
- * CRC: specs-crc/crc-AdventureView.md
+ * CRC: crc-AdventureView.md
  */
 export class AdventureView {
     private container: HTMLElement | null = null;
@@ -91,9 +91,9 @@ export class AdventureView {
     /**
      * render implementation - Display adventure UI with banner, output area, command input
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-select-world.md
+     * - seq-select-world.md
      */
     async render(worldId?: string, skipInitialization: boolean = false): Promise<HTMLElement> {
         // Load template
@@ -148,9 +148,9 @@ export class AdventureView {
     /**
      * initializeMudPeer implementation - Set up MUD connection for specified world
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-select-world.md
+     * - seq-select-world.md
      */
     private async initializeMudPeer(worldId?: string): Promise<void> {
         // Solo mode by default
@@ -160,7 +160,7 @@ export class AdventureView {
     /**
      * initializeSoloMode implementation - Start local solo session
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private async initializeSoloMode(worldId?: string): Promise<void> {
         this.addSystemOutput('🎮 Solo Mode');
@@ -211,7 +211,7 @@ export class AdventureView {
     /**
      * setupEventListeners implementation - Attach handlers for adventure controls
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private setupEventListeners(): void {
         // Back button
@@ -265,9 +265,9 @@ export class AdventureView {
     /**
      * handleCommand implementation - Process user command through MUD engine
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-send-command.md
+     * - seq-send-command.md
      */
     private handleCommand(): void {
         if (!this.inputElement) return;
@@ -309,7 +309,7 @@ export class AdventureView {
     /**
      * handleBasicCommand implementation - Fallback for basic commands without MUD engine
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private handleBasicCommand(cmd: string): void {
         const lowerCmd = cmd.toLowerCase();
@@ -330,7 +330,7 @@ export class AdventureView {
     /**
      * navigateHistory implementation - Navigate up/down through command history
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private navigateHistory(direction: number): void {
         if (!this.inputElement || this.commandHistory.length === 0) return;
@@ -353,9 +353,9 @@ export class AdventureView {
     /**
      * handleHostSession implementation - Start hosting multiplayer session
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-host-session.md
+     * - seq-host-session.md
      */
     private handleHostSession(): void {
         this.startHosting();
@@ -364,9 +364,9 @@ export class AdventureView {
     /**
      * startHosting implementation - Initialize host mode
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-host-session.md
+     * - seq-host-session.md
      */
     private startHosting(): void {
         this.addSystemOutput('🏠 Starting host mode...');
@@ -402,9 +402,9 @@ export class AdventureView {
     /**
      * handleJoinSession implementation - Open join session modal
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private handleJoinSession(): void {
         this.showJoinModal();
@@ -413,9 +413,9 @@ export class AdventureView {
     /**
      * showJoinModal implementation - Display join session modal
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private showJoinModal(): void {
         if (this.joinSessionModal) {
@@ -426,9 +426,9 @@ export class AdventureView {
     /**
      * confirmJoin implementation - Connect to host peer
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private confirmJoin(hostPeerId: string, characterId: string): void {
         this.addSystemOutput(`🚪 Joining session: ${hostPeerId}`);
@@ -470,7 +470,7 @@ export class AdventureView {
     /**
      * handleEndSession implementation - End current session and return to solo mode
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private handleEndSession(): void {
         this.addSystemOutput('🛑 Ending session...');
@@ -490,7 +490,7 @@ export class AdventureView {
     /**
      * updateSessionControls implementation - Update session controls display
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private updateSessionControls(): void {
         if (this.sessionControls) {
@@ -501,9 +501,9 @@ export class AdventureView {
     /**
      * handleWorldsButton implementation - Navigate to world list
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      * Sequences:
-     * - specs-crc/seq-switch-to-world-list.md
+     * - seq-switch-to-world-list.md
      */
     private handleWorldsButton(): void {
         if (this.router) {
@@ -514,8 +514,8 @@ export class AdventureView {
     /**
      * addOutput implementation - Add text to output area and scroll to bottom
      *
-     * CRC: specs-crc/crc-AdventureView.md
-     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
+     * CRC: crc-AdventureView.md
+     * Spec: game-worlds.md (Adventure Output History Persistence)
      */
     private addOutput(text: string, className?: string): void {
         if (!this.outputElement) return;
@@ -545,7 +545,7 @@ export class AdventureView {
     /**
      * addCommandOutput implementation - Add command text to output
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private addCommandOutput(text: string): void {
         this.addOutput(text, 'command-output');
@@ -554,7 +554,7 @@ export class AdventureView {
     /**
      * addErrorOutput implementation - Add error text to output
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private addErrorOutput(text: string): void {
         this.addOutput(text, 'error-output');
@@ -563,7 +563,7 @@ export class AdventureView {
     /**
      * addSystemOutput implementation - Add system message to output
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private addSystemOutput(text: string): void {
         this.addOutput(text, 'system-output');
@@ -572,7 +572,7 @@ export class AdventureView {
     /**
      * clearOutput implementation - Clear all output text
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     private clearOutput(): void {
         if (this.outputElement) {
@@ -583,7 +583,7 @@ export class AdventureView {
     /**
      * show implementation - Display adventure view
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     show(): void {
         if (this.container) {
@@ -594,7 +594,7 @@ export class AdventureView {
     /**
      * hide implementation - Hide adventure view
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     hide(): void {
         if (this.container) {
@@ -605,8 +605,8 @@ export class AdventureView {
     /**
      * saveHistory implementation - Persist output history to localStorage
      *
-     * CRC: specs-crc/crc-AdventureView.md
-     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
+     * CRC: crc-AdventureView.md
+     * Spec: game-worlds.md (Adventure Output History Persistence)
      */
     private saveHistory(): void {
         try {
@@ -625,8 +625,8 @@ export class AdventureView {
     /**
      * loadHistory implementation - Load output history from localStorage and populate output area
      *
-     * CRC: specs-crc/crc-AdventureView.md
-     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
+     * CRC: crc-AdventureView.md
+     * Spec: game-worlds.md (Adventure Output History Persistence)
      */
     private loadHistory(): void {
         try {
@@ -671,8 +671,8 @@ export class AdventureView {
     /**
      * clearHistory implementation - Clear output history from memory and storage
      *
-     * CRC: specs-crc/crc-AdventureView.md
-     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
+     * CRC: crc-AdventureView.md
+     * Spec: game-worlds.md (Adventure Output History Persistence)
      */
     clearHistory(): void {
         this.outputHistory = [];
@@ -693,7 +693,7 @@ export class AdventureView {
     /**
      * destroy implementation - Dispose of MUD engine and network connections
      *
-     * CRC: specs-crc/crc-AdventureView.md
+     * CRC: crc-AdventureView.md
      */
     destroy(): void {
         // Clean up event listeners

@@ -1,9 +1,9 @@
 /**
  * Router - Route-based Navigation System
  *
- * CRC: specs-crc/crc-Router.md
- * Spec: specs/ui.md, specs/routes.md
- * Sequences: specs-crc/seq-edit-character.md
+ * CRC: crc-Router.md
+ * Spec: ui.md, routes.md
+ * Sequences: seq-edit-character.md
  */
 
 export interface IRoute {
@@ -15,7 +15,7 @@ export interface IRoute {
 /**
  * IRouter interface
  *
- * CRC: specs-crc/crc-Router.md
+ * CRC: crc-Router.md
  */
 export interface IRouter {
     addRoute(route: IRoute): void;
@@ -48,7 +48,7 @@ export class Router implements IRouter {
     /**
      * addRoute implementation
      *
-     * CRC: specs-crc/crc-Router.md
+     * CRC: crc-Router.md
      */
     addRoute(route: IRoute): void {
         this.routes.push(route);
@@ -57,7 +57,7 @@ export class Router implements IRouter {
     /**
      * navigate implementation
      *
-     * CRC: specs-crc/crc-Router.md
+     * CRC: crc-Router.md
      */
     navigate(path: string, title?: string): void {
         const pageTitle = title || document.title;
@@ -72,7 +72,7 @@ export class Router implements IRouter {
     /**
      * replace implementation
      *
-     * CRC: specs-crc/crc-Router.md
+     * CRC: crc-Router.md
      */
     replace(path: string, title?: string): void {
         const pageTitle = title || document.title;
@@ -87,7 +87,7 @@ export class Router implements IRouter {
     /**
      * getCurrentPath implementation
      *
-     * CRC: specs-crc/crc-Router.md
+     * CRC: crc-Router.md
      */
     getCurrentPath(): string {
         return this.currentPath;
@@ -96,7 +96,7 @@ export class Router implements IRouter {
     /**
      * initialize implementation
      *
-     * CRC: specs-crc/crc-Router.md
+     * CRC: crc-Router.md
      */
     initialize(): void {
         // Handle initial route
@@ -106,7 +106,7 @@ export class Router implements IRouter {
     /**
      * destroy implementation
      *
-     * CRC: specs-crc/crc-Router.md
+     * CRC: crc-Router.md
      */
     destroy(): void {
         window.removeEventListener('popstate', this.handlePopState);
@@ -160,7 +160,7 @@ export class Router implements IRouter {
     /**
      * extractParams implementation
      *
-     * CRC: specs-crc/crc-Router.md
+     * CRC: crc-Router.md
      */
     private extractParams(pattern: string, path: string): Record<string, string> {
         const params: Record<string, string> = {};

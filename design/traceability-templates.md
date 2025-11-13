@@ -1,7 +1,7 @@
 
 # UI Template Traceability Rules
 
-**Purpose**: Link HTML templates in `public/templates/` to their layout specifications in `specs-ui/`
+**Purpose**: Link HTML templates in `public/templates/` to their layout specifications in `design/`
 
 **Phase**: Phase 8 - UI Template Traceability
 
@@ -14,12 +14,12 @@
 Every HTML template MUST have a header comment at the top of the file:
 
 ```html
-<!-- @layout specs-ui/ui-view-name.md -->
+<!-- @layout design/ui-view-name.md -->
 <!-- @spec specs/ui.view.md -->
 ```
 
 **Tags**:
-- `@layout` - Reference to layout spec in `specs-ui/` (REQUIRED)
+- `@layout` - Reference to layout spec in `design/` (REQUIRED)
 - `@spec` - Reference to human-readable spec in `specs/` (OPTIONAL but recommended)
 
 **Placement**: First lines of the file (before `<!DOCTYPE>` or any other content)
@@ -29,7 +29,7 @@ Every HTML template MUST have a header comment at the top of the file:
 For complex templates with multiple sections, add comments for major sections:
 
 ```html
-<!-- @layout specs-ui/ui-view-name.md → Section Name -->
+<!-- @layout design/ui-view-name.md → Section Name -->
 <div class="section-name">
   ...
 </div>
@@ -44,18 +44,18 @@ For complex templates with multiple sections, add comments for major sections:
 **File**: `public/templates/splash-screen.html`
 
 ```html
-<!-- @layout specs-ui/ui-splash-view.md -->
+<!-- @layout design/ui-splash-view.md -->
 <!-- @spec specs/ui.splash.md -->
 <!DOCTYPE html>
 <html>
   <body>
     <div class="splash-container">
-      <!-- @layout specs-ui/ui-splash-view.md → Title Section -->
+      <!-- @layout design/ui-splash-view.md → Title Section -->
       <h1 class="splash-title">
         Don't Go <span class="hollow-glow">Hollow</span>
       </h1>
 
-      <!-- @layout specs-ui/ui-splash-view.md → Peer ID Display -->
+      <!-- @layout design/ui-splash-view.md → Peer ID Display -->
       <div class="peer-id-display">
         <button class="peer-id-value" data-action="copyPeerId">
           {{peerId}}
@@ -73,7 +73,7 @@ For complex templates with multiple sections, add comments for major sections:
 **File**: `public/templates/character-card.html`
 
 ```html
-<!-- @layout specs-ui/ui-characters-view.md → CharacterCard Component -->
+<!-- @layout design/ui-characters-view.md → CharacterCard Component -->
 <!-- @spec specs/ui.characters.md -->
 <div class="character-card" data-character-id="{{character.id}}">
   <div class="character-card-header">
@@ -89,7 +89,7 @@ For complex templates with multiple sections, add comments for major sections:
 **File**: `public/templates/attribute-box.html`
 
 ```html
-<!-- @layout specs-ui/ui-character-editor-view.md → Attribute Box -->
+<!-- @layout design/ui-character-editor-view.md → Attribute Box -->
 <!-- @spec specs/ui.characters.md -->
 <div class="attribute-box">
   <label>{{attributeName}}</label>
@@ -104,7 +104,7 @@ For complex templates with multiple sections, add comments for major sections:
 **File**: `public/templates/character-editor-fallback.html`
 
 ```html
-<!-- @layout specs-ui/ui-character-editor-view.md → Error Fallback -->
+<!-- @layout design/ui-character-editor-view.md → Error Fallback -->
 <!-- @spec specs/ui.characters.md -->
 <div class="error-fallback">
   <p>Failed to load character editor. Please try again.</p>
@@ -122,12 +122,12 @@ Link to the corresponding view spec:
 
 | Template | Layout Spec | Human Spec |
 |----------|-------------|------------|
-| `splash-screen.html` | `specs-ui/ui-splash-view.md` | `specs/ui.splash.md` |
-| `character-list.html` | `specs-ui/ui-characters-view.md` | `specs/ui.characters.md` |
-| `character-editor.html` | `specs-ui/ui-character-editor-view.md` | `specs/ui.characters.md` |
-| `friends-view.html` | `specs-ui/ui-friends-view.md` | `specs/ui.friends.md` |
-| `settings-view.html` | `specs-ui/ui-settings-view.md` | `specs/ui.settings.md` |
-| `log-view.html` | `specs-ui/ui-settings-view.md → LogView` | `specs/ui.settings.md` |
+| `splash-screen.html` | `design/ui-splash-view.md` | `specs/ui.splash.md` |
+| `character-list.html` | `design/ui-characters-view.md` | `specs/ui.characters.md` |
+| `character-editor.html` | `design/ui-character-editor-view.md` | `specs/ui.characters.md` |
+| `friends-view.html` | `design/ui-friends-view.md` | `specs/ui.friends.md` |
+| `settings-view.html` | `design/ui-settings-view.md` | `specs/ui.settings.md` |
+| `log-view.html` | `design/ui-settings-view.md → LogView` | `specs/ui.settings.md` |
 
 ### Component Templates
 
@@ -135,11 +135,11 @@ Link to the component section within a view spec:
 
 | Template | Layout Spec | Section |
 |----------|-------------|---------|
-| `character-card.html` | `specs-ui/ui-characters-view.md` | CharacterCard Component |
-| `attribute-box.html` | `specs-ui/ui-character-editor-view.md` | Attribute Box |
-| `skill-item.html` | `specs-ui/ui-character-editor-view.md` | Skills Section |
-| `event-modal.html` | `specs-ui/manifest.md` | EventNotificationButton + EventModal |
-| `global-audio-control.html` | `specs-ui/manifest.md` | GlobalAudioControl |
+| `character-card.html` | `design/ui-characters-view.md` | CharacterCard Component |
+| `attribute-box.html` | `design/ui-character-editor-view.md` | Attribute Box |
+| `skill-item.html` | `design/ui-character-editor-view.md` | Skills Section |
+| `event-modal.html` | `design/manifest-ui.md` | EventNotificationButton + EventModal |
+| `global-audio-control.html` | `design/manifest-ui.md` | GlobalAudioControl |
 
 ### Shared/Utility Templates
 
@@ -147,10 +147,10 @@ Link to the most relevant spec or manifest:
 
 | Template | Layout Spec | Notes |
 |----------|-------------|-------|
-| `empty-state.html` | `specs-ui/manifest.md` | Shared across views |
-| `error-fallback.html` | `specs-ui/manifest.md` | Global error template |
-| `error-notification.html` | `specs-ui/manifest.md` | Global notification |
-| `validation-warning.html` | `specs-ui/ui-character-editor-view.md` | Character validation |
+| `empty-state.html` | `design/manifest-ui.md` | Shared across views |
+| `error-fallback.html` | `design/manifest-ui.md` | Global error template |
+| `error-notification.html` | `design/manifest-ui.md` | Global notification |
+| `validation-warning.html` | `design/ui-character-editor-view.md` | Character validation |
 
 ### Fallback Templates
 
@@ -158,9 +158,9 @@ Fallback templates follow same rules as their main counterparts:
 
 | Template | Layout Spec | Notes |
 |----------|-------------|-------|
-| `splash-fallback.html` | `specs-ui/ui-splash-view.md` | Fallback for splash |
-| `character-editor-fallback.html` | `specs-ui/ui-character-editor-view.md` | Fallback for editor |
-| `friends-fallback.html` | `specs-ui/ui-friends-view.md` | Fallback for friends |
+| `splash-fallback.html` | `design/ui-splash-view.md` | Fallback for splash |
+| `character-editor-fallback.html` | `design/ui-character-editor-view.md` | Fallback for editor |
+| `friends-fallback.html` | `design/ui-friends-view.md` | Fallback for friends |
 
 ---
 
@@ -169,19 +169,19 @@ Fallback templates follow same rules as their main counterparts:
 ### Basic Reference
 
 ```html
-<!-- @layout specs-ui/ui-view-name.md -->
+<!-- @layout design/ui-view-name.md -->
 ```
 
 ### Section Reference
 
 ```html
-<!-- @layout specs-ui/ui-view-name.md → Section Name -->
+<!-- @layout design/ui-view-name.md → Section Name -->
 ```
 
 ### Component Reference
 
 ```html
-<!-- @layout specs-ui/ui-view-name.md → ComponentName Component -->
+<!-- @layout design/ui-view-name.md → ComponentName Component -->
 ```
 
 ### Multiple Sources
@@ -189,8 +189,8 @@ Fallback templates follow same rules as their main counterparts:
 If a template combines multiple specs (rare), list all:
 
 ```html
-<!-- @layout specs-ui/ui-view-1.md → Section A -->
-<!-- @layout specs-ui/ui-view-2.md → Section B -->
+<!-- @layout design/ui-view-1.md → Section A -->
+<!-- @layout design/ui-view-2.md → Section B -->
 <!-- @spec specs/ui.combined.md -->
 ```
 
@@ -220,7 +220,7 @@ Check that all referenced specs exist:
 ```bash
 # Extract layout references and verify files exist
 grep -rh "@layout" public/templates/ | \
-  sed 's/.*@layout \(specs-ui\/[^ ]*\).*/\1/' | \
+  sed 's/.*@layout \(design\/[^ ]*\).*/\1/' | \
   sort -u | \
   while read spec; do
     if [ ! -f "$spec" ]; then
@@ -237,22 +237,22 @@ grep -rh "@layout" public/templates/ | \
 
 ✅ **Add header comment to every template**
 ```html
-<!-- @layout specs-ui/ui-view-name.md -->
+<!-- @layout design/ui-view-name.md -->
 ```
 
 ✅ **Reference the section for component templates**
 ```html
-<!-- @layout specs-ui/ui-view-name.md → ComponentName -->
+<!-- @layout design/ui-view-name.md → ComponentName -->
 ```
 
 ✅ **Use arrow notation for sections**
 ```html
-<!-- @layout specs-ui/ui-view-name.md → Section Name -->
+<!-- @layout design/ui-view-name.md → Section Name -->
 ```
 
 ✅ **Keep references terse and accurate**
 ```html
-<!-- @layout specs-ui/ui-splash-view.md -->
+<!-- @layout design/ui-splash-view.md -->
 <!-- @spec specs/ui.splash.md -->
 ```
 
@@ -266,8 +266,8 @@ grep -rh "@layout" public/templates/ | \
 
 ❌ **Don't use relative paths**
 ```html
-<!-- @layout ../specs-ui/ui-view.md -->  <!-- WRONG -->
-<!-- @layout specs-ui/ui-view.md -->     <!-- CORRECT -->
+<!-- @layout ../design/ui-view.md -->  <!-- WRONG -->
+<!-- @layout design/ui-view.md -->     <!-- CORRECT -->
 ```
 
 ❌ **Don't add excessive comments throughout template**
@@ -277,7 +277,7 @@ grep -rh "@layout" public/templates/ | \
 
 ❌ **Don't reference non-existent specs**
 ```html
-<!-- @layout specs-ui/ui-nonexistent.md -->  <!-- Verify file exists! -->
+<!-- @layout design/ui-nonexistent.md -->  <!-- Verify file exists! -->
 ```
 
 ---
@@ -292,7 +292,7 @@ grep -rh "@layout" public/templates/ | \
 
 ### Verification
 - [ ] Can grep `@layout` and find all templates
-- [ ] All referenced `specs-ui/ui-*.md` files exist
+- [ ] All referenced `design/ui-*.md` files exist
 - [ ] All referenced `specs/*.md` files exist
 - [ ] No templates missing header comments
 
@@ -354,21 +354,21 @@ grep -rh "@layout" public/templates/ | \
 
 ### Audio Control Templates (5 total)
 
-- [x] `audio-control.html` → `manifest.md` (GlobalAudioControl)
-- [x] `enhanced-audio-control.html` → `manifest.md` (GlobalAudioControl)
-- [x] `global-audio-control.html` → `manifest.md` (GlobalAudioControl)
-- [x] `global-audio-control-unavailable.html` → `manifest.md` (GlobalAudioControl)
-- [x] `music-button-fallback.html` → `manifest.md` (GlobalAudioControl)
+- [x] `audio-control.html` → `manifest-ui.md` (GlobalAudioControl)
+- [x] `enhanced-audio-control.html` → `manifest-ui.md` (GlobalAudioControl)
+- [x] `global-audio-control.html` → `manifest-ui.md` (GlobalAudioControl)
+- [x] `global-audio-control-unavailable.html` → `manifest-ui.md` (GlobalAudioControl)
+- [x] `music-button-fallback.html` → `manifest-ui.md` (GlobalAudioControl)
 
 ### Event & Notification Templates (8 total)
 
-- [x] `event-notification-button.html` → `manifest.md` (EventNotificationButton)
-- [x] `event-modal.html` → `manifest.md` (EventModal)
-- [x] `event-card-friend-request.html` → `manifest.md` (EventModal - Friend Request)
-- [x] `event-card-friend-accepted.html` → `manifest.md` (EventModal - Friend Accepted)
-- [x] `event-card-friend-approved.html` → `manifest.md` (EventModal - Friend Approved)
-- [x] `event-card-friend-declined.html` → `manifest.md` (EventModal - Friend Declined)
-- [x] `error-notification.html` → `manifest.md` (Global Notification)
+- [x] `event-notification-button.html` → `manifest-ui.md` (EventNotificationButton)
+- [x] `event-modal.html` → `manifest-ui.md` (EventModal)
+- [x] `event-card-friend-request.html` → `manifest-ui.md` (EventModal - Friend Request)
+- [x] `event-card-friend-accepted.html` → `manifest-ui.md` (EventModal - Friend Accepted)
+- [x] `event-card-friend-approved.html` → `manifest-ui.md` (EventModal - Friend Approved)
+- [x] `event-card-friend-declined.html` → `manifest-ui.md` (EventModal - Friend Declined)
+- [x] `error-notification.html` → `manifest-ui.md` (Global Notification)
 - [x] `validation-warning.html` → `ui-character-editor-view.md` (Validation)
 
 ### Friends View Components (4 total)
@@ -386,9 +386,9 @@ grep -rh "@layout" public/templates/ | \
 
 ### Error & Utility Templates (10 total)
 
-- [x] `error-fallback.html` → `manifest.md` (Global Error)
-- [x] `error-content.html` → `manifest.md` (Error Content)
-- [x] `main-error-container.html` → `manifest.md` (Main Error Container)
+- [x] `error-fallback.html` → `manifest-ui.md` (Global Error)
+- [x] `error-content.html` → `manifest-ui.md` (Error Content)
+- [x] `main-error-container.html` → `manifest-ui.md` (Main Error Container)
 - [x] `character-render-error.html` → `ui-character-editor-view.md` (Render Error)
 - [x] `character-editor-no-character-error.html` → `ui-character-editor-view.md` (No Character)
 - [x] `character-manager-error.html` → `ui-characters-view.md` (Manager Error)
@@ -399,8 +399,8 @@ grep -rh "@layout" public/templates/ | \
 
 ### Utility Templates (3 total)
 
-- [x] `empty-state.html` → `manifest.md` (Shared Empty State)
-- [x] `load-more-button.html` → `manifest.md` (Pagination)
+- [x] `empty-state.html` → `manifest-ui.md` (Shared Empty State)
+- [x] `load-more-button.html` → `manifest-ui.md` (Pagination)
 - [x] `game-view.html` → (future/deprecated)
 
 ---
@@ -427,11 +427,11 @@ grep -rh "@layout" public/templates/ | \
 
 ## Related Documentation
 
-- **[`specs-crc/README.md`](../specs-crc/README.md)** - CRC modeling process
-- **[`specs-crc/traceability-guide.md`](../specs-crc/traceability-guide.md)** - Traceability for TypeScript code
-- **[`specs-crc/traceability.md`](../specs-crc/traceability.md)** - Master traceability map
-- **[`specs-ui/README.md`](README.md)** - Layout spec overview
-- **[`specs-ui/MIGRATION-PLAN.md`](MIGRATION-PLAN.md)** - WYSIWID to CRC migration
+- **[`design/README.md`](../design/README.md)** - CRC modeling process
+- **[`design/traceability-guide.md`](../design/traceability-guide.md)** - Traceability for TypeScript code
+- **[`design/traceability.md`](../design/traceability.md)** - Master traceability map
+- **[`design/README.md`](README.md)** - Layout spec overview
+- **[`design/MIGRATION-PLAN.md`](MIGRATION-PLAN.md)** - WYSIWID to CRC migration
 
 ---
 

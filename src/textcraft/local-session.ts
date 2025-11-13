@@ -2,9 +2,9 @@
  * LocalMudSession manages a single-player MUD session without networking
  * Phase 2.5 implementation for solo gameplay
  *
- * CRC: specs-crc/crc-LocalMudSession.md
- * Spec: specs/integrate-textcraft.md
- * Sequences: specs-crc/seq-textcraft-solo-command.md
+ * CRC: crc-LocalMudSession.md
+ * Spec: integrate-textcraft.md
+ * Sequences: seq-textcraft-solo-command.md
  */
 
 import { World, Thing } from './model.js';
@@ -13,7 +13,7 @@ import * as mudcontrol from './mudcontrol.js';
 /**
  * LocalMudSession - Solo session manager for single-player TextCraft
  *
- * CRC: specs-crc/crc-LocalMudSession.md
+ * CRC: crc-LocalMudSession.md
  */
 export class LocalMudSession {
     private mudConnection: mudcontrol.MudConnection | null = null;

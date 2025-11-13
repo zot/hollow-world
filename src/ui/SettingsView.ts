@@ -2,8 +2,8 @@
  * SettingsView - Application Settings and Configuration Interface
  * Single Responsibility: Manages settings UI only (delegates storage to ProfileService, logging to LogService)
  *
- * CRC: specs-crc/crc-SettingsView.md
- * Spec: specs/ui.settings.md
+ * CRC: crc-SettingsView.md
+ * Spec: ui.settings.md
  * Template: public/templates/settings-view.html, public/templates/log-view.html
  */
 
@@ -21,7 +21,7 @@ import { DEFAULT_PUBSUB_TOPIC, DEFAULT_PEER_PROTOCOL } from '../p2p/constants.js
 
 /**
  * ISettingsView interface
- * CRC: specs-crc/crc-SettingsView.md
+ * CRC: crc-SettingsView.md
  */
 export interface ISettingsView {
     onBackToMenu?: () => void;
@@ -62,7 +62,7 @@ const DEFAULT_CONFIG: ISettingsViewConfig = {
 /**
  * SettingsView - Manage application settings and view system log
  *
- * CRC: specs-crc/crc-SettingsView.md
+ * CRC: crc-SettingsView.md
  *
  * Key Features:
  * - Peer ID display (read-only, copyable)
@@ -107,7 +107,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * renderSettings implementation
      *
-     * CRC: specs-crc/crc-SettingsView.md
+     * CRC: crc-SettingsView.md
      */
     async renderSettings(container: HTMLElement): Promise<void> {
         if (!container) {
@@ -196,7 +196,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * destroy implementation
      *
-     * CRC: specs-crc/crc-SettingsView.md
+     * CRC: crc-SettingsView.md
      */
     destroy(): void {
         if (this.peerCountInterval) {
@@ -219,7 +219,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * getContainer implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     getContainer(): HTMLElement | null {
         return this.container;
@@ -228,7 +228,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * show implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     show(): void {
         if (this.container) {
@@ -239,7 +239,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * hide implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     hide(): void {
         if (this.container) {
@@ -626,7 +626,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * updatePeerId implementation
      *
-     * CRC: specs-crc/crc-SettingsView.md
+     * CRC: crc-SettingsView.md
      */
     updatePeerId(peerId: string): void {
         this.settingsData.peerId = peerId;
@@ -643,7 +643,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * updateHollowPeer implementation
      *
-     * CRC: specs-crc/crc-SettingsView.md
+     * CRC: crc-SettingsView.md
      */
     updateHollowPeer(hollowPeer: HollowPeer): void {
         this.hollowPeer = hollowPeer;
@@ -660,7 +660,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * startPeerCountUpdates implementation
      *
-     * CRC: specs-crc/crc-SettingsView.md
+     * CRC: crc-SettingsView.md
      */
     startPeerCountUpdates(): void {
         this.updatePeerCount();
@@ -672,7 +672,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * updatePeerCount implementation
      *
-     * CRC: specs-crc/crc-SettingsView.md
+     * CRC: crc-SettingsView.md
      */
     updatePeerCount(): void {
         const peerCountElement = this.container?.querySelector('#peer-count');
@@ -686,7 +686,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * refreshMusicButtonState implementation
      *
-     * CRC: specs-crc/crc-SettingsView.md
+     * CRC: crc-SettingsView.md
      */
     refreshMusicButtonState(): void {
         if (this.audioManager) {
@@ -855,7 +855,7 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
     /**
      * renderLog implementation
      *
-     * CRC: specs-crc/crc-SettingsView.md
+     * CRC: crc-SettingsView.md
      */
     async renderLog(container: HTMLElement): Promise<void> {
         if (!container) {

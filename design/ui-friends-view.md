@@ -2,7 +2,7 @@
 
 **Source**: `specs/ui.friends.md`
 
-**Route**: `/friends` (see `manifest.md`)
+**Route**: `/friends` (see `manifest-ui.md`)
 
 **Purpose**: Manage P2P friend relationships and view friend status
 
@@ -613,7 +613,7 @@
 
 ## Behavior Implementation
 
-**CRC Card**: `specs-crc/crc-FriendsView.md`
+**CRC Card**: `design/crc-FriendsView.md`
 
 **Sequence Diagrams**:
 - `seq-add-friend-by-peerid.md` - Add friend by peer ID flow
@@ -678,7 +678,7 @@
 
 ## Theme Requirements
 
-**Western Frontier Styling** (from `manifest.md`):
+**Western Frontier Styling** (from `manifest-ui.md`):
 - Friend cards: Parchment-style with brown borders
 - Expanded cards: Slightly darker background for contrast
 - Status badges:
@@ -688,13 +688,13 @@
 - Milkdown editor: Western-themed, no padding around content
 - Modal overlays: Semi-transparent black (rgba(0,0,0,0.7))
 
-**Markdown Editing** (from `manifest.md`):
+**Markdown Editing** (from `manifest-ui.md`):
 - Use Milkdown crepe for all notes fields
 - No padding around editor content
 - Use `crepe.on` for events
 - Support all Crepe features
 
-**P2P UX** (from `manifest.md`):
+**P2P UX** (from `manifest-ui.md`):
 - NO DIALOGS for P2P status updates
 - Use visual badges for status
 - Status badges show current state

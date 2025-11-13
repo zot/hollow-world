@@ -1,9 +1,9 @@
 /**
  * FriendsView - P2P Friend Management Interface
  *
- * CRC: specs-crc/crc-FriendsView.md
- * Spec: specs/ui.friends.md
- * Sequences: specs-crc/seq-add-friend-by-peerid.md
+ * CRC: crc-FriendsView.md
+ * Spec: ui.friends.md
+ * Sequences: seq-add-friend-by-peerid.md
  * Template: public/templates/friends-view.html
  */
 
@@ -84,7 +84,7 @@ interface ICharacterViewData {
  * handle banned peers, and coordinate P2P friendship operations.
  *
  * Specifications:
- * - UI Structure: specs-ui/ui-friends-view.md
+ * - UI Structure: ui-friends-view.md
  * - UI Concept: specs-wysiwid/concepts-ui.md → FriendsView
  * - Coordination: specs-wysiwid/synchronizations-friends.md → Friend operations
  * - UI Sync: specs-wysiwid/synchronizations-ui.md → UI-to-domain coordination
@@ -777,7 +777,7 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
     /**
      * getContainer implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     getContainer(): HTMLElement | null {
         return this.container;
@@ -786,7 +786,7 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
     /**
      * show implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     show(): void {
         if (this.container) {
@@ -797,7 +797,7 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
     /**
      * hide implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     hide(): void {
         if (this.container) {

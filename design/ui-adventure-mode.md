@@ -1,6 +1,6 @@
 # Adventure Mode UI
 
-**CRC Card:** specs-crc/crc-AdventureMode.md
+**CRC Card:** design/crc-AdventureMode.md
 **Source Spec:** specs/game-worlds.md (lines 66-73)
 
 ---
@@ -63,10 +63,10 @@ The current implementation violates Single Responsibility Principle:
 
 ## Traceability
 
-**CRC Card:** specs-crc/crc-AdventureMode.md
+**CRC Card:** design/crc-AdventureMode.md
 **Sequences:**
-- specs-crc/seq-start-adventure-mode.md
-- specs-crc/seq-select-world.md
-- specs-crc/seq-switch-to-world-list.md
+- design/seq-start-adventure-mode.md
+- design/seq-select-world.md
+- design/seq-switch-to-world-list.md
 
 **Future Implementation:** src/ui/AdventureMode.ts (to be created)

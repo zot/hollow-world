@@ -379,4 +379,4 @@ d2 diagrams can be viewed in:
 - **Development**: [`development.md`](development.md)
 - **Testing**: [`testing.md`](testing.md)
 - **d2 Documentation**: `.claude/diagrams/README.md`
-- **ASCII Art Agent**: `.claude/agents/artist.md`
+- **ASCII Art Agent**: `.claude/agent/artist.md`

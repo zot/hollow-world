@@ -2,15 +2,15 @@
  * Event Notification Button - Shows pending events count with bugle icon
  * Observer Pattern: Listens to EventService for real-time updates
  *
- * CRC: specs-crc/crc-EventNotificationButton.md
- * Spec: specs/friends.md, specs/ui.settings.md
+ * CRC: crc-EventNotificationButton.md
+ * Spec: friends.md, ui.settings.md
  */
 
 import type { EventService } from '../services/EventService.js';
 
 /**
  * IEventNotificationButton interface
- * CRC: specs-crc/crc-EventNotificationButton.md
+ * CRC: crc-EventNotificationButton.md
  */
 export interface IEventNotificationButton {
     render(): HTMLElement;
@@ -20,7 +20,7 @@ export interface IEventNotificationButton {
 
 /**
  * EventNotificationButton class - Event notification badge
- * CRC: specs-crc/crc-EventNotificationButton.md
+ * CRC: crc-EventNotificationButton.md
  */
 export class EventNotificationButton implements IEventNotificationButton {
     private button: HTMLButtonElement | null = null;
@@ -41,7 +41,7 @@ export class EventNotificationButton implements IEventNotificationButton {
     /**
      * render implementation
      *
-     * CRC: specs-crc/crc-EventNotificationButton.md
+     * CRC: crc-EventNotificationButton.md
      */
     render(): HTMLElement {
         // Create button container
@@ -131,7 +131,7 @@ export class EventNotificationButton implements IEventNotificationButton {
     /**
      * updateCount implementation
      *
-     * CRC: specs-crc/crc-EventNotificationButton.md
+     * CRC: crc-EventNotificationButton.md
      */
     updateCount(): void {
         const events = this.eventService.getEvents();
@@ -150,7 +150,7 @@ export class EventNotificationButton implements IEventNotificationButton {
     /**
      * destroy implementation
      *
-     * CRC: specs-crc/crc-EventNotificationButton.md
+     * CRC: crc-EventNotificationButton.md
      */
     destroy(): void {
         if (this.button && this.button.parentElement) {

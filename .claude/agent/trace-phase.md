@@ -85,7 +85,7 @@ Phase X Traceability Progress:
 # Count CRC comments in all Phase X files
 for file in <list of files>; do
   echo "=== $file ==="
-  grep -c "CRC: specs-crc/crc-" "$file"
+  grep -c "CRC: design/crc-" "$file"
 done
 ```
 

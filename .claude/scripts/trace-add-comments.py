@@ -18,7 +18,7 @@ from pathlib import Path
 
 def read_crc_card(crc_name):
     """Read CRC card to get implementation file and spec references."""
-    crc_file = Path(f"specs-crc/crc-{crc_name}.md")
+    crc_file = Path(f"design/crc-{crc_name}.md")
     if not crc_file.exists():
         print(f"❌ CRC card not found: {crc_file}")
         sys.exit(1)
@@ -48,8 +48,8 @@ def read_crc_card(crc_name):
                 break
             if line.strip().startswith('- '):
                 seq = line.strip()[2:]
-                if not seq.startswith('specs-crc/'):
-                    seq = f"specs-crc/{seq}"
+                if not seq.startswith('design/'):
+                    seq = f"design/{seq}"
                 sequences.append(seq)
 
     return {
@@ -61,7 +61,7 @@ def read_crc_card(crc_name):
 
 def read_traceability_map(crc_name):
     """Read traceability.md to get method-specific sequence references."""
-    trace_file = Path("specs-crc/traceability.md")
+    trace_file = Path("design/traceability.md")
     if not trace_file.exists():
         return {}
 
@@ -93,7 +93,7 @@ def read_traceability_map(crc_name):
             seq_refs = []
             for seq_match in re.finditer(r'(seq-[\w-]+\.md)\s*\(lines\s+([\d-]+)\)', sequences_str):
                 seq_refs.append({
-                    "file": f"specs-crc/{seq_match.group(1)}",
+                    "file": f"design/{seq_match.group(1)}",
                     "lines": seq_match.group(2)
                 })
 
@@ -206,7 +206,7 @@ def generate_comment(method_name, crc_data, method_sequences, existing_descripti
         lines.append("     *")
 
     # Add CRC reference
-    lines.append(f"     * CRC: specs-crc/crc-{crc_data['name']}.md")
+    lines.append(f"     * CRC: design/crc-{crc_data['name']}.md")
 
     # Add sequence references if available
     if method_name in method_sequences:

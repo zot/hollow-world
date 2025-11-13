@@ -1,9 +1,9 @@
 /**
  * CharacterSheet - Character Sheet Component
  *
- * CRC: specs-crc/crc-CharacterSheet.md
- * Spec: specs/ui.characters.md, specs/characters.md
- * Sequences: specs-crc/seq-edit-character.md, specs-crc/seq-save-character-ui.md, specs-crc/seq-revert-character.md, specs-crc/seq-increment-attribute.md
+ * CRC: crc-CharacterSheet.md
+ * Spec: ui.characters.md, characters.md
+ * Sequences: seq-edit-character.md, seq-save-character-ui.md, seq-revert-character.md, seq-increment-attribute.md
  */
 
 // Main CharacterSheet component following SOLID principles
@@ -90,7 +90,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * getCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     getCharacter(): ICharacter {
         return { ...this.character };
@@ -99,7 +99,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * updateCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     updateCharacter(updates: Partial<ICharacter>): void {
         this.character = CharacterUpdater.updateCharacter(this.character, updates);
@@ -125,7 +125,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * destroy implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     destroy(): void {
         this.destroySubComponents();
@@ -138,7 +138,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * exportCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     exportCharacter(): string {
         return JSON.stringify(this.character, null, 2);
@@ -147,7 +147,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * importCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     importCharacter(data: string): boolean {
         try {
@@ -173,7 +173,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * validateCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     validateCharacter(): string[] {
         const errors: string[] = [];
@@ -322,7 +322,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * renderAttributes implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     private async renderAttributes(attributesEl: Element, templateEngine: any): Promise<void> {
         // Organize attributes by category and cost order per spec - group them in rows
@@ -433,7 +433,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * renderSkills implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     private async renderSkills(skillsEl: Element, templateEngine: any): Promise<void> {
         const hasFields = this.character.fields.length > 0;
@@ -595,8 +595,8 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * Setup event handlers for character header inputs (name, rank)
      * 
-     * @spec specs/ui.characters.md
-     * @crc specs-crc/crc-CharacterSheet.md
+     * @spec ui.characters.md
+     * @crc crc-CharacterSheet.md
      */
     private setupHeaderInputHandlers(): void {
         if (!this.container || this.config.readOnly) return;
@@ -704,8 +704,8 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * incrementAttribute implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
-     * Sequence: specs-crc/seq-increment-attribute.md (lines 14-96)
+     * CRC: crc-CharacterSheet.md
+     * Sequence: seq-increment-attribute.md (lines 14-96)
      */
     private incrementAttribute(attribute: AttributeType, cost: number): void {
         const currentValue = this.character.attributes[attribute];
@@ -741,7 +741,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * decrementAttribute implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     private decrementAttribute(attribute: AttributeType, cost: number): void {
         const currentValue = this.character.attributes[attribute];
@@ -802,7 +802,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * updateResourceDisplays implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     private updateResourceDisplays(): void {
         const availableXPEl = this.container?.querySelector('.available-xp');
@@ -846,7 +846,7 @@ export class CharacterSheet implements ICharacterSheet {
     /**
      * updateAttributeButtonStates implementation
      *
-     * CRC: specs-crc/crc-CharacterSheet.md
+     * CRC: crc-CharacterSheet.md
      */
     private updateAttributeButtonStates(attributesEl: Element): void {
         attributesEl.querySelectorAll('.attr-btn').forEach(button => {

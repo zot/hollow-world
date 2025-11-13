@@ -1,16 +1,16 @@
 /**
  * World List View - World management interface (list, create, edit, delete)
  *
- * CRC: specs-crc/crc-WorldListView.md
- * Spec: specs/game-worlds.md (lines 110-136)
+ * CRC: crc-WorldListView.md
+ * Spec: game-worlds.md (lines 110-136)
  * Sequences:
- * - specs-crc/seq-start-adventure-mode.md
- * - specs-crc/seq-select-world.md
- * - specs-crc/seq-create-world.md
- * - specs-crc/seq-edit-world-settings.md
- * - specs-crc/seq-delete-world.md
- * - specs-crc/seq-switch-to-world-list.md
- * UI Spec: specs-ui/ui-world-list-view.md
+ * - seq-start-adventure-mode.md
+ * - seq-select-world.md
+ * - seq-create-world.md
+ * - seq-edit-world-settings.md
+ * - seq-delete-world.md
+ * - seq-switch-to-world-list.md
+ * UI Spec: ui-world-list-view.md
  */
 
 import type { MudStorage } from '../textcraft/model.js';
@@ -22,7 +22,7 @@ import { DeleteWorldModal } from './DeleteWorldModal.js';
 
 /**
  * IWorldListView interface
- * CRC: specs-crc/crc-WorldListView.md
+ * CRC: crc-WorldListView.md
  */
 export interface IWorldListView {
     render(): Promise<HTMLElement>;
@@ -43,7 +43,7 @@ export interface IAdventureModeQuery {
 
 /**
  * WorldListView class - World management view
- * CRC: specs-crc/crc-WorldListView.md
+ * CRC: crc-WorldListView.md
  */
 export class WorldListView implements IWorldListView {
     private container: HTMLElement | null = null;
@@ -87,10 +87,10 @@ export class WorldListView implements IWorldListView {
     /**
      * render implementation - Display world list overlay with header and world items
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      * Sequences:
-     * - specs-crc/seq-start-adventure-mode.md
-     * - specs-crc/seq-switch-to-world-list.md
+     * - seq-start-adventure-mode.md
+     * - seq-switch-to-world-list.md
      */
     async render(): Promise<HTMLElement> {
         // Load worlds
@@ -130,8 +130,8 @@ export class WorldListView implements IWorldListView {
     /**
      * refresh implementation - Re-render world list to update active indicator
      *
-     * CRC: specs-crc/crc-WorldListView.md
-     * Spec: specs-ui/ui-world-list-view.md
+     * CRC: crc-WorldListView.md
+     * Spec: ui-world-list-view.md
      */
     async refresh(): Promise<void> {
         if (!this.container) return;
@@ -143,8 +143,8 @@ export class WorldListView implements IWorldListView {
     /**
      * renderWorldItems implementation - Render individual world items into container
      *
-     * CRC: specs-crc/crc-WorldListView.md
-     * UI Spec: specs-ui/ui-world-list-view.md
+     * CRC: crc-WorldListView.md
+     * UI Spec: ui-world-list-view.md
      */
     private async renderWorldItems(): Promise<void> {
         if (!this.container) return;
@@ -186,7 +186,7 @@ export class WorldListView implements IWorldListView {
     /**
      * show implementation - Display world list overlay
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      */
     show(): void {
         if (this.container) {
@@ -197,7 +197,7 @@ export class WorldListView implements IWorldListView {
     /**
      * hide implementation - Hide world list overlay
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      */
     hide(): void {
         if (this.container) {
@@ -208,9 +208,9 @@ export class WorldListView implements IWorldListView {
     /**
      * loadWorlds implementation - Fetch all worlds from MudStorage
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      * Sequences:
-     * - specs-crc/seq-start-adventure-mode.md
+     * - seq-start-adventure-mode.md
      */
     async loadWorlds(): Promise<void> {
         this.worlds = this.mudStorage.worlds || [];
@@ -219,7 +219,7 @@ export class WorldListView implements IWorldListView {
     /**
      * attachEventListeners implementation - Attach handlers for world list actions
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      */
     private attachEventListeners(): void {
         if (!this.container) return;
@@ -266,10 +266,10 @@ export class WorldListView implements IWorldListView {
     /**
      * handleStartWorld implementation - Load world and navigate to adventure view
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      * Sequences:
-     * - specs-crc/seq-select-world.md
-     * Spec: specs-ui/ui-world-list-view.md (Start Button Behavior)
+     * - seq-select-world.md
+     * Spec: ui-world-list-view.md (Start Button Behavior)
      *
      * Behavior:
      * - If no active world: Activate and navigate to world
@@ -296,7 +296,7 @@ export class WorldListView implements IWorldListView {
     /**
      * proceedToWorld implementation - Navigate to world (after confirmation if needed)
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      */
     private proceedToWorld(worldId: string): void {
         // Notify callback
@@ -311,8 +311,8 @@ export class WorldListView implements IWorldListView {
     /**
      * showSwitchWorldConfirmation implementation - Show modal warning before switching worlds
      *
-     * CRC: specs-crc/crc-WorldListView.md
-     * UI Spec: specs-ui/ui-world-list-view.md (Switch World Confirmation Modal)
+     * CRC: crc-WorldListView.md
+     * UI Spec: ui-world-list-view.md (Switch World Confirmation Modal)
      */
     private showSwitchWorldConfirmation(currentWorldId: string, targetWorldId: string): void {
         // Create modal container
@@ -364,9 +364,9 @@ export class WorldListView implements IWorldListView {
     /**
      * handleNewWorld implementation - Open create world modal
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      * Sequences:
-     * - specs-crc/seq-create-world.md
+     * - seq-create-world.md
      */
     private async handleNewWorld(): Promise<void> {
         await this.createWorldModal.show();
@@ -375,9 +375,9 @@ export class WorldListView implements IWorldListView {
     /**
      * handleEditWorld implementation - Open world settings modal
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      * Sequences:
-     * - specs-crc/seq-edit-world-settings.md
+     * - seq-edit-world-settings.md
      */
     private async handleEditWorld(worldId: string): Promise<void> {
         await this.worldSettingsModal.show(worldId);
@@ -386,9 +386,9 @@ export class WorldListView implements IWorldListView {
     /**
      * handleDeleteWorld implementation - Open delete confirmation modal
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      * Sequences:
-     * - specs-crc/seq-delete-world.md
+     * - seq-delete-world.md
      */
     private async handleDeleteWorld(worldId: string, worldName: string): Promise<void> {
         await this.deleteWorldModal.show(worldId, worldName);
@@ -397,7 +397,7 @@ export class WorldListView implements IWorldListView {
     /**
      * cleanup implementation - Dispose of resources
      *
-     * CRC: specs-crc/crc-WorldListView.md
+     * CRC: crc-WorldListView.md
      */
     cleanup(): void {
         this.createWorldModal.destroy();

@@ -2,16 +2,16 @@
  * Character Versioning - Manages character schema upgrades and compatibility
  * Following Single Responsibility Principle
  *
- * CRC: specs-crc/crc-CharacterVersioning.md
- * Spec: specs/characters.md, specs/storage.md
- * Sequences: specs-crc/seq-load-character.md
+ * CRC: crc-CharacterVersioning.md
+ * Spec: characters.md, storage.md
+ * Sequences: seq-load-character.md
  */
 
 import { ICharacter, IField, IFieldSkillEntry } from './types.js';
 
 /**
  * ICharacterSchema - Schema definition for character versions
- * CRC: specs-crc/crc-CharacterVersioning.md
+ * CRC: crc-CharacterVersioning.md
  */
 export interface ICharacterSchema {
     version: string;
@@ -21,7 +21,7 @@ export interface ICharacterSchema {
 
 /**
  * ILegacyField - Old field format (pre-v0.0.17) with skills array
- * CRC: specs-crc/crc-CharacterVersioning.md
+ * CRC: crc-CharacterVersioning.md
  */
 export interface ILegacyField {
     id: string;
@@ -33,14 +33,14 @@ export interface ILegacyField {
 
 /**
  * CharacterVersioning - Manages character schema upgrades and migration
- * CRC: specs-crc/crc-CharacterVersioning.md
- * Spec: specs/characters.md, specs/storage.md (Schema evolution)
- * Sequences: specs-crc/seq-load-character.md
+ * CRC: crc-CharacterVersioning.md
+ * Spec: characters.md, storage.md (Schema evolution)
+ * Sequences: seq-load-character.md
  */
 export class CharacterVersioning {
     /**
      * CHARACTER_SCHEMAS - Array of supported schema versions
-     * CRC: specs-crc/crc-CharacterVersioning.md
+     * CRC: crc-CharacterVersioning.md
      */
     private static readonly CHARACTER_SCHEMAS: ICharacterSchema[] = [
         {
@@ -57,7 +57,7 @@ export class CharacterVersioning {
 
     /**
      * Get current application version
-     * CRC: specs-crc/crc-CharacterVersioning.md
+     * CRC: crc-CharacterVersioning.md
      */
     static getCurrentVersion(): string {
         return '0.0.17'; // This should ideally be imported from VERSION file
@@ -65,7 +65,7 @@ export class CharacterVersioning {
 
     /**
      * Get schema definition for specific version
-     * CRC: specs-crc/crc-CharacterVersioning.md
+     * CRC: crc-CharacterVersioning.md
      */
     static getSchemaForVersion(version: string): ICharacterSchema | null {
         return this.CHARACTER_SCHEMAS.find(schema => schema.version === version) || null;
@@ -80,7 +80,7 @@ export class CharacterVersioning {
 
     /**
      * Check if character is at the latest version
-     * CRC: specs-crc/crc-CharacterVersioning.md
+     * CRC: crc-CharacterVersioning.md
      */
     static isLatestVersion(character: ICharacter | any): boolean {
         const currentVersion = this.getCurrentVersion();
@@ -89,7 +89,7 @@ export class CharacterVersioning {
 
     /**
      * Upgrade character from v0.0.16 to v0.0.17 (legacy skills array → skillEntries)
-     * Sequence: specs-crc/seq-load-character.md (lines 56-58)
+     * Sequence: seq-load-character.md (lines 56-58)
      */
     static upgradeFromV0_0_16ToV0_0_17(character: any): ICharacter {
         console.log(`Migrating character ${character.name || character.id} from v0.0.16 to v0.0.17`);
@@ -121,7 +121,7 @@ export class CharacterVersioning {
 
     /**
      * Main upgrade function that upgrades a character to the latest version
-     * Sequence: specs-crc/seq-load-character.md (lines 45-61)
+     * Sequence: seq-load-character.md (lines 45-61)
      */
     static upgradeCharacterToLatest(character: any): ICharacter {
         let upgradedCharacter = character;
@@ -155,7 +155,7 @@ export class CharacterVersioning {
 
     /**
      * Validate character against its schema version
-     * CRC: specs-crc/crc-CharacterVersioning.md
+     * CRC: crc-CharacterVersioning.md
      */
     static validateCharacterSchema(character: ICharacter): string[] {
         const errors: string[] = [];
@@ -187,7 +187,7 @@ export class CharacterVersioning {
 
     /**
      * Get all supported versions
-     * CRC: specs-crc/crc-CharacterVersioning.md
+     * CRC: crc-CharacterVersioning.md
      */
     static getSupportedVersions(): string[] {
         return this.CHARACTER_SCHEMAS.map(schema => schema.version);

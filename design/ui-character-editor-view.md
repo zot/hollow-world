@@ -2,7 +2,7 @@
 
 **Source**: `specs/ui.characters.md` → Editor Interface section
 
-**Route**: `/character/:id` (see `manifest.md`)
+**Route**: `/character/:id` (see `manifest-ui.md`)
 
 **Purpose**: Full character sheet editor with all character data
 
@@ -464,7 +464,7 @@
 - Freeze: Always enabled, text changes based on frozen state
 
 **Change Detection**:
-- Hash-based comparison every 250ms (see `manifest.md` → Global UI Patterns)
+- Hash-based comparison every 250ms (see `manifest-ui.md` → Global UI Patterns)
 - Calculate hash of original character on load (`originalCharacterHash`)
 - Compare current character hash to original every 250ms
 - Enable buttons when hashes differ
@@ -591,7 +591,7 @@
 
 ## Theme Requirements
 
-**Western Frontier Styling** (from `manifest.md`):
+**Western Frontier Styling** (from `manifest-ui.md`):
 - Parchment-style content boxes for each section
 - Western-themed spinners (stacked arrows)
 - Brown/gold color scheme
@@ -603,7 +603,7 @@
 - Responsive breakpoints for mobile/tablet
 - Vertical scrolling for long character sheets
 
-**Save Behavior** (from `manifest.md`):
+**Save Behavior** (from `manifest-ui.md`):
 - NEVER block saves due to validation errors
 - Always save, show warnings but allow completion
 - Invalid data prevented from being used, not from being saved

@@ -1,6 +1,6 @@
 # CRC Documentation: What It Adds Beyond Original Specs
 
-**Purpose:** This document explains what the specs-crc/* documentation provides that is not present in the original specs/*.md files.
+**Purpose:** This document explains what the design/* documentation provides that is not present in the original specs/*.md files.
 
 **TL;DR:** CRC documentation provides **bidirectional traceability** - mapping not just specs→code, but also **reality→specs**, documenting what was actually implemented, what's missing, and why certain decisions were made.
 
@@ -242,7 +242,7 @@ CRC cards document **coding patterns and architectural decisions** not specified
 
 ## Summary Table
 
-| Element                 | In specs/*.md | In specs-crc/*.md |
+| Element                 | In specs/*.md | In design/*.md |
 |-------------------------|---------------|-------------------|
 | **Requirements (what)** | ✅ Yes        | ✅ Yes            |
 | **Implementation gaps** | ❌ No         | ✅ Type A issues  |

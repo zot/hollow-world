@@ -326,4 +326,4 @@ Follow specifications for consistent western frontier theme:
 - **Storage**: [`storage.md`](storage.md)
 - **Testing**: [`testing.md`](testing.md)
 - **P2P**: [`p2p.md`](p2p.md)
-- **CRC Modeling**: [`../specs-crc/README.md`](../specs-crc/README.md)
+- **CRC Modeling**: [`../design/README.md`](../design/README.md)

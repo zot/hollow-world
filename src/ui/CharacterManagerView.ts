@@ -1,9 +1,9 @@
 /**
  * CharacterManagerView - Character List and Management Interface
  *
- * CRC: specs-crc/crc-CharacterManagerView.md
- * Spec: specs/ui.characters.md, specs/ui.md
- * Sequences: specs-crc/seq-render-character-list.md, specs-crc/seq-edit-character.md
+ * CRC: crc-CharacterManagerView.md
+ * Spec: ui.characters.md, ui.md
+ * Sequences: seq-render-character-list.md, seq-edit-character.md
  */
 
 // Character Manager View following SOLID principles
@@ -21,7 +21,7 @@ import { AudioControlUtils, IEnhancedAudioControlSupport } from '../utils/AudioC
 /**
  * ICharacterManager interface
  *
- * CRC: specs-crc/crc-CharacterManagerView.md
+ * CRC: crc-CharacterManagerView.md
  */
 export interface ICharacterManager extends IUIComponent {
     getCharacters(): ICharacter[];
@@ -223,7 +223,7 @@ const SAMPLE_CHARACTERS: ICharacter[] = [
  * navigate to character editor on card click.
  *
  * Specifications:
- * - UI Structure: specs-ui/ui-characters-view.md
+ * - UI Structure: ui-characters-view.md
  * - UI Concept: specs-wysiwid/concepts-ui.md → CharactersView
  * - Character Operations: specs-wysiwid/synchronizations-character.md
  *
@@ -261,7 +261,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * loadCharacters implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
+     * CRC: crc-CharacterManagerView.md
      */
     private async loadCharacters(): Promise<void> {
         try {
@@ -278,8 +278,8 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * render implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
-     * Sequence: specs-crc/seq-render-character-list.md (lines 18-85)
+     * CRC: crc-CharacterManagerView.md
+     * Sequence: seq-render-character-list.md (lines 18-85)
      */
     async render(container: HTMLElement): Promise<void> {
         if (!container) {
@@ -295,7 +295,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * debouncedRender implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
+     * CRC: crc-CharacterManagerView.md
      */
     private debouncedRender(): void {
         if (this.isRendering) {
@@ -405,7 +405,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * destroy implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
+     * CRC: crc-CharacterManagerView.md
      */
     destroy(): void {
         if (this.container) {
@@ -421,7 +421,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * getContainer implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     getContainer(): HTMLElement | null {
         return this.container;
@@ -430,7 +430,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * show implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     show(): void {
         if (this.container) {
@@ -441,7 +441,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * hide implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     hide(): void {
         if (this.container) {
@@ -452,7 +452,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * getCharacters implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
+     * CRC: crc-CharacterManagerView.md
      */
     getCharacters(): ICharacter[] {
         return [...this.characters];
@@ -461,7 +461,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * createNewCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
+     * CRC: crc-CharacterManagerView.md
      */
     async createNewCharacter(): Promise<void> {
         try {
@@ -486,7 +486,7 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * deleteCharacter implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
+     * CRC: crc-CharacterManagerView.md
      */
     async deleteCharacter(characterId: string): Promise<void> {
         if (confirm('Are you sure you want to delete this character? This action cannot be undone.')) {
@@ -552,9 +552,9 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * renderCharacterList implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
+     * CRC: crc-CharacterManagerView.md
      * Sequences:
-     * - specs-crc/seq-render-character-list.md (lines 45-75)
+     * - seq-render-character-list.md (lines 45-75)
      */
     private async renderCharacterList(): Promise<void> {
         if (!this.container) return;
@@ -604,8 +604,8 @@ export class CharacterManagerView implements ICharacterManager, IEnhancedAudioCo
     /**
      * renderCharacterCard implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
-     * Sequence: specs-crc/seq-render-character-list.md (lines 51-71)
+     * CRC: crc-CharacterManagerView.md
+     * Sequence: seq-render-character-list.md (lines 51-71)
      */
     private async renderCharacterCard(character: ICharacter): Promise<string> {
         // Create a cache key based on character data
@@ -869,7 +869,7 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
     /**
      * setupListEventListeners implementation
      *
-     * CRC: specs-crc/crc-CharacterManagerView.md
+     * CRC: crc-CharacterManagerView.md
      */
     private setupListEventListeners(): void {
         if (!this.container) return;

@@ -2,7 +2,7 @@ Traceability management for CRC cards: {{args}}
 
 ## Add Traceability Comments
 
-Following the three-pass process from specs-crc/crc.md:
+Following the three-pass process from design/crc.md:
 
 **Workflow:**
 1. Run: `./.claude/scripts/trace-add-comments.py {{args}}`

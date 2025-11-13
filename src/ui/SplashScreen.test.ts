@@ -1,8 +1,8 @@
 /**
  * Unit tests for SplashScreen (Main Menu)
  *
- * CRC: specs-crc/crc-SplashScreen.md
- * Spec: specs/ui.splash.md
+ * CRC: crc-SplashScreen.md
+ * Spec: ui.splash.md
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';

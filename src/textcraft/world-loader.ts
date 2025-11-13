@@ -2,8 +2,8 @@
  * WorldLoader creates and loads worlds programmatically
  * Phase 2.5 implementation for solo mode
  *
- * CRC: specs-crc/crc-WorldLoader.md
- * Spec: specs/integrate-textcraft.md
+ * CRC: crc-WorldLoader.md
+ * Spec: integrate-textcraft.md
  */
 
 import { World, Thing, getStorage } from './model.js';
@@ -11,7 +11,7 @@ import { World, Thing, getStorage } from './model.js';
 /**
  * WorldLoader - Factory for creating and loading TextCraft worlds
  *
- * CRC: specs-crc/crc-WorldLoader.md
+ * CRC: crc-WorldLoader.md
  *
  * For now, this creates simple worlds.
  * Full world loading from files will be implemented in Phase 3.

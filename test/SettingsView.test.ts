@@ -1,7 +1,7 @@
 /**
  * Unit tests for SettingsView
  *
- * CRC: specs-crc/crc-SettingsView.md
+ * CRC: design/crc-SettingsView.md
  * Spec: specs/ui.settings.md, specs/logging.md
  */
 

@@ -1,7 +1,7 @@
 /**
  * Unit tests for CharacterManagerView
  *
- * CRC: specs-crc/crc-CharacterManagerView.md
+ * CRC: crc-CharacterManagerView.md
  */
 
 // Unit tests for CharacterManagerView following SOLID principles

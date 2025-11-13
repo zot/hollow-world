@@ -2,9 +2,9 @@
  * Application Entry Point - Main orchestrator for Hollow World
  * Facade Pattern: Coordinates all subsystems (audio, P2P, views, routing)
  *
- * CRC: specs-crc/crc-Application.md
- * Spec: specs/main.md
- * Sequences: specs-crc/seq-app-startup.md, specs-crc/seq-view-transition.md
+ * CRC: crc-Application.md
+ * Spec: main.md
+ * Sequences: seq-app-startup.md, seq-view-transition.md
  */
 
 console.log('Main.ts starting to load...');
@@ -63,8 +63,8 @@ let currentView: 'splash' | 'characters' | 'editor' | 'friends' | 'game' | 'sett
 /**
  * initializeAudio function - Initialize audio system in background (non-blocking)
  *
- * CRC: specs-crc/crc-Application.md
- * Sequences: specs-crc/seq-app-startup.md
+ * CRC: crc-Application.md
+ * Sequences: seq-app-startup.md
  */
 async function initializeAudio(): Promise<void> {
     try {
@@ -152,8 +152,8 @@ async function initializeAudio(): Promise<void> {
 /**
  * initializeHollowPeer function - Initialize P2P system with retry logic (non-blocking)
  *
- * CRC: specs-crc/crc-Application.md
- * Sequences: specs-crc/seq-app-startup.md
+ * CRC: crc-Application.md
+ * Sequences: seq-app-startup.md
  */
 async function initializeHollowPeer(): Promise<void> {
     try {
@@ -283,8 +283,8 @@ async function initializeHollowPeer(): Promise<void> {
 /**
  * createApp function - Initialize application and all views
  *
- * CRC: specs-crc/crc-Application.md
- * Sequences: specs-crc/seq-app-startup.md
+ * CRC: crc-Application.md
+ * Sequences: seq-app-startup.md
  */
 async function createApp(): Promise<void> {
     console.log('createApp called');
@@ -423,8 +423,8 @@ async function createApp(): Promise<void> {
 /**
  * initializeAdventureMode function - Create and initialize Adventure Mode coordinator
  *
- * CRC: specs-crc/crc-Application.md
- * Spec: specs/game-worlds.md
+ * CRC: crc-Application.md
+ * Spec: game-worlds.md
  */
 async function initializeAdventureMode(): Promise<void> {
     try {
@@ -454,8 +454,8 @@ async function initializeAdventureMode(): Promise<void> {
 /**
  * setupRoutes function - Register all application routes
  *
- * CRC: specs-crc/crc-Application.md
- * Sequences: specs-crc/seq-view-transition.md
+ * CRC: crc-Application.md
+ * Sequences: seq-view-transition.md
  */
 function setupRoutes(): void {
     // Add route definitions
@@ -508,8 +508,8 @@ function setupRoutes(): void {
 /**
  * setupComponentCallbacks function - Wire up view navigation callbacks
  *
- * CRC: specs-crc/crc-Application.md
- * Sequences: specs-crc/seq-navigate-from-splash.md
+ * CRC: crc-Application.md
+ * Sequences: seq-navigate-from-splash.md
  */
 function setupComponentCallbacks(): void {
     // Splash screen callbacks
@@ -528,7 +528,7 @@ function setupComponentCallbacks(): void {
 
     splashScreen.onAdventure = () => {
         // Delegate route selection to AdventureMode based on active world state
-        // Spec: specs/ui.splash.md (Adventure Mode Navigation)
+        // Spec: ui.splash.md (Adventure Mode Navigation)
         if (adventureMode) {
             const route = adventureMode.getDefaultRoute();
             router.navigate(route);
@@ -585,7 +585,7 @@ function setupComponentCallbacks(): void {
 /**
  * renderSplashScreen function - Render main menu
  *
- * CRC: specs-crc/crc-Application.md
+ * CRC: crc-Application.md
  */
 async function renderSplashScreen(): Promise<void> {
     currentView = 'splash';
@@ -602,7 +602,7 @@ async function renderSplashScreen(): Promise<void> {
 /**
  * renderCharacterManager function - Render character list
  *
- * CRC: specs-crc/crc-Application.md
+ * CRC: crc-Application.md
  */
 async function renderCharacterManager(): Promise<void> {
     currentView = 'characters';
@@ -619,7 +619,7 @@ async function renderCharacterManager(): Promise<void> {
 /**
  * renderCharacterEditor function - Render character editor for specific character
  *
- * CRC: specs-crc/crc-Application.md
+ * CRC: crc-Application.md
  */
 async function renderCharacterEditor(characterId: string): Promise<void> {
     currentView = 'editor';
@@ -643,7 +643,7 @@ async function renderCharacterEditor(characterId: string): Promise<void> {
 /**
  * renderGameView function - Render game view (placeholder)
  *
- * CRC: specs-crc/crc-Application.md
+ * CRC: crc-Application.md
  */
 async function renderGameView(): Promise<void> {
     currentView = 'game';
@@ -676,7 +676,7 @@ async function renderGameView(): Promise<void> {
 /**
  * renderFriendsView function - Render friends management
  *
- * CRC: specs-crc/crc-Application.md
+ * CRC: crc-Application.md
  */
 async function renderFriendsView(): Promise<void> {
     currentView = 'friends';
@@ -699,7 +699,7 @@ async function renderFriendsView(): Promise<void> {
 /**
  * renderSettingsView function - Render settings with peer info
  *
- * CRC: specs-crc/crc-Application.md
+ * CRC: crc-Application.md
  */
 async function renderSettingsView(): Promise<void> {
     currentView = 'settings';
@@ -735,7 +735,7 @@ async function renderSettingsView(): Promise<void> {
 /**
  * renderLogView function - Render log view
  *
- * CRC: specs-crc/crc-Application.md
+ * CRC: crc-Application.md
  */
 async function renderLogView(): Promise<void> {
     currentView = 'settings'; // Still settings context
@@ -755,7 +755,7 @@ async function renderLogView(): Promise<void> {
 /**
  * cleanup function - Clean up resources on page unload
  *
- * CRC: specs-crc/crc-Application.md
+ * CRC: crc-Application.md
  */
 function cleanup(): void {
     if (router) {

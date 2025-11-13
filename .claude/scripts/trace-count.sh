@@ -12,7 +12,7 @@
 
 set -e
 
-TRACEABILITY_FILE="specs-crc/traceability.md"
+TRACEABILITY_FILE="design/traceability.md"
 
 if [ ! -f "$TRACEABILITY_FILE" ]; then
     echo "❌ Error: $TRACEABILITY_FILE not found"

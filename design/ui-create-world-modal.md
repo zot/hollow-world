@@ -1,6 +1,6 @@
 # Create World Modal
 
-**CRC Card:** specs-crc/crc-CreateWorldModal.md
+**CRC Card:** design/crc-CreateWorldModal.md
 **Source Spec:** specs/game-worlds.md (lines 126-128)
 
 ---
@@ -170,6 +170,6 @@ Modal dialog for creating new MUD worlds with name, description, and optional YA
 
 ## Traceability
 
-**CRC Card:** specs-crc/crc-CreateWorldModal.md
-**Sequence:** specs-crc/seq-create-world.md
+**CRC Card:** design/crc-CreateWorldModal.md
+**Sequence:** design/seq-create-world.md
 **Future Implementation:** src/ui/CreateWorldModal.ts (to be created)

@@ -2,7 +2,7 @@
 
 **Source**: `specs/ui.settings.md`
 
-**Route**: `/settings` (see `manifest.md`)
+**Route**: `/settings` (see `manifest-ui.md`)
 
 **Purpose**: Application settings, peer configuration, and profile management
 
@@ -372,7 +372,7 @@
 **CSS Classes**:
 - `events-button` - Western-themed button
 
-**Note**: This is separate from the global EventNotificationButton (see `manifest.md`). The global button appears at upper-right on ALL views. This is a context-specific button on Settings view.
+**Note**: This is separate from the global EventNotificationButton (see `manifest-ui.md`). The global button appears at upper-right on ALL views. This is a context-specific button on Settings view.
 
 ---
 
@@ -498,7 +498,7 @@
 
 **Source**: `specs/ui.settings.md` → Log button section
 
-**Route**: `/settings/log` (see `manifest.md`)
+**Route**: `/settings/log` (see `manifest-ui.md`)
 
 **Purpose**: Display application log with filtering and sorting
 
@@ -792,7 +792,7 @@
 
 ## Behavior Implementation
 
-**CRC Card**: `specs-crc/crc-SettingsView.md`
+**CRC Card**: `design/crc-SettingsView.md`
 
 **Related CRC Cards**:
 - `crc-ProfileService.md` - Profile management
@@ -862,14 +862,14 @@
 
 ## Theme Requirements
 
-**Western Frontier Styling** (from `manifest.md`):
+**Western Frontier Styling** (from `manifest-ui.md`):
 - Settings fields: Parchment-style boxes
 - Buttons: Dark brown background, gold text
 - Modals: Dark brown background with gold accents
 - Monospace: For peer ID, pubsub topic, peer protocol
 - Milkdown editor: Western-themed, no padding
 
-**Markdown Editing** (from `manifest.md`):
+**Markdown Editing** (from `manifest-ui.md`):
 - Use Milkdown crepe for private notes
 - No padding around editor content
 - Use `crepe.on` for events

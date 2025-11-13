@@ -2,8 +2,8 @@
  * World Connections and Characters Management
  * Helper functions for Phase 2 implementation
  *
- * CRC: specs-crc/crc-WorldConnections.md
- * Spec: specs/integrate-textcraft.md
+ * CRC: crc-WorldConnections.md
+ * Spec: integrate-textcraft.md
  *
  * These functions provide CRUD operations for world connections and characters
  */

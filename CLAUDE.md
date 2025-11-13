@@ -13,13 +13,11 @@
 All specs referenced in this file are **human-readable design documents** (intent, UX, architecture).
 
 **Correct workflow for code generation**:
-1. **READ [`specs-crc/README.md`](specs-crc/README.md) at start of session** ⚠️ **REQUIRED**
-2. Read human specs (`specs/*.md`) for design intent
-3. Create/consult **CRC cards and sequence diagrams** (`specs-crc/*.md`) for data structures, behavior, and interactions
-4. Create/consult **UI specs** (`specs-ui/*.md`) for layout structure (HTML, CSS classes, data bindings) - references CRC cards
-5. Generate/write code (templates + TypeScript) following complete specification with traceability comments
+1. Read human specs (`specs/*.md`) for design intent
+2. **Use `design` agent** to create/consult Level 2 design specs (CRC cards, sequences, UI specs) ⚠️ **REQUIRED**
+3. Generate/write code (templates + TypeScript) following complete specification with traceability comments
 
-**See**: [`specs-crc/README.md`](specs-crc/README.md) for complete three-tier process and traceability requirements
+**For creating Level 2 specs**: Use the `design` agent (`.claude/agent/design.md`) - it handles CRC cards, sequence diagrams, and UI layout specs
 
 ---
 
@@ -49,12 +47,13 @@ All specs referenced in this file are **human-readable design documents** (inten
 - **[`development.md`](specs/development.md)** - Development server, build process, workflow
 - **[`view-management.md`](specs/view-management.md)** - View manager and single-active-view architecture
 - **[`coding-standards.md`](specs/coding-standards.md)** - TypeScript, HTML, SOLID principles, best practices
-- **[`crc.md`](specs-crc/README.md)** - CRC modeling process (specs → CRC cards and sequence diagrams → code)
+- **`design` agent** (`.claude/agent/design.md`) - Level 2 spec generation (CRC cards, sequences, UI specs)
 - **[`tooling.md`](specs/tooling.md)** - d2 diagrams, scripts, development tools
 - **[`logging.md`](specs/logging.md)** - Application logging system
 
 ### UI Specifications
-- **[`specs-ui/README.md`](specs-ui/README.md)** - **UI Layout Specifications** (authoritative guide for HTML structure, CSS classes, data bindings)
+- **`design` agent** (`.claude/agent/design.md`) - Create UI layout specs (use for generating `design/*.md` files)
+- **[`design/*.md`](design/)** - UI layout specifications (HTML structure, CSS classes, data bindings)
 - **[`ui.md`](specs/ui.md)** - General UI principles (save behavior, audio controls, navigation, western theme)
 - **[`ui.splash.md`](specs/ui.splash.md)** - Splash Screen (main menu)
 - **[`ui.characters.md`](specs/ui.characters.md)** - Character Manager and Character Editor views
@@ -93,26 +92,26 @@ All specs referenced in this file are **human-readable design documents** (inten
 
 **Three-tier process**: Human-readable specs (`specs/*.md`) → CRC cards + Sequence diagrams + UI specs → Generated code/templates/tests
 
-- **CRC Cards** (`specs-crc/crc-*.md`): Classes, responsibilities, collaborators → TypeScript classes
+- **CRC Cards** (`design/crc-*.md`): Classes, responsibilities, collaborators → TypeScript classes
   - One card per class in markdown format
   - Defines what each class knows (data) and does (behavior)
   - Identifies collaborations between classes
 
-- **Sequence Diagrams** (`specs-crc/seq-*.md`): Object interactions over time → Method implementations
+- **Sequence Diagrams** (`design/seq-*.md`): Object interactions over time → Method implementations
   - One diagram per scenario/use case
   - Shows how objects collaborate to fulfill requirements
   - Guides implementation details
 
-- **UI Specs** (`specs-ui/*.md`): Layout structure → HTML templates
+- **UI Specs** (`design/ui-*.md`): Layout structure → HTML templates
   - Organized by view (may group small related components together)
   - Defines HTML structure, CSS classes, data bindings
   - References CRC cards for data types and behavior
-  - See [`specs-ui/README.md`](specs-ui/README.md) for UI spec format
+  - Use `design` agent to create UI specs
 
 **Key principle**: CRC models are **source of truth** for structure, UI specs are **source of truth** for layout, human specs are **source of truth** for intent.
 
-**Complete Documentation**: [`specs-crc/README.md`](specs-crc/README.md) - Full CRC modeling guide
-**Traceability**: [`specs-crc/traceability.md`](specs-crc/traceability.md) - Links from specs → CRC → code
+**Creating Level 2 Specs**: Use `design` agent (`.claude/agent/design.md`) for complete workflow
+**Traceability**: [`design/traceability.md`](design/traceability.md) - Links from specs → CRC → code
 
 ### 🔄 Bidirectional Traceability Principle
 
@@ -132,7 +131,7 @@ All specs referenced in this file are **human-readable design documents** (inten
 
 **Abstraction Levels:**
 - **High-level specs** (`specs/*.md`): Intent, architecture, UX requirements, principles (WHAT and WHY)
-- **Design specs** (`specs-crc/*.md`, `specs-ui/*.md`): Structure, behavior, interactions, layout (HOW at design level)
+- **Design specs** (`design/*.md`, `design/*.md`): Structure, behavior, interactions, layout (HOW at design level)
 - **Implementation** (`src/*.ts`, `public/templates/*.html`): Code, templates, concrete implementation (HOW at code level)
 
 **Key Rules:**
@@ -145,7 +144,7 @@ All specs referenced in this file are **human-readable design documents** (inten
 ```
 User identifies missing persistence →
 Update specs/game-worlds.md (add persistence requirement) →
-Update specs-crc/crc-AdventureMode.md (add persistence responsibility) →
+Update design/crc-AdventureMode.md (add persistence responsibility) →
 Update src/ui/AdventureMode.ts (implement + add traceability comments)
 
 Later: Bug fix in AdventureMode.ts (terminateActiveWorld logic) →
@@ -159,14 +158,12 @@ Review if specs/game-worlds.md needs update (it does - clarify persistence rules
 
 ## 💡 Daily Reminders
 
-⚠️ **CRITICAL - START OF EVERY SESSION:**
-- **READ specs-crc/README.md** - This file contains complete CRC modeling requirements including:
-  - Traceability requirements (ALL code must have CRC/spec comments)
-  - CRC card creation process
-  - Sequence diagram process
-  - Quality checklist
-  - File organization standards
-  - **This is REQUIRED reading** - Do not skip
+⚠️ **CRITICAL - Creating Level 2 Specs:**
+- **Use `design` agent** (`.claude/agent/design.md`) when creating CRC cards, sequences, or UI specs
+  - Handles complete workflow: specs → CRC cards → sequence diagrams → UI specs
+  - Manages traceability and gap analysis
+  - Integrates with diagram-converter and gap-analyzer agents
+  - Use: `Task(subagent_type="design", ...)`
 
 - **Skills Opportunity**: Once per day, suggest creating new skills (`.claude/skills/*.md`) for repetitive tasks that could benefit from pre-approved scripts or commands (e.g., build/test runners, code formatting checks, log parsing). Currently available: `ascii-analyze`, `plantuml`, `trace`
 
@@ -176,7 +173,7 @@ Review if specs/game-worlds.md needs update (it does - clarify persistence rules
 
 1. **Identify affected documentation**:
    - [ ] Which high-level specs (`specs/*.md`) describe this area?
-   - [ ] Which CRC cards/sequences/UI specs (`specs-crc/*.md`, `specs-ui/*.md`) are involved?
+   - [ ] Which CRC cards/sequences/UI specs (`design/*.md`, `design/*.md`) are involved?
    - [ ] Which source files will change?
 
 2. **Create comprehensive todos** using TodoWrite:
@@ -193,7 +190,7 @@ Review if specs/game-worlds.md needs update (it does - clarify persistence rules
 **Example todo list for a bug fix:**
 ```
 [ ] Fix router initialization order in main.ts
-[ ] Update specs-crc/crc-Application.md (startup sequence)
+[ ] Update design/crc-Application.md (startup sequence)
 [ ] Update specs/game-worlds.md (clarify startup behavior)
 ```
 
@@ -203,13 +200,13 @@ Review if specs/game-worlds.md needs update (it does - clarify persistence rules
 
 **CRITICAL: Diagram Format Requirements**
 
-- **Sequence Diagrams (`specs-crc/seq-*.md`)**: MUST use PlantUML ASCII art output
+- **Sequence Diagrams (`design/seq-*.md`)**: MUST use PlantUML ASCII art output
   - ⚠️ **REQUIRED APPROACH: Use the `diagram-converter` agent**
     - Launch with Task tool: `subagent_type="diagram-converter"`
     - **NEVER manually write sequence text or pseudocode** - always use this agent
     - Agent handles entire workflow: edit PlantUML source → convert to ASCII → embed in markdown
     - Handles complex conversions with reasoning and decision-making
-    - See `.claude/agents/diagram-converter.md` for details
+    - See `.claude/agent/diagram-converter.md` for details
   - **ALTERNATIVE: Direct skill invocation** (for simple one-off diagrams, if agent unavailable)
     - Use Skill tool: `Skill(skill: "plantuml")`
     - Pass PlantUML source as input

@@ -1,12 +1,12 @@
 /**
  * Session Controls - Host/Join/End session buttons for multiplayer
  *
- * CRC: specs-crc/crc-SessionControls.md
- * Spec: specs/game-worlds.md (lines 138-142)
+ * CRC: crc-SessionControls.md
+ * Spec: game-worlds.md (lines 138-142)
  * Sequences:
- * - specs-crc/seq-host-session.md
- * - specs-crc/seq-join-session.md
- * UI Spec: specs-ui/ui-adventure-view.md (embedded)
+ * - seq-host-session.md
+ * - seq-join-session.md
+ * UI Spec: ui-adventure-view.md (embedded)
  */
 
 import type { TemplateEngine } from '../utils/TemplateEngine.js';
@@ -15,7 +15,7 @@ export type SessionMode = 'solo' | 'host' | 'guest';
 
 /**
  * ISessionControls interface
- * CRC: specs-crc/crc-SessionControls.md
+ * CRC: crc-SessionControls.md
  */
 export interface ISessionControls {
     render(): Promise<HTMLElement>;
@@ -26,7 +26,7 @@ export interface ISessionControls {
 
 /**
  * SessionControls class - Session mode control buttons
- * CRC: specs-crc/crc-SessionControls.md
+ * CRC: crc-SessionControls.md
  */
 export class SessionControls implements ISessionControls {
     private container: HTMLElement | null = null;
@@ -51,7 +51,7 @@ export class SessionControls implements ISessionControls {
     /**
      * render implementation - Display session control buttons based on current mode
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      */
     async render(): Promise<HTMLElement> {
         // Create container
@@ -67,7 +67,7 @@ export class SessionControls implements ISessionControls {
     /**
      * updateDisplay implementation - Refresh buttons when session mode changes
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      */
     async updateDisplay(): Promise<void> {
         if (!this.container) return;
@@ -101,7 +101,7 @@ export class SessionControls implements ISessionControls {
     /**
      * setSessionMode implementation - Update session mode and refresh display
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      */
     setSessionMode(mode: SessionMode): void {
         this.sessionMode = mode;
@@ -111,10 +111,10 @@ export class SessionControls implements ISessionControls {
     /**
      * renderSoloControls implementation - Show Host/Join buttons
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      * Sequences:
-     * - specs-crc/seq-host-session.md
-     * - specs-crc/seq-join-session.md
+     * - seq-host-session.md
+     * - seq-join-session.md
      */
     private async renderSoloControls(): Promise<string> {
         return await this.templateEngine.renderTemplateFromFile('session-controls-solo', {});
@@ -123,9 +123,9 @@ export class SessionControls implements ISessionControls {
     /**
      * renderHostControls implementation - Show connection info with copy button
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      * Sequences:
-     * - specs-crc/seq-host-session.md
+     * - seq-host-session.md
      */
     private async renderHostControls(): Promise<string> {
         // TODO: Get actual peer ID from HollowIPeer
@@ -139,7 +139,7 @@ export class SessionControls implements ISessionControls {
     /**
      * renderGuestControls implementation - Show end session button only
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      */
     private async renderGuestControls(): Promise<string> {
         return await this.templateEngine.renderTemplateFromFile('session-controls-guest', {});
@@ -148,7 +148,7 @@ export class SessionControls implements ISessionControls {
     /**
      * attachEventListeners implementation - Attach handlers for control buttons
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      */
     private attachEventListeners(): void {
         if (!this.container) return;
@@ -181,9 +181,9 @@ export class SessionControls implements ISessionControls {
     /**
      * handleHostSession implementation - Switch from solo to host mode
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      * Sequences:
-     * - specs-crc/seq-host-session.md
+     * - seq-host-session.md
      */
     private handleHostSession(): void {
         if (this.onHostSession) {
@@ -194,9 +194,9 @@ export class SessionControls implements ISessionControls {
     /**
      * handleJoinSession implementation - Open JoinSessionModal for guest mode
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private handleJoinSession(): void {
         if (this.onJoinSession) {
@@ -207,7 +207,7 @@ export class SessionControls implements ISessionControls {
     /**
      * handleEndSession implementation - Return to solo mode from host/guest
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      */
     private handleEndSession(): void {
         if (this.onEndSession) {
@@ -218,7 +218,7 @@ export class SessionControls implements ISessionControls {
     /**
      * handleCopyConnection implementation - Copy connection string to clipboard
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      */
     private async handleCopyConnection(): Promise<void> {
         if (!this.container) return;
@@ -238,7 +238,7 @@ export class SessionControls implements ISessionControls {
     /**
      * destroy implementation - Cleanup resources
      *
-     * CRC: specs-crc/crc-SessionControls.md
+     * CRC: crc-SessionControls.md
      */
     destroy(): void {
         if (this.container) {

@@ -2,9 +2,9 @@
  * Character Storage Service - Handles character persistence
  * Following Single Responsibility Principle
  *
- * CRC: specs-crc/crc-CharacterStorageService.md
- * Spec: specs/characters.md, specs/storage.md
- * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md
+ * CRC: crc-CharacterStorageService.md
+ * Spec: characters.md, storage.md
+ * Sequences: seq-save-character.md, seq-load-character.md
  */
 
 import { ICharacter, AttributeType } from '../character/types.js';
@@ -15,7 +15,7 @@ import { calculateCharacterHash } from '../utils/characterHash.js';
 
 /**
  * ICharacterStorageService - Character persistence interface
- * CRC: specs-crc/crc-CharacterStorageService.md
+ * CRC: crc-CharacterStorageService.md
  */
 export interface ICharacterStorageService {
     getAllCharacters(): Promise<ICharacter[]>;
@@ -27,16 +27,16 @@ export interface ICharacterStorageService {
 
 /**
  * CharacterStorageService - Manages character persistence with hash-based optimization
- * CRC: specs-crc/crc-CharacterStorageService.md
- * Spec: specs/characters.md, specs/storage.md
- * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md
+ * CRC: crc-CharacterStorageService.md
+ * Spec: characters.md, storage.md
+ * Sequences: seq-save-character.md, seq-load-character.md
  */
 export class CharacterStorageService implements ICharacterStorageService {
     private readonly STORAGE_KEY = 'hollow-world-characters';
 
     /**
      * Load all characters with version migration and hash initialization
-     * Sequence: specs-crc/seq-load-character.md (lines 26-78)
+     * Sequence: seq-load-character.md (lines 26-78)
      */
     async getAllCharacters(): Promise<ICharacter[]> {
         try {
@@ -70,8 +70,8 @@ export class CharacterStorageService implements ICharacterStorageService {
 
     /**
      * Save character with hash-based optimization
-     * Spec: specs/storage.md "Hash-based save optimization"
-     * Sequence: specs-crc/seq-save-character.md (lines 46-57)
+     * Spec: storage.md "Hash-based save optimization"
+     * Sequence: seq-save-character.md (lines 46-57)
      */
     async saveCharacter(character: ICharacter): Promise<void> {
         try {
@@ -141,7 +141,7 @@ export class CharacterStorageService implements ICharacterStorageService {
 
     /**
      * Upgrade character to latest version and initialize hash
-     * Sequence: specs-crc/seq-load-character.md (lines 45-76)
+     * Sequence: seq-load-character.md (lines 45-76)
      */
     private async validateAndFixCharacter(character: any): Promise<ICharacter> {
         try {

@@ -1,6 +1,6 @@
 # Delete World Modal
 
-**CRC Card:** specs-crc/crc-DeleteWorldModal.md
+**CRC Card:** design/crc-DeleteWorldModal.md
 **Source Spec:** specs/game-worlds.md (line 127)
 
 ---
@@ -140,6 +140,6 @@ Simple confirmation modal for deleting a world with clear warning.
 
 ## Traceability
 
-**CRC Card:** specs-crc/crc-DeleteWorldModal.md
-**Sequence:** specs-crc/seq-delete-world.md
+**CRC Card:** design/crc-DeleteWorldModal.md
+**Sequence:** design/seq-delete-world.md
 **Future Implementation:** src/ui/DeleteWorldModal.ts (to be created)

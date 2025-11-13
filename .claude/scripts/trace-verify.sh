@@ -12,7 +12,7 @@
 set -e
 
 PHASE=${1:-1}
-TRACEABILITY_FILE="specs-crc/traceability.md"
+TRACEABILITY_FILE="design/traceability.md"
 EXIT_CODE=0
 
 echo "=== Phase ${PHASE} Traceability Sync & Verification ==="
@@ -110,7 +110,7 @@ parse_crc_implementation() {
 # Check if a file header has CRC: comment
 has_crc_header() {
     local file=$1
-    [ -f "$file" ] && head -20 "$file" | grep -q "^ \* CRC: specs-crc/"
+    [ -f "$file" ] && head -20 "$file" | grep -q "^ \* CRC: design/"
 }
 
 # Check if a specific method/class has CRC comment
@@ -118,7 +118,7 @@ has_crc_comment() {
     local file=$1
     local search_term=$2
 
-    [ -f "$file" ] && grep -B 10 "$search_term" "$file" 2>/dev/null | grep -q "CRC: specs-crc/"
+    [ -f "$file" ] && grep -B 10 "$search_term" "$file" 2>/dev/null | grep -q "CRC: design/"
 }
 
 # Update checkbox in traceability.md

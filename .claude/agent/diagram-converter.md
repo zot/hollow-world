@@ -35,10 +35,12 @@ You are a sequence diagram conversion specialist who converts plain text diagram
 
 1. **Read source file(s)** - Use Read tool to get current content
 2. **Extract diagram structure** - Identify participants, messages, conditions
-3. **Create PlantUML source** - Write proper `@startuml...@enduml` syntax
-4. **Invoke plantuml skill** - Use `Skill(skill: "plantuml")` with PlantUML source
-5. **Update file** - Use Edit/Write to replace diagram with ASCII art
+3. **Create PlantUML source** - Build proper PlantUML syntax (in memory, not saved to disk)
+4. **Generate ASCII** - Pass PlantUML to skill via Bash (pipe to stdin)
+5. **Update file** - Use Edit/Write to embed ASCII art in markdown
 6. **Verify** - Check that all sections preserved and formatting correct
+
+**IMPORTANT: Only create .md files. Do NOT save .plantuml or .atxt intermediate files.**
 
 ## PlantUML Invocation (CRITICAL)
 
@@ -68,7 +70,7 @@ Before completing work, verify:
 - [ ] Conditional logic (alt/else/loop) shown correctly
 - [ ] Notes and annotations included
 - [ ] Code blocks properly formatted with triple backticks
-- [ ] File structure matches project standards (see specs-crc/seq-*.md examples)
+- [ ] File structure matches project standards (see design/seq-*.md examples)
 - [ ] Used Skill tool (not direct shell calls)
 
 ## Example Invocation
@@ -77,7 +79,7 @@ Before completing work, verify:
 Task(
   subagent_type="diagram-converter",
   description="Convert P2P sequence diagrams",
-  prompt="Convert specs-crc/seq-establish-p2p-connection.md to PlantUML ASCII format.
+  prompt="Convert design/seq-establish-p2p-connection.md to PlantUML ASCII format.
 
   Process:
   1. Read the existing file
@@ -85,6 +87,6 @@ Task(
   3. Use Skill tool to invoke plantuml skill
   4. Update file with generated ASCII art
   5. Preserve all metadata and analysis sections
-  6. Verify formatting matches other sequence diagrams in specs-crc/"
+  6. Verify formatting matches other sequence diagrams in design/"
 )
 ```

@@ -2,16 +2,16 @@
  * Log Service - Application logging with profile-scoped persistence
  * Handles log entries with serial numbers and automatic trimming
  *
- * CRC: specs-crc/crc-LogService.md
- * Spec: specs/logging.md
- * Sequences: specs-crc/seq-log-message.md
+ * CRC: crc-LogService.md
+ * Spec: logging.md
+ * Sequences: seq-log-message.md
  */
 
 import { getProfileService } from './ProfileService.js';
 
 /**
  * ILogEntry - Single log entry with serial number and timestamp
- * CRC: specs-crc/crc-LogService.md
+ * CRC: crc-LogService.md
  */
 export interface ILogEntry {
     serial: number;
@@ -21,7 +21,7 @@ export interface ILogEntry {
 
 /**
  * ILogData - Log storage structure with metadata
- * CRC: specs-crc/crc-LogService.md
+ * CRC: crc-LogService.md
  */
 export interface ILogData {
     nextSerial: number;
@@ -31,7 +31,7 @@ export interface ILogData {
 
 /**
  * ILogService - Logging service interface
- * CRC: specs-crc/crc-LogService.md
+ * CRC: crc-LogService.md
  */
 export interface ILogService {
     log(message: string): void;
@@ -46,9 +46,9 @@ const STORAGE_KEY = 'hollowWorldLog';
 
 /**
  * LogService - Application logging with automatic trimming and persistence
- * CRC: specs-crc/crc-LogService.md
- * Spec: specs/logging.md
- * Sequences: specs-crc/seq-log-message.md
+ * CRC: crc-LogService.md
+ * Spec: logging.md
+ * Sequences: seq-log-message.md
  */
 export class LogService implements ILogService {
     private logData: ILogData;
@@ -85,7 +85,7 @@ export class LogService implements ILogService {
 
     /**
      * Persist log data to profile-scoped storage
-     * Sequence: specs-crc/seq-log-message.md (lines 51-61)
+     * Sequence: seq-log-message.md (lines 51-61)
      */
     private saveToStorage(): void {
         try {
@@ -97,7 +97,7 @@ export class LogService implements ILogService {
 
     /**
      * Trim log to 256KB when exceeding 512KB (keeps at least one entry)
-     * Sequence: specs-crc/seq-log-message.md (lines 39-49)
+     * Sequence: seq-log-message.md (lines 39-49)
      */
     private trimLog(): void {
         // Only trim if we exceed MAX_LOG_SIZE
@@ -125,7 +125,7 @@ export class LogService implements ILogService {
 
     /**
      * Add log entry with serial number and automatic trimming
-     * Sequence: specs-crc/seq-log-message.md (lines 19-64)
+     * Sequence: seq-log-message.md (lines 19-64)
      */
     log(message: string): void {
         const entry: ILogEntry = {

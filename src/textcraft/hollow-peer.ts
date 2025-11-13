@@ -2,9 +2,9 @@
  * HollowIPeer - Adapter implementing Textcraft's IPeer interface using Hollow's P2P infrastructure
  * Adapter Pattern: Bridges TextCraft MUD engine to Hollow's P2P infrastructure
  *
- * CRC: specs-crc/crc-HollowIPeer.md
- * Spec: specs/integrate-textcraft.md
- * Sequences: specs-crc/seq-textcraft-multiplayer-command.md
+ * CRC: crc-HollowIPeer.md
+ * Spec: integrate-textcraft.md
+ * Sequences: seq-textcraft-multiplayer-command.md
  */
 
 import { IPeer, PeerID, UserInfo } from './peer.js'

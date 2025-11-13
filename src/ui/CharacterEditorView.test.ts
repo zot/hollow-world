@@ -1,7 +1,7 @@
 /**
  * Unit tests for CharacterEditorView
  *
- * CRC: specs-crc/crc-CharacterEditorView.md
+ * CRC: crc-CharacterEditorView.md
  */
 
 // Unit tests for CharacterEditorView UI behavior

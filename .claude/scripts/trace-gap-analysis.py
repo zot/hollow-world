@@ -3,8 +3,9 @@
 Trace Gap Analysis - Find specs with no implementation references
 
 Scans the codebase to find:
-- CRC cards (specs-crc/crc-*.md) with no source code referencing them
-- UI specs (specs-ui/*.md) with no templates referencing them
+- CRC cards (design/crc-*.md) with no source code referencing them
+- Sequence diagrams (design/seq-*.md) with no source code referencing them
+- UI specs (design/ui-*.md) with no templates referencing them
 
 Usage:
     ./trace-gap-analysis.py [--output FILE]
@@ -24,7 +25,7 @@ from dataclasses import dataclass, field
 class SpecStatus:
     """Status of a spec file"""
     spec_file: str
-    spec_type: str  # "CRC" or "UI"
+    spec_type: str  # "CRC", "SEQ", or "UI"
     referenced_by: List[str] = field(default_factory=list)
 
     @property
@@ -32,20 +33,28 @@ class SpecStatus:
         return len(self.referenced_by) > 0
 
 def find_all_crc_cards() -> List[Path]:
-    """Find all CRC cards in specs-crc/"""
-    crc_dir = Path("specs-crc")
+    """Find all CRC cards in design/"""
+    crc_dir = Path("design")
     if not crc_dir.exists():
         return []
 
     return sorted(crc_dir.glob("crc-*.md"))
 
+def find_all_seq_diagrams() -> List[Path]:
+    """Find all sequence diagrams in design/"""
+    seq_dir = Path("design")
+    if not seq_dir.exists():
+        return []
+
+    return sorted(seq_dir.glob("seq-*.md"))
+
 def find_all_ui_specs() -> List[Path]:
-    """Find all UI specs in specs-ui/"""
-    ui_dir = Path("specs-ui")
+    """Find all UI specs in design/"""
+    ui_dir = Path("design")
     if not ui_dir.exists():
         return []
 
-    return sorted(ui_dir.glob("*.md"))
+    return sorted(ui_dir.glob("ui-*.md"))
 
 def find_source_files() -> List[Path]:
     """Find all TypeScript source files"""
@@ -76,13 +85,36 @@ def check_crc_references(crc_cards: List[Path], source_files: List[Path]) -> Dic
         for src_path in source_files:
             try:
                 content = src_path.read_text()
-                # Look for "CRC: specs-crc/crc-*.md" pattern
-                if f"specs-crc/{crc_name}" in content or f"CRC: {crc_name}" in content:
+                # Look for "CRC: design/crc-*.md" or "CRC: crc-*.md" pattern
+                if f"design/{crc_name}" in content or f"CRC: {crc_name}" in content:
                     status.referenced_by.append(str(src_path))
             except Exception as e:
                 print(f"⚠️  Error reading {src_path}: {e}", file=sys.stderr)
 
         results[crc_name] = status
+
+    return results
+
+def check_seq_references(seq_diagrams: List[Path], source_files: List[Path]) -> Dict[str, SpecStatus]:
+    """Check which sequence diagrams are referenced in source code"""
+
+    results = {}
+
+    for seq_path in seq_diagrams:
+        seq_name = seq_path.name
+        status = SpecStatus(spec_file=str(seq_path), spec_type="SEQ")
+
+        # Search for references to this sequence diagram in source files
+        for src_path in source_files:
+            try:
+                content = src_path.read_text()
+                # Look for "SEQ: design/seq-*.md" or "SEQ: seq-*.md" pattern
+                if f"design/{seq_name}" in content or f"SEQ: {seq_name}" in content:
+                    status.referenced_by.append(str(src_path))
+            except Exception as e:
+                print(f"⚠️  Error reading {src_path}: {e}", file=sys.stderr)
+
+        results[seq_name] = status
 
     return results
 
@@ -99,8 +131,8 @@ def check_ui_references(ui_specs: List[Path], template_files: List[Path]) -> Dic
         for tmpl_path in template_files:
             try:
                 content = tmpl_path.read_text()
-                # Look for "@layout: specs-ui/*.md" or similar pattern
-                if f"specs-ui/{ui_name}" in content or f"@layout: {ui_name}" in content or f"@layout {ui_name}" in content:
+                # Look for "@layout: design/ui-*.md" or similar pattern
+                if f"design/{ui_name}" in content or f"@layout: {ui_name}" in content or f"@layout {ui_name}" in content:
                     status.referenced_by.append(str(tmpl_path))
             except Exception as e:
                 print(f"⚠️  Error reading {tmpl_path}: {e}", file=sys.stderr)
@@ -137,7 +169,7 @@ def parse_ui_template_path(ui_path: Path) -> Optional[str]:
 
     return None
 
-def format_markdown_report(crc_results: Dict[str, SpecStatus], ui_results: Dict[str, SpecStatus]) -> str:
+def format_markdown_report(crc_results: Dict[str, SpecStatus], seq_results: Dict[str, SpecStatus], ui_results: Dict[str, SpecStatus]) -> str:
     """Format gap analysis as markdown"""
 
     output = []
@@ -196,6 +228,42 @@ def format_markdown_report(crc_results: Dict[str, SpecStatus], ui_results: Dict[
     output.append("---")
     output.append("")
 
+    # Sequence Diagrams Analysis
+    output.append("## Sequence Diagrams")
+    output.append("")
+
+    unimplemented_seq = [name for name, status in seq_results.items() if not status.is_implemented]
+    implemented_seq = [name for name, status in seq_results.items() if status.is_implemented]
+
+    output.append(f"**Total sequence diagrams:** {len(seq_results)}")
+    output.append(f"**Implemented:** {len(implemented_seq)}")
+    output.append(f"**Not implemented:** {len(unimplemented_seq)}")
+    output.append("")
+
+    if unimplemented_seq:
+        output.append("### ❌ Sequence Diagrams with NO Implementation")
+        output.append("")
+        output.append("These sequence diagrams have no source files referencing them:")
+        output.append("")
+
+        for seq_name in sorted(unimplemented_seq):
+            output.append(f"- **{seq_name}**")
+            output.append("")
+
+    if implemented_seq:
+        output.append("### ✅ Sequence Diagrams with Implementation")
+        output.append("")
+
+        for seq_name in sorted(implemented_seq):
+            status = seq_results[seq_name]
+            output.append(f"- **{seq_name}**")
+            for ref in status.referenced_by:
+                output.append(f"  - `{ref}`")
+            output.append("")
+
+    output.append("---")
+    output.append("")
+
     # UI Specs Analysis
     output.append("## UI Specs")
     output.append("")
@@ -241,7 +309,7 @@ def format_markdown_report(crc_results: Dict[str, SpecStatus], ui_results: Dict[
     output.append("")
 
     # Migration Priority
-    if unimplemented_crc or unimplemented_ui:
+    if unimplemented_crc or unimplemented_seq or unimplemented_ui:
         output.append("## 🎯 Migration Priority")
         output.append("")
         output.append("**Files to create/update:**")
@@ -259,6 +327,13 @@ def format_markdown_report(crc_results: Dict[str, SpecStatus], ui_results: Dict[
                         output.append(f"- [ ] Add traceability comments to `{impl_path}` → {crc_name}")
                     else:
                         output.append(f"- [ ] Create `{impl_path}` implementing {crc_name}")
+            output.append("")
+
+        if unimplemented_seq:
+            output.append("### Source Files (Sequence diagram implementations)")
+            output.append("")
+            for seq_name in sorted(unimplemented_seq):
+                output.append(f"- [ ] Add traceability comments referencing {seq_name}")
             output.append("")
 
         if unimplemented_ui:
@@ -303,8 +378,10 @@ def main():
     # Find all specs
     print("🔍 Finding specs...")
     crc_cards = find_all_crc_cards()
+    seq_diagrams = find_all_seq_diagrams()
     ui_specs = find_all_ui_specs()
     print(f"   Found {len(crc_cards)} CRC cards")
+    print(f"   Found {len(seq_diagrams)} sequence diagrams")
     print(f"   Found {len(ui_specs)} UI specs")
     print("")
 
@@ -323,6 +400,12 @@ def main():
     print(f"   {len(crc_results) - unimplemented_crc} implemented, {unimplemented_crc} not implemented")
     print("")
 
+    print("🔗 Checking sequence diagram references in source files...")
+    seq_results = check_seq_references(seq_diagrams, source_files)
+    unimplemented_seq = sum(1 for s in seq_results.values() if not s.is_implemented)
+    print(f"   {len(seq_results) - unimplemented_seq} implemented, {unimplemented_seq} not implemented")
+    print("")
+
     print("🔗 Checking UI spec references in template files...")
     ui_results = check_ui_references(ui_specs, template_files)
     unimplemented_ui = sum(1 for s in ui_results.values() if not s.is_implemented)
@@ -330,7 +413,7 @@ def main():
     print("")
 
     # Format report
-    markdown = format_markdown_report(crc_results, ui_results)
+    markdown = format_markdown_report(crc_results, seq_results, ui_results)
 
     # Write to file or stdout
     if output_file:

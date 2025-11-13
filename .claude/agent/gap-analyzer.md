@@ -36,8 +36,8 @@ You are a specialized agent that performs gap analysis for CRC modeling phases.
 ### 2. Read All Relevant Files
 
 **For this phase:**
-- All CRC cards (`specs-crc/crc-*.md`)
-- All sequence diagrams (`specs-crc/seq-*.md`)
+- All CRC cards (`design/crc-*.md`)
+- All sequence diagrams (`design/seq-*.md`)
 - All implementation files from CRC cards
 - All spec files referenced in CRC cards
 
@@ -145,13 +145,13 @@ Key findings:
 - [Highlight 2]
 - [Highlight 3]
 
-✅ Ready for review and insertion into specs-crc/gaps.md
+✅ Ready for review and insertion into design/gaps.md
 ```
 
 ### 6. Return Control
 
 **Main agent will:**
-1. Read both `.claude/scratch/gaps-phaseX.md` and `specs-crc/gaps.md`
+1. Read both `.claude/scratch/gaps-phaseX.md` and `design/gaps.md`
 2. Use Edit tool to insert phase analysis into gaps.md
 3. User reviews diff in IDE
 4. User approves or requests changes
@@ -228,6 +228,6 @@ Before writing analysis:
 2. **Be thorough** - This analysis guides future development
 3. **Be specific** - Include file paths and line numbers
 4. **Be actionable** - Clear recommendations for each issue
-5. **Follow existing format** - Match style in specs-crc/gaps.md
+5. **Follow existing format** - Match style in design/gaps.md
 6. **Document reality** - What's actually implemented, not ideal
 7. **Preserve design rationale** - Explain why deviations exist

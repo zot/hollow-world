@@ -1,6 +1,6 @@
 # Join Session Modal
 
-**CRC Card:** specs-crc/crc-JoinSessionModal.md
+**CRC Card:** design/crc-JoinSessionModal.md
 **Source Spec:** specs/game-worlds.md (line 138, implicit from multiplayer modes)
 
 ---
@@ -250,6 +250,6 @@ Modal dialog for joining a multiplayer MUD session hosted by another peer.
 
 ## Traceability
 
-**CRC Card:** specs-crc/crc-JoinSessionModal.md
-**Sequence:** specs-crc/seq-join-session.md
+**CRC Card:** design/crc-JoinSessionModal.md
+**Sequence:** design/seq-join-session.md
 **Future Implementation:** src/ui/JoinSessionModal.ts (to be created)

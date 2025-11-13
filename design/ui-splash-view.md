@@ -2,7 +2,7 @@
 
 **Source**: `specs/ui.splash.md`
 
-**Route**: `/` (see `manifest.md`)
+**Route**: `/` (see `manifest-ui.md`)
 
 **Purpose**: Main menu and navigation hub for Hollow World
 
@@ -250,7 +250,7 @@
 - Non-selectable elements (except peer ID when showing copy feedback)
 - Medium-light brown text color throughout
 
-**Western Frontier Styling** (from `manifest.md`):
+**Western Frontier Styling** (from `manifest-ui.md`):
 - Background: Dark brown/wood grain
 - Buttons: Dark brown background with gold text
 - Hover effects: Lighten background, gold border, subtle lift

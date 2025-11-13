@@ -1,11 +1,11 @@
 /**
  * Delete World Modal - Confirmation dialog for deleting MUD worlds
  *
- * CRC: specs-crc/crc-DeleteWorldModal.md
- * Spec: specs/game-worlds.md (line 127)
+ * CRC: crc-DeleteWorldModal.md
+ * Spec: game-worlds.md (line 127)
  * Sequences:
- * - specs-crc/seq-delete-world.md
- * UI Spec: specs-ui/ui-delete-world-modal.md
+ * - seq-delete-world.md
+ * UI Spec: ui-delete-world-modal.md
  */
 
 import type { MudStorage } from '../textcraft/model.js';
@@ -13,7 +13,7 @@ import type { TemplateEngine } from '../utils/TemplateEngine.js';
 
 /**
  * IDeleteWorldModal interface
- * CRC: specs-crc/crc-DeleteWorldModal.md
+ * CRC: crc-DeleteWorldModal.md
  */
 export interface IDeleteWorldModal {
     show(worldId: string, worldName: string): Promise<void>;
@@ -23,7 +23,7 @@ export interface IDeleteWorldModal {
 
 /**
  * DeleteWorldModal class - World deletion confirmation modal
- * CRC: specs-crc/crc-DeleteWorldModal.md
+ * CRC: crc-DeleteWorldModal.md
  */
 export class DeleteWorldModal implements IDeleteWorldModal {
     private modal: HTMLDivElement | null = null;
@@ -42,9 +42,9 @@ export class DeleteWorldModal implements IDeleteWorldModal {
     /**
      * show implementation - Display delete confirmation modal
      *
-     * CRC: specs-crc/crc-DeleteWorldModal.md
+     * CRC: crc-DeleteWorldModal.md
      * Sequences:
-     * - specs-crc/seq-delete-world.md
+     * - seq-delete-world.md
      */
     async show(worldId: string, worldName: string): Promise<void> {
         this.worldId = worldId;
@@ -67,9 +67,9 @@ export class DeleteWorldModal implements IDeleteWorldModal {
     /**
      * hide implementation - Close modal and remove overlay
      *
-     * CRC: specs-crc/crc-DeleteWorldModal.md
+     * CRC: crc-DeleteWorldModal.md
      * Sequences:
-     * - specs-crc/seq-delete-world.md
+     * - seq-delete-world.md
      */
     hide(): void {
         if (this.modal) {
@@ -82,9 +82,9 @@ export class DeleteWorldModal implements IDeleteWorldModal {
     /**
      * render implementation - Display confirmation message with world name
      *
-     * CRC: specs-crc/crc-DeleteWorldModal.md
+     * CRC: crc-DeleteWorldModal.md
      * Sequences:
-     * - specs-crc/seq-delete-world.md
+     * - seq-delete-world.md
      */
     private async render(): Promise<void> {
         // Load template
@@ -105,7 +105,7 @@ export class DeleteWorldModal implements IDeleteWorldModal {
     /**
      * attachEventListeners implementation - Attach handlers for modal actions
      *
-     * CRC: specs-crc/crc-DeleteWorldModal.md
+     * CRC: crc-DeleteWorldModal.md
      */
     private attachEventListeners(): void {
         if (!this.modal) return;
@@ -144,9 +144,9 @@ export class DeleteWorldModal implements IDeleteWorldModal {
     /**
      * handleConfirmDelete implementation - Delete world from storage
      *
-     * CRC: specs-crc/crc-DeleteWorldModal.md
+     * CRC: crc-DeleteWorldModal.md
      * Sequences:
-     * - specs-crc/seq-delete-world.md
+     * - seq-delete-world.md
      */
     private async handleConfirmDelete(): Promise<void> {
         try {
@@ -170,9 +170,9 @@ export class DeleteWorldModal implements IDeleteWorldModal {
     /**
      * handleCancel implementation - Close modal without deleting world
      *
-     * CRC: specs-crc/crc-DeleteWorldModal.md
+     * CRC: crc-DeleteWorldModal.md
      * Sequences:
-     * - specs-crc/seq-delete-world.md
+     * - seq-delete-world.md
      */
     private handleCancel(): void {
         this.hide();
@@ -181,7 +181,7 @@ export class DeleteWorldModal implements IDeleteWorldModal {
     /**
      * destroy implementation - Cleanup resources
      *
-     * CRC: specs-crc/crc-DeleteWorldModal.md
+     * CRC: crc-DeleteWorldModal.md
      */
     destroy(): void {
         this.hide();

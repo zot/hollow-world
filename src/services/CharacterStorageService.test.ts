@@ -2,9 +2,9 @@
  * Unit tests for CharacterStorageService following SOLID principles
  * "Test everything twice, trust nothing once"
  *
- * CRC: specs-crc/crc-CharacterStorageService.md
- * Spec: specs/characters.md, specs/storage.md
- * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md
+ * CRC: crc-CharacterStorageService.md
+ * Spec: characters.md, storage.md
+ * Sequences: seq-save-character.md, seq-load-character.md
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';

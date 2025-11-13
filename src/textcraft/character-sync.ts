@@ -2,9 +2,9 @@
  * Character Access System (Phase 3)
  * Provides access to Hollow World character data from TextCraft Things
  *
- * CRC: specs-crc/crc-CharacterSync.md
- * Spec: specs/integrate-textcraft.md
- * Sequences: specs-crc/seq-textcraft-character-sync.md
+ * CRC: crc-CharacterSync.md
+ * Spec: integrate-textcraft.md
+ * Sequences: seq-textcraft-character-sync.md
  *
  * Design principle: Things only store characterId, NOT character data
  * Character data is retrieved from the world's characters store when needed

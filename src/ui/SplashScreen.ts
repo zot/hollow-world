@@ -1,8 +1,8 @@
 /**
  * SplashScreen - Main Menu Interface
  *
- * CRC: specs-crc/crc-SplashScreen.md
- * Spec: specs/ui.splash.md
+ * CRC: crc-SplashScreen.md
+ * Spec: ui.splash.md
  * Sequences: seq-app-startup.md, seq-navigate-from-splash.md
  *
  * @template public/templates/splash-screen.html
@@ -24,7 +24,7 @@ export interface IUIComponent {
 /**
  * ISplashScreen interface
  *
- * CRC: specs-crc/crc-SplashScreen.md
+ * CRC: crc-SplashScreen.md
  */
 export interface ISplashScreen extends IUIComponent {
     updatePeerId(peerId: string): void;
@@ -71,8 +71,8 @@ const DEFAULT_CONFIG: ISplashScreenConfig = {
 /**
  * SplashScreen - Main menu with navigation to all app sections
  *
- * CRC: specs-crc/crc-SplashScreen.md
- * Spec: specs/ui.splash.md
+ * CRC: crc-SplashScreen.md
+ * Spec: ui.splash.md
  * Sequences: seq-app-startup.md, seq-navigate-from-splash.md
  *
  * Purpose: Display application title, peer ID, and navigation buttons to access
@@ -124,7 +124,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * render implementation
      *
-     * CRC: specs-crc/crc-SplashScreen.md
+     * CRC: crc-SplashScreen.md
      * Sequence: seq-app-startup.md
      */
     async render(container: HTMLElement): Promise<void> {
@@ -212,7 +212,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * updatePeerId implementation
      *
-     * CRC: specs-crc/crc-SplashScreen.md
+     * CRC: crc-SplashScreen.md
      */
     updatePeerId(peerId: string): void {
         console.log('📍 updatePeerId called with:', peerId);
@@ -235,7 +235,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * destroy implementation
      *
-     * CRC: specs-crc/crc-SplashScreen.md
+     * CRC: crc-SplashScreen.md
      */
     destroy(): void {
         if (this.container) {
@@ -254,7 +254,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * getContainer implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     getContainer(): HTMLElement | null {
         return this.container;
@@ -263,7 +263,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * show implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     show(): void {
         if (this.container) {
@@ -274,7 +274,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * hide implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     hide(): void {
         if (this.container) {
@@ -326,7 +326,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * setupPeerIdInteraction implementation
      *
-     * CRC: specs-crc/crc-SplashScreen.md
+     * CRC: crc-SplashScreen.md
      */
     private setupPeerIdInteraction(): void {
         if (!this.peerIdElement) return;
@@ -346,7 +346,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * setupButtonInteractions implementation
      *
-     * CRC: specs-crc/crc-SplashScreen.md
+     * CRC: crc-SplashScreen.md
      * Sequence: seq-navigate-from-splash.md
      */
     private setupButtonInteractions(): void {
@@ -420,7 +420,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * refreshMusicButtonState implementation
      *
-     * CRC: specs-crc/crc-SplashScreen.md
+     * CRC: crc-SplashScreen.md
      */
     refreshMusicButtonState(): void {
         AudioControlUtils.updateMusicButtonState(this);
@@ -429,7 +429,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * copyPeerIdToClipboard implementation
      *
-     * CRC: specs-crc/crc-SplashScreen.md
+     * CRC: crc-SplashScreen.md
      */
     private async copyPeerIdToClipboard(): Promise<void> {
         if (!this.peerIdElement) return;
@@ -477,7 +477,7 @@ export class SplashScreen implements ISplashScreen, IEnhancedAudioControlSupport
     /**
      * showCreditsPopup implementation
      *
-     * CRC: specs-crc/crc-SplashScreen.md
+     * CRC: crc-SplashScreen.md
      */
     private async showCreditsPopup(): Promise<void> {
         try {

@@ -1,11 +1,11 @@
 /**
  * Create World Modal - Dialog for creating new MUD worlds
  *
- * CRC: specs-crc/crc-CreateWorldModal.md
- * Spec: specs/game-worlds.md (lines 126-128)
+ * CRC: crc-CreateWorldModal.md
+ * Spec: game-worlds.md (lines 126-128)
  * Sequences:
- * - specs-crc/seq-create-world.md
- * UI Spec: specs-ui/ui-create-world-modal.md
+ * - seq-create-world.md
+ * UI Spec: ui-create-world-modal.md
  */
 
 import type { MudStorage } from '../textcraft/model.js';
@@ -13,7 +13,7 @@ import type { TemplateEngine } from '../utils/TemplateEngine.js';
 
 /**
  * ICreateWorldModal interface
- * CRC: specs-crc/crc-CreateWorldModal.md
+ * CRC: crc-CreateWorldModal.md
  */
 export interface ICreateWorldModal {
     show(): Promise<void>;
@@ -23,7 +23,7 @@ export interface ICreateWorldModal {
 
 /**
  * CreateWorldModal class - New world creation dialog
- * CRC: specs-crc/crc-CreateWorldModal.md
+ * CRC: crc-CreateWorldModal.md
  */
 export class CreateWorldModal implements ICreateWorldModal {
     private modal: HTMLDivElement | null = null;
@@ -44,9 +44,9 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * show implementation - Display create world modal dialog
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      * Sequences:
-     * - specs-crc/seq-create-world.md
+     * - seq-create-world.md
      */
     async show(): Promise<void> {
         // Render modal
@@ -70,9 +70,9 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * hide implementation - Close modal and remove overlay
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      * Sequences:
-     * - specs-crc/seq-create-world.md
+     * - seq-create-world.md
      */
     hide(): void {
         if (this.modal) {
@@ -90,9 +90,9 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * render implementation - Display form with name, description, YAML option
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      * Sequences:
-     * - specs-crc/seq-create-world.md
+     * - seq-create-world.md
      */
     private async render(): Promise<void> {
         // Load template
@@ -110,7 +110,7 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * attachEventListeners implementation - Attach handlers for modal actions
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      */
     private attachEventListeners(): void {
         if (!this.modal) return;
@@ -164,9 +164,9 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * handleCreate implementation - Validate input and create new world with default settings
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      * Sequences:
-     * - specs-crc/seq-create-world.md
+     * - seq-create-world.md
      */
     private async handleCreate(): Promise<void> {
         if (!this.modal) return;
@@ -216,9 +216,9 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * handleCancel implementation - Close modal without creating world
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      * Sequences:
-     * - specs-crc/seq-create-world.md
+     * - seq-create-world.md
      */
     private handleCancel(): void {
         this.hide();
@@ -227,7 +227,7 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * handleYamlSelect implementation - Allow user to select YAML file for import
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      */
     private handleYamlSelect(event: Event): void {
         if (!this.modal) return;
@@ -244,9 +244,9 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * createDefaultWorld implementation - Create blank world with minimal starter content
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      * Sequences:
-     * - specs-crc/seq-create-world.md
+     * - seq-create-world.md
      */
     private async createDefaultWorld(): Promise<void> {
         // Create world using MudStorage.openWorld (creates if doesn't exist)
@@ -263,7 +263,7 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * importYamlWorld implementation - Parse YAML and create world from file
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      */
     private async importYamlWorld(file: File): Promise<void> {
         // Read YAML file
@@ -280,7 +280,7 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * showError implementation - Display inline error message
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      */
     private showError(message: string): void {
         if (!this.modal) return;
@@ -304,7 +304,7 @@ export class CreateWorldModal implements ICreateWorldModal {
     /**
      * destroy implementation - Cleanup resources
      *
-     * CRC: specs-crc/crc-CreateWorldModal.md
+     * CRC: crc-CreateWorldModal.md
      */
     destroy(): void {
         this.hide();

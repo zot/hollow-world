@@ -1,7 +1,7 @@
 /**
  * ViewManager - Centralized view visibility coordinator
  *
- * Spec: specs/view-management.md
+ * Spec: view-management.md
  *
  * Implements single-active-view pattern where only one view is visible at a time.
  * Manages view registration, switching, and visibility coordination.
@@ -10,7 +10,7 @@
 /**
  * IView interface - All views must implement this interface
  *
- * Spec: specs/view-management.md (View Interface section)
+ * Spec: view-management.md (View Interface section)
  */
 export interface IView {
     /**
@@ -38,7 +38,7 @@ export interface IView {
 /**
  * IViewManager interface
  *
- * Spec: specs/view-management.md (ViewManager Class section)
+ * Spec: view-management.md (ViewManager Class section)
  */
 export interface IViewManager {
     /**
@@ -77,7 +77,7 @@ export interface IViewManager {
 /**
  * ViewManager - Centralized view visibility coordinator
  *
- * Spec: specs/view-management.md
+ * Spec: view-management.md
  *
  * Responsibilities:
  * - Maintain registry of all application views
@@ -92,7 +92,7 @@ export class ViewManager implements IViewManager {
     /**
      * registerView implementation
      *
-     * Spec: specs/view-management.md (ViewManager Class section)
+     * Spec: view-management.md (ViewManager Class section)
      */
     registerView(name: string, view: IView): void {
         if (this.views.has(name)) {
@@ -105,7 +105,7 @@ export class ViewManager implements IViewManager {
     /**
      * showView implementation
      *
-     * Spec: specs/view-management.md (ViewManager Class section)
+     * Spec: view-management.md (ViewManager Class section)
      *
      * Algorithm:
      * 1. Validate view exists
@@ -141,7 +141,7 @@ export class ViewManager implements IViewManager {
     /**
      * getActiveView implementation
      *
-     * Spec: specs/view-management.md (ViewManager Class section)
+     * Spec: view-management.md (ViewManager Class section)
      */
     getActiveView(): string | null {
         return this.activeView;
@@ -150,7 +150,7 @@ export class ViewManager implements IViewManager {
     /**
      * hideAll implementation
      *
-     * Spec: specs/view-management.md (ViewManager Class section)
+     * Spec: view-management.md (ViewManager Class section)
      */
     hideAll(): void {
         console.log('ViewManager: Hiding all views');
@@ -164,7 +164,7 @@ export class ViewManager implements IViewManager {
     /**
      * hasView implementation
      *
-     * Spec: specs/view-management.md (ViewManager Class section)
+     * Spec: view-management.md (ViewManager Class section)
      */
     hasView(name: string): boolean {
         return this.views.has(name);

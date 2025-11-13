@@ -1,8 +1,8 @@
 /**
  * AudioControlUtils - Shared audio control UI utilities
  *
- * CRC: specs-crc/crc-AudioControlUtils.md
- * Spec: specs/audio.md
+ * CRC: crc-AudioControlUtils.md
+ * Spec: audio.md
  * Sequences: seq-app-startup.md, seq-play-sound-effect.md
  */
 
@@ -22,7 +22,7 @@ export class AudioControlUtils {
     /**
      * toggleMusic implementation
      *
-     * CRC: specs-crc/crc-AudioControlUtils.md
+     * CRC: crc-AudioControlUtils.md
      */
     static async toggleMusic(component: IAudioControlSupport): Promise<void> {
         if (!component.audioManager) return;
@@ -38,7 +38,7 @@ export class AudioControlUtils {
     /**
      * updateMusicButtonState implementation
      *
-     * CRC: specs-crc/crc-AudioControlUtils.md
+     * CRC: crc-AudioControlUtils.md
      */
     static updateMusicButtonState(component: IAudioControlSupport): void {
         if (!component.musicButtonElement || !component.audioManager) return;
@@ -51,7 +51,7 @@ export class AudioControlUtils {
     /**
      * setupMusicButtonEventListener implementation
      *
-     * CRC: specs-crc/crc-AudioControlUtils.md
+     * CRC: crc-AudioControlUtils.md
      */
     static setupMusicButtonEventListener(component: IAudioControlSupport): void {
         if (component.musicButtonElement && component.audioManager) {
@@ -64,7 +64,7 @@ export class AudioControlUtils {
     /**
      * renderEnhancedAudioControl implementation
      *
-     * CRC: specs-crc/crc-AudioControlUtils.md
+     * CRC: crc-AudioControlUtils.md
      * Sequence: seq-app-startup.md
      */
     static async renderEnhancedAudioControl(component: IEnhancedAudioControlSupport): Promise<string> {
@@ -103,7 +103,7 @@ export class AudioControlUtils {
     /**
      * setupEnhancedAudioControls implementation
      *
-     * CRC: specs-crc/crc-AudioControlUtils.md
+     * CRC: crc-AudioControlUtils.md
      * Sequence: seq-app-startup.md
      */
     static setupEnhancedAudioControls(component: IEnhancedAudioControlSupport): void {
@@ -184,7 +184,7 @@ export class AudioControlUtils {
     /**
      * updateEnhancedAudioState implementation
      *
-     * CRC: specs-crc/crc-AudioControlUtils.md
+     * CRC: crc-AudioControlUtils.md
      * Sequence: seq-app-startup.md
      */
     static updateEnhancedAudioState(component: IEnhancedAudioControlSupport): void {
@@ -238,7 +238,7 @@ export class AudioControlUtils {
     /**
      * playButtonSound implementation
      *
-     * CRC: specs-crc/crc-AudioControlUtils.md
+     * CRC: crc-AudioControlUtils.md
      * Sequence: seq-play-sound-effect.md
      */
     static async playButtonSound(audioManager?: IAudioManager): Promise<void> {

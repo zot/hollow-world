@@ -1,13 +1,13 @@
 /**
  * Adventure Mode - Coordinator managing world list and adventure views
  *
- * CRC: specs-crc/crc-AdventureMode.md
- * Spec: specs/game-worlds.md (lines 66-73)
+ * CRC: crc-AdventureMode.md
+ * Spec: game-worlds.md (lines 66-73)
  * Sequences:
- * - specs-crc/seq-start-adventure-mode.md
- * - specs-crc/seq-select-world.md
- * - specs-crc/seq-switch-to-world-list.md
- * UI Spec: specs-ui/ui-adventure-mode.md
+ * - seq-start-adventure-mode.md
+ * - seq-select-world.md
+ * - seq-switch-to-world-list.md
+ * UI Spec: ui-adventure-mode.md
  */
 
 import type { MudStorage } from '../textcraft/model.js';
@@ -24,7 +24,7 @@ const ACTIVE_WORLD_ID_KEY = 'activeWorldId';
 
 /**
  * IAdventureMode interface
- * CRC: specs-crc/crc-AdventureMode.md
+ * CRC: crc-AdventureMode.md
  */
 export interface IAdventureMode {
     initialize(): void;
@@ -40,7 +40,7 @@ export interface IAdventureMode {
 
 /**
  * AdventureMode class - View coordinator for TextCraft MUD integration
- * CRC: specs-crc/crc-AdventureMode.md
+ * CRC: crc-AdventureMode.md
  */
 export class AdventureMode implements IAdventureMode {
     private currentView: 'worldList' | 'adventure' | null = null;
@@ -72,10 +72,10 @@ export class AdventureMode implements IAdventureMode {
     /**
      * initialize implementation - Set up router integration and create child views
      *
-     * CRC: specs-crc/crc-AdventureMode.md
+     * CRC: crc-AdventureMode.md
      * Sequences:
-     * - specs-crc/seq-start-adventure-mode.md
-     * Spec: specs/game-worlds.md (Adventure Output History Persistence)
+     * - seq-start-adventure-mode.md
+     * Spec: game-worlds.md (Adventure Output History Persistence)
      */
     initialize(): void {
         // Load persisted activeWorldId
@@ -115,10 +115,10 @@ export class AdventureMode implements IAdventureMode {
     /**
      * showWorldList implementation - Display world list overlay
      *
-     * CRC: specs-crc/crc-AdventureMode.md
+     * CRC: crc-AdventureMode.md
      * Sequences:
-     * - specs-crc/seq-start-adventure-mode.md
-     * - specs-crc/seq-switch-to-world-list.md
+     * - seq-start-adventure-mode.md
+     * - seq-switch-to-world-list.md
      */
     async showWorldList(): Promise<void> {
         // Create WorldListView if not exists
@@ -155,9 +155,9 @@ export class AdventureMode implements IAdventureMode {
     /**
      * showAdventure implementation - Display adventure view for specified world
      *
-     * CRC: specs-crc/crc-AdventureMode.md
+     * CRC: crc-AdventureMode.md
      * Sequences:
-     * - specs-crc/seq-select-world.md
+     * - seq-select-world.md
      *
      * Note: This activates the world (sets activeWorldId) or returns to active world
      */
@@ -238,9 +238,9 @@ export class AdventureMode implements IAdventureMode {
     /**
      * handleWorldSelection implementation - Switch from world list to adventure view
      *
-     * CRC: specs-crc/crc-AdventureMode.md
+     * CRC: crc-AdventureMode.md
      * Sequences:
-     * - specs-crc/seq-select-world.md
+     * - seq-select-world.md
      */
     handleWorldSelection(worldId: string): void {
         // Navigation is handled by WorldListView clicking Start button
@@ -251,9 +251,9 @@ export class AdventureMode implements IAdventureMode {
     /**
      * handleBackToList implementation - Switch from adventure view to world list
      *
-     * CRC: specs-crc/crc-AdventureMode.md
+     * CRC: crc-AdventureMode.md
      * Sequences:
-     * - specs-crc/seq-switch-to-world-list.md
+     * - seq-switch-to-world-list.md
      *
      * Note: Does NOT terminate active world - just shows world list overlay
      */
@@ -265,8 +265,8 @@ export class AdventureMode implements IAdventureMode {
     /**
      * getDefaultRoute implementation - Determine route based on active world state
      *
-     * CRC: specs-crc/crc-AdventureMode.md
-     * Spec: specs/ui.splash.md (Adventure Mode Navigation)
+     * CRC: crc-AdventureMode.md
+     * Spec: ui.splash.md (Adventure Mode Navigation)
      *
      * Returns the appropriate route for entering adventure mode:
      * - If active world exists: /world/:worldId (return to gameplay)
@@ -283,7 +283,7 @@ export class AdventureMode implements IAdventureMode {
     /**
      * getContainer implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     getContainer(): HTMLElement | null {
         return this.container;
@@ -292,7 +292,7 @@ export class AdventureMode implements IAdventureMode {
     /**
      * show implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      *
      * Shows the adventure mode container and ensures other views are hidden
      */
@@ -312,7 +312,7 @@ export class AdventureMode implements IAdventureMode {
     /**
      * hide implementation - IView interface
      *
-     * Spec: specs/view-management.md
+     * Spec: view-management.md
      */
     hide(): void {
         if (this.container) {
@@ -323,8 +323,8 @@ export class AdventureMode implements IAdventureMode {
     /**
      * getActiveWorldId implementation - Get the currently active world ID
      *
-     * CRC: specs-crc/crc-AdventureMode.md
-     * Spec: specs/game-worlds.md (Active World State Management)
+     * CRC: crc-AdventureMode.md
+     * Spec: game-worlds.md (Active World State Management)
      *
      * Returns the ID of the active world, or null if no world is active
      */
@@ -335,8 +335,8 @@ export class AdventureMode implements IAdventureMode {
     /**
      * cleanup implementation - Dispose of resources when leaving adventure mode
      *
-     * CRC: specs-crc/crc-AdventureMode.md
-     * Spec: specs/game-worlds.md (Active World State Management - World Termination)
+     * CRC: crc-AdventureMode.md
+     * Spec: game-worlds.md (Active World State Management - World Termination)
      *
      * Note: Cleans up UI resources but preserves activeWorldId for page reload persistence
      */
@@ -369,8 +369,8 @@ export class AdventureMode implements IAdventureMode {
     /**
      * terminateActiveWorld implementation - Explicitly terminate active world
      *
-     * CRC: specs-crc/crc-AdventureMode.md
-     * Spec: specs/game-worlds.md (Active World State Management - World Termination)
+     * CRC: crc-AdventureMode.md
+     * Spec: game-worlds.md (Active World State Management - World Termination)
      *
      * Call this when user explicitly leaves adventure mode (navigates to splash/characters/friends/settings)
      */

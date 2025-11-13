@@ -1,7 +1,7 @@
 /**
  * Unit tests for TemplateEngine
  *
- * CRC: specs-crc/crc-TemplateEngine.md
+ * CRC: crc-TemplateEngine.md
  */
 
 import { TemplateEngine } from './TemplateEngine.js';

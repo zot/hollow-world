@@ -2,9 +2,9 @@
  * Character Sheet Data Models and Types for Hollow RPG System
  * Following SOLID principles with clear interfaces
  *
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
- * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md, specs-crc/seq-validate-character.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
+ * Sequences: seq-save-character.md, seq-load-character.md, seq-validate-character.md
  */
 
 export enum AttributeCategory {
@@ -21,7 +21,7 @@ export enum AttributeCostMultiplier {
 
 /**
  * AttributeType - Eight core attributes organized by category
- * CRC: specs-crc/crc-Character.md
+ * CRC: crc-Character.md
  */
 export enum AttributeType {
     // Physical
@@ -47,8 +47,8 @@ export interface IAttributeDefinition {
 
 /**
  * IAttributes - Character attribute values
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
  */
 export interface IAttributes {
     [AttributeType.DEX]: number;
@@ -63,8 +63,8 @@ export interface IAttributes {
 
 /**
  * ISkill - Character skill definition
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
  */
 export interface ISkill {
     id: string;
@@ -79,8 +79,8 @@ export interface ISkill {
 
 /**
  * IFieldSkillEntry - Skill entry within a field with experience tracking
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
  */
 export interface IFieldSkillEntry {
     skillId: string;
@@ -89,8 +89,8 @@ export interface IFieldSkillEntry {
 
 /**
  * IField - Character field with skills and progression
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
  */
 export interface IField {
     id: string;
@@ -118,8 +118,8 @@ export interface IDrawback {
 
 /**
  * IItem - Equipment item (weapons, gadgets, ordinary gear)
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
  */
 export interface IItem {
     id: string;
@@ -143,8 +143,8 @@ export interface ICompanion {
 
 /**
  * IHollowData - Hollow-specific character data (dust, debt, marks)
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
  */
 export interface IHollowData {
     dust: number; // Current dust grains
@@ -157,9 +157,9 @@ export interface IHollowData {
 
 /**
  * ICharacter - Complete character data model
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
- * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-load-character.md, specs-crc/seq-validate-character.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
+ * Sequences: seq-save-character.md, seq-load-character.md, seq-validate-character.md
  */
 export interface ICharacter {
     // Basic Info
@@ -251,8 +251,8 @@ export interface ICharacterSheetCallbacks {
 
 /**
  * ATTRIBUTE_DEFINITIONS - System-wide attribute definitions with costs and descriptions
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
  */
 export const ATTRIBUTE_DEFINITIONS: Record<AttributeType, IAttributeDefinition> = {
     [AttributeType.DEX]: {
@@ -466,8 +466,8 @@ export const STANDARD_SKILLS: Record<string, ISkill> = {
 
 /**
  * CHARACTER_CREATION_RULES - Character creation constraints and starting values
- * CRC: specs-crc/crc-Character.md
- * Spec: specs/characters.md
+ * CRC: crc-Character.md
+ * Spec: characters.md
  */
 export const CHARACTER_CREATION_RULES: ICharacterCreationRules = {
     startingAttributeChips: 16,

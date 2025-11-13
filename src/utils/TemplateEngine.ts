@@ -1,15 +1,15 @@
 /**
  * TemplateEngine - HTML Template Rendering
  *
- * CRC: specs-crc/crc-TemplateEngine.md
- * Spec: specs/ui.md, specs/coding-standards.md
- * Sequences: specs-crc/seq-edit-character.md, specs-crc/seq-render-character-list.md
+ * CRC: crc-TemplateEngine.md
+ * Spec: ui.md, coding-standards.md
+ * Sequences: seq-edit-character.md, seq-render-character-list.md
  */
 
 /**
  * ITemplateEngine interface
  *
- * CRC: specs-crc/crc-TemplateEngine.md
+ * CRC: crc-TemplateEngine.md
  */
 export interface ITemplateEngine {
     loadTemplate(templateName: string): Promise<string>;
@@ -28,7 +28,7 @@ export class TemplateEngine implements ITemplateEngine {
     /**
      * loadTemplate implementation
      *
-     * CRC: specs-crc/crc-TemplateEngine.md
+     * CRC: crc-TemplateEngine.md
      */
     async loadTemplate(templateName: string): Promise<string> {
         // Check cache first
@@ -57,7 +57,7 @@ export class TemplateEngine implements ITemplateEngine {
     /**
      * renderTemplate implementation
      *
-     * CRC: specs-crc/crc-TemplateEngine.md
+     * CRC: crc-TemplateEngine.md
      */
     renderTemplate(template: string, data: Record<string, any>): string {
         let result = template;
@@ -191,7 +191,7 @@ export class TemplateEngine implements ITemplateEngine {
     /**
      * clearCache implementation
      *
-     * CRC: specs-crc/crc-TemplateEngine.md
+     * CRC: crc-TemplateEngine.md
      */
     clearCache(): void {
         this.templateCache.clear();

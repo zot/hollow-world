@@ -1,9 +1,9 @@
 /**
  * Unit tests for LogService - Application logging with automatic trimming
  *
- * CRC: specs-crc/crc-LogService.md
+ * CRC: design/crc-LogService.md
  * Spec: specs/logging.md
- * Sequences: specs-crc/seq-log-message.md
+ * Sequences: design/seq-log-message.md
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';

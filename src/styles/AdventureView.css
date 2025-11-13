@@ -703,7 +703,7 @@
 }
 
 /* Active World Indicator */
-/* UI Spec: specs-ui/ui-world-list-view.md (World Item - Active World) */
+/* UI Spec: design/ui-world-list-view.md (World Item - Active World) */
 .world-list-item--active {
     border-color: #FFD700;
     background: rgba(212, 175, 55, 0.1); /* Gold tint */
@@ -730,7 +730,7 @@
 }
 
 /* Switch World Confirmation Modal */
-/* UI Spec: specs-ui/ui-world-list-view.md (Switch World Confirmation Modal) */
+/* UI Spec: design/ui-world-list-view.md (Switch World Confirmation Modal) */
 .switch-world-modal-overlay {
     position: fixed;
     top: 0;

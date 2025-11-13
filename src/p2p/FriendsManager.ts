@@ -2,9 +2,9 @@
  * Friends Manager - Friend data management, persistence, and ban list
  * Single Responsibility: Manages friend data only (no P2P logic, no UI)
  *
- * CRC: specs-crc/crc-FriendsManager.md
- * Spec: specs/friends.md, specs/p2p.md
- * Sequences: specs-crc/seq-add-friend-by-peerid.md, specs-crc/seq-friend-status-change.md
+ * CRC: crc-FriendsManager.md
+ * Spec: friends.md, p2p.md
+ * Sequences: seq-add-friend-by-peerid.md, seq-friend-status-change.md
  */
 
 import type { IFriend, IFriendsManager, IStorageProvider, IFriendWorld, IFriendCharacter, ICharacter, BanList, IBannedPeerEntry } from './types.js';
@@ -13,7 +13,7 @@ import { calculateCharacterHash } from '../utils/characterHash.js';
 
 /**
  * FriendsManager class - Friend data management with observer pattern
- * CRC: specs-crc/crc-FriendsManager.md
+ * CRC: crc-FriendsManager.md
  */
 export class FriendsManager implements IFriendsManager {
     private friends: Map<string, IFriend> = new Map(); // peerId -> IFriend
@@ -50,7 +50,7 @@ export class FriendsManager implements IFriendsManager {
 
     /**
      * Load friends from storage
-     * Sequence: specs-crc/seq-add-friend-by-peerid.md (initialization)
+     * Sequence: seq-add-friend-by-peerid.md (initialization)
      */
     async loadFriends(): Promise<void> {
         const friendsData = await this.storageProvider.load<Record<string, IFriend>>(STORAGE_KEY_FRIENDS);
@@ -73,7 +73,7 @@ export class FriendsManager implements IFriendsManager {
 
     /**
      * Add friend to list and persist
-     * Sequence: specs-crc/seq-add-friend-by-peerid.md (lines TBD)
+     * Sequence: seq-add-friend-by-peerid.md (lines TBD)
      */
     addFriend(friend: IFriend): void {
         this.friends.set(friend.peerId, friend);
@@ -82,7 +82,7 @@ export class FriendsManager implements IFriendsManager {
 
     /**
      * Update friend data and persist
-     * Sequence: specs-crc/seq-friend-status-change.md (lines TBD)
+     * Sequence: seq-friend-status-change.md (lines TBD)
      */
     updateFriend(peerId: string, friend: IFriend): void {
         if (this.friends.has(peerId)) {

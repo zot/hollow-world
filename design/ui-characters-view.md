@@ -2,7 +2,7 @@
 
 **Source**: `specs/ui.characters.md` → Character List Display section
 
-**Route**: `/characters` (see `manifest.md`)
+**Route**: `/characters` (see `manifest-ui.md`)
 
 **Purpose**: Display list of all characters with quick stats overview
 
@@ -292,7 +292,7 @@
 
 ## Theme Requirements
 
-**Western Frontier Styling** (from `manifest.md`):
+**Western Frontier Styling** (from `manifest-ui.md`):
 - Character cards: Parchment-style boxes with brown borders
 - Hover effects: Gold border, subtle glow
 - Buttons: Dark brown background, gold text

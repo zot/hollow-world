@@ -183,13 +183,13 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-switch-to-world-list.md
 
 **UI Specs:**
-- specs-ui/ui-adventure-mode.md
-- specs-ui/ui-adventure-view.md (updated)
-- specs-ui/ui-world-list-view.md (updated)
-- specs-ui/ui-create-world-modal.md
-- specs-ui/ui-world-settings-modal.md
-- specs-ui/ui-delete-world-modal.md
-- specs-ui/ui-join-session-modal.md
+- design/ui-adventure-mode.md
+- design/ui-adventure-view.md (updated)
+- design/ui-world-list-view.md (updated)
+- design/ui-create-world-modal.md
+- design/ui-world-settings-modal.md
+- design/ui-delete-world-modal.md
+- design/ui-join-session-modal.md
 
 ---
 
@@ -2348,7 +2348,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-select-world.md
 - seq-switch-to-world-list.md
 
-**UI Spec:** specs-ui/ui-adventure-mode.md
+**UI Spec:** design/ui-adventure-mode.md
 
 ---
 
@@ -2408,7 +2408,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-join-session.md
 - seq-switch-to-world-list.md
 
-**UI Spec:** specs-ui/ui-adventure-view.md
+**UI Spec:** design/ui-adventure-view.md
 
 ---
 
@@ -2463,7 +2463,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-delete-world.md
 - seq-switch-to-world-list.md
 
-**UI Spec:** specs-ui/ui-world-list-view.md
+**UI Spec:** design/ui-world-list-view.md
 
 ---
 
@@ -2508,7 +2508,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 **Appears in Sequences:**
 - seq-create-world.md
 
-**UI Spec:** specs-ui/ui-create-world-modal.md
+**UI Spec:** design/ui-create-world-modal.md
 
 ---
 
@@ -2557,7 +2557,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 **Appears in Sequences:**
 - seq-edit-world-settings.md
 
-**UI Spec:** specs-ui/ui-world-settings-modal.md
+**UI Spec:** design/ui-world-settings-modal.md
 
 ---
 
@@ -2595,7 +2595,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 **Appears in Sequences:**
 - seq-delete-world.md
 
-**UI Spec:** specs-ui/ui-delete-world-modal.md
+**UI Spec:** design/ui-delete-world-modal.md
 
 ---
 
@@ -2638,7 +2638,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 **Appears in Sequences:**
 - seq-join-session.md
 
-**UI Spec:** specs-ui/ui-join-session-modal.md
+**UI Spec:** design/ui-join-session-modal.md
 
 ---
 
@@ -2676,7 +2676,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-host-session.md
 - seq-join-session.md
 
-**UI Spec:** (Embedded in specs-ui/ui-adventure-view.md)
+**UI Spec:** (Embedded in design/ui-adventure-view.md)
 
 ---
 
@@ -2846,12 +2846,12 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 
 **Verification:**
 - [ ] Can grep `@layout` in all templates and find matches
-- [ ] All referenced `specs-ui/*.md` files exist
+- [ ] All referenced `design/*.md` files exist
 - [ ] No templates missing header comments
-- [ ] Template checklist in `specs-ui/traceability-templates.md` complete
+- [ ] Template checklist in `design/traceability-templates.md` complete
 
 **Documentation:**
-- [x] `specs-ui/traceability-templates.md` created with rules and checklist
+- [x] `design/traceability-templates.md` created with rules and checklist
 - [x] Phase 8 section added to `traceability.md`
 - [ ] All 70 templates updated with traceability comments
 
@@ -2908,14 +2908,14 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - Test files: 0 (E2E tests)
 
 **Phase 8:**
-- Layout specs: 6 (specs-ui/*.md)
+- Layout specs: 6 (design/*.md)
 - UI templates: 71 (public/templates/*.html)
 - Template-to-layout mappings: 71
 - Focus: UI template → layout spec traceability
 
 **Combined All Phases (0-8):**
 - Total specs: 11
-- Total layout specs: 6 (specs-ui/*.md)
+- Total layout specs: 6 (design/*.md)
 - Total CRC cards: 34
 - Total sequence diagrams: 22 unique (33 total with reuse)
 - Total implementation files: ~35

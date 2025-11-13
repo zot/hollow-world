@@ -1,11 +1,11 @@
 /**
  * Join Session Modal - Dialog for joining multiplayer MUD sessions
  *
- * CRC: specs-crc/crc-JoinSessionModal.md
- * Spec: specs/game-worlds.md (line 138)
+ * CRC: crc-JoinSessionModal.md
+ * Spec: game-worlds.md (line 138)
  * Sequences:
- * - specs-crc/seq-join-session.md
- * UI Spec: specs-ui/ui-join-session-modal.md
+ * - seq-join-session.md
+ * UI Spec: ui-join-session-modal.md
  */
 
 import type { TemplateEngine } from '../utils/TemplateEngine.js';
@@ -13,7 +13,7 @@ import type { ICharacter } from '../character/types.js';
 
 /**
  * IJoinSessionModal interface
- * CRC: specs-crc/crc-JoinSessionModal.md
+ * CRC: crc-JoinSessionModal.md
  */
 export interface IJoinSessionModal {
     show(): Promise<void>;
@@ -23,7 +23,7 @@ export interface IJoinSessionModal {
 
 /**
  * JoinSessionModal class - Multiplayer session join dialog
- * CRC: specs-crc/crc-JoinSessionModal.md
+ * CRC: crc-JoinSessionModal.md
  */
 export class JoinSessionModal implements IJoinSessionModal {
     private modal: HTMLDivElement | null = null;
@@ -50,9 +50,9 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * show implementation - Display join session modal dialog
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     async show(): Promise<void> {
         // Render modal
@@ -76,9 +76,9 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * hide implementation - Close modal and remove overlay
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     hide(): void {
         if (this.modal) {
@@ -95,9 +95,9 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * render implementation - Display form with host peer ID input, character selection
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private async render(): Promise<void> {
         // Prepare template data
@@ -121,7 +121,7 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * attachEventListeners implementation - Attach handlers for modal actions
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      */
     private attachEventListeners(): void {
         if (!this.modal) return;
@@ -172,9 +172,9 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * handleJoin implementation - Validate inputs and initiate guest session connection
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private async handleJoin(): Promise<void> {
         if (!this.modal) return;
@@ -217,9 +217,9 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * handleCancel implementation - Close modal without joining session
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private handleCancel(): void {
         this.hide();
@@ -228,9 +228,9 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * validateInputs implementation - Ensure peer ID is valid format and character is selected
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private validateInputs(): string | null {
         // Check if peer ID is provided
@@ -254,9 +254,9 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * connectToHost implementation - Establish P2P connection to host peer
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      * Sequences:
-     * - specs-crc/seq-join-session.md
+     * - seq-join-session.md
      */
     private async connectToHost(): Promise<void> {
         // TODO: Use HollowIPeer to connect to host
@@ -273,7 +273,7 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * setLoadingState implementation - Show/hide loading spinner
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      */
     private setLoadingState(loading: boolean): void {
         if (!this.modal) return;
@@ -299,7 +299,7 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * showError implementation - Display inline error message
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      */
     private showError(message: string): void {
         if (!this.modal) return;
@@ -323,7 +323,7 @@ export class JoinSessionModal implements IJoinSessionModal {
     /**
      * destroy implementation - Cleanup resources
      *
-     * CRC: specs-crc/crc-JoinSessionModal.md
+     * CRC: crc-JoinSessionModal.md
      */
     destroy(): void {
         this.hide();

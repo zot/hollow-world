@@ -27,11 +27,11 @@ Examples:
 
 ## What this skill does
 
-Uses the **three-pass process** from `specs-crc/crc.md`:
+Uses the **three-pass process** from `design/crc.md`:
 
 ### Pass 1: Read CRC card and traceability map
-- Reads `specs-crc/crc-<card-name>.md` for implementation file and sequences
-- Reads `specs-crc/traceability.md` for method-specific sequence references
+- Reads `design/crc-<card-name>.md` for implementation file and sequences
+- Reads `design/traceability.md` for method-specific sequence references
 - Reports what was found
 
 ### Pass 2: Find methods needing comments
@@ -78,10 +78,10 @@ Uses the **three-pass process** from `specs-crc/crc.md`:
 /**
  * methodName implementation
  *
- * CRC: specs-crc/crc-ClassName.md
+ * CRC: design/crc-ClassName.md
  * Sequences:
- * - specs-crc/seq-operation.md (lines X-Y)
- * - specs-crc/seq-other.md (lines A-B)
+ * - design/seq-operation.md (lines X-Y)
+ * - design/seq-other.md (lines A-B)
  */
 methodName(): void {
 ```
@@ -91,7 +91,7 @@ methodName(): void {
 /**
  * methodName implementation
  *
- * CRC: specs-crc/crc-ClassName.md
+ * CRC: design/crc-ClassName.md
  */
 methodName(): void {
 ```
@@ -102,7 +102,7 @@ methodName(): void {
 2. **Approval required** - User sees diff and approves via IDE
 3. **Skips existing comments** - Won't add if method already has `CRC:` comment
 4. **Reverse insertion order** - Inserts from bottom to top to preserve line numbers
-5. **Requires CRC card** - Must have `specs-crc/crc-<name>.md` with `**Existing Code:**` field
+5. **Requires CRC card** - Must have `design/crc-<name>.md` with `**Existing Code:**` field
 6. **Cleanup option** - Use `--cleanup` flag to safely remove scratch file after applying changes
 
 ## Example output

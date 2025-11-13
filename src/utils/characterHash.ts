@@ -2,9 +2,9 @@
  * Character hashing utilities for integrity verification
  * Uses SHA-256 hashing with recursive key sorting for consistent hashes
  *
- * CRC: specs-crc/crc-CharacterHash.md
- * Spec: specs/storage.md
- * Sequences: specs-crc/seq-save-character.md, specs-crc/seq-validate-character.md
+ * CRC: crc-CharacterHash.md
+ * Spec: storage.md
+ * Sequences: seq-save-character.md, seq-validate-character.md
  */
 
 import type { ICharacter } from '../character/types.js';
@@ -32,8 +32,8 @@ function sortedReplacer(key: string, value: any): any {
  * IMPORTANT: Excludes the characterHash field itself to prevent circular dependency
  *
  * Sequences:
- * - specs-crc/seq-save-character.md (hash calculation for save optimization)
- * - specs-crc/seq-load-character.md (lines 68-72, hash initialization)
+ * - seq-save-character.md (hash calculation for save optimization)
+ * - seq-load-character.md (lines 68-72, hash initialization)
  *
  * @param character - Character to hash
  * @returns Promise that resolves to hex-encoded hash string
