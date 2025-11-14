@@ -14,7 +14,7 @@
 Every HTML template MUST have a header comment at the top of the file:
 
 ```html
-<!-- @layout design/ui-view-name.md -->
+<!-- @layout ui-view-name.md -->
 <!-- @spec specs/ui.view.md -->
 ```
 
@@ -29,7 +29,7 @@ Every HTML template MUST have a header comment at the top of the file:
 For complex templates with multiple sections, add comments for major sections:
 
 ```html
-<!-- @layout design/ui-view-name.md → Section Name -->
+<!-- @layout ui-view-name.md → Section Name -->
 <div class="section-name">
   ...
 </div>
@@ -44,18 +44,18 @@ For complex templates with multiple sections, add comments for major sections:
 **File**: `public/templates/splash-screen.html`
 
 ```html
-<!-- @layout design/ui-splash-view.md -->
+<!-- @layout ui-splash-view.md -->
 <!-- @spec specs/ui.splash.md -->
 <!DOCTYPE html>
 <html>
   <body>
     <div class="splash-container">
-      <!-- @layout design/ui-splash-view.md → Title Section -->
+      <!-- @layout ui-splash-view.md → Title Section -->
       <h1 class="splash-title">
         Don't Go <span class="hollow-glow">Hollow</span>
       </h1>
 
-      <!-- @layout design/ui-splash-view.md → Peer ID Display -->
+      <!-- @layout ui-splash-view.md → Peer ID Display -->
       <div class="peer-id-display">
         <button class="peer-id-value" data-action="copyPeerId">
           {{peerId}}
@@ -73,7 +73,7 @@ For complex templates with multiple sections, add comments for major sections:
 **File**: `public/templates/character-card.html`
 
 ```html
-<!-- @layout design/ui-characters-view.md → CharacterCard Component -->
+<!-- @layout ui-characters-view.md → CharacterCard Component -->
 <!-- @spec specs/ui.characters.md -->
 <div class="character-card" data-character-id="{{character.id}}">
   <div class="character-card-header">
@@ -89,7 +89,7 @@ For complex templates with multiple sections, add comments for major sections:
 **File**: `public/templates/attribute-box.html`
 
 ```html
-<!-- @layout design/ui-character-editor-view.md → Attribute Box -->
+<!-- @layout ui-character-editor-view.md → Attribute Box -->
 <!-- @spec specs/ui.characters.md -->
 <div class="attribute-box">
   <label>{{attributeName}}</label>
@@ -104,7 +104,7 @@ For complex templates with multiple sections, add comments for major sections:
 **File**: `public/templates/character-editor-fallback.html`
 
 ```html
-<!-- @layout design/ui-character-editor-view.md → Error Fallback -->
+<!-- @layout ui-character-editor-view.md → Error Fallback -->
 <!-- @spec specs/ui.characters.md -->
 <div class="error-fallback">
   <p>Failed to load character editor. Please try again.</p>
@@ -122,12 +122,12 @@ Link to the corresponding view spec:
 
 | Template | Layout Spec | Human Spec |
 |----------|-------------|------------|
-| `splash-screen.html` | `design/ui-splash-view.md` | `specs/ui.splash.md` |
-| `character-list.html` | `design/ui-characters-view.md` | `specs/ui.characters.md` |
-| `character-editor.html` | `design/ui-character-editor-view.md` | `specs/ui.characters.md` |
-| `friends-view.html` | `design/ui-friends-view.md` | `specs/ui.friends.md` |
-| `settings-view.html` | `design/ui-settings-view.md` | `specs/ui.settings.md` |
-| `log-view.html` | `design/ui-settings-view.md → LogView` | `specs/ui.settings.md` |
+| `splash-screen.html` | `ui-splash-view.md` | `specs/ui.splash.md` |
+| `character-list.html` | `ui-characters-view.md` | `specs/ui.characters.md` |
+| `character-editor.html` | `ui-character-editor-view.md` | `specs/ui.characters.md` |
+| `friends-view.html` | `ui-friends-view.md` | `specs/ui.friends.md` |
+| `settings-view.html` | `ui-settings-view.md` | `specs/ui.settings.md` |
+| `log-view.html` | `ui-settings-view.md → LogView` | `specs/ui.settings.md` |
 
 ### Component Templates
 
@@ -135,9 +135,9 @@ Link to the component section within a view spec:
 
 | Template | Layout Spec | Section |
 |----------|-------------|---------|
-| `character-card.html` | `design/ui-characters-view.md` | CharacterCard Component |
-| `attribute-box.html` | `design/ui-character-editor-view.md` | Attribute Box |
-| `skill-item.html` | `design/ui-character-editor-view.md` | Skills Section |
+| `character-card.html` | `ui-characters-view.md` | CharacterCard Component |
+| `attribute-box.html` | `ui-character-editor-view.md` | Attribute Box |
+| `skill-item.html` | `ui-character-editor-view.md` | Skills Section |
 | `event-modal.html` | `design/manifest-ui.md` | EventNotificationButton + EventModal |
 | `global-audio-control.html` | `design/manifest-ui.md` | GlobalAudioControl |
 
@@ -150,7 +150,7 @@ Link to the most relevant spec or manifest:
 | `empty-state.html` | `design/manifest-ui.md` | Shared across views |
 | `error-fallback.html` | `design/manifest-ui.md` | Global error template |
 | `error-notification.html` | `design/manifest-ui.md` | Global notification |
-| `validation-warning.html` | `design/ui-character-editor-view.md` | Character validation |
+| `validation-warning.html` | `ui-character-editor-view.md` | Character validation |
 
 ### Fallback Templates
 
@@ -158,9 +158,9 @@ Fallback templates follow same rules as their main counterparts:
 
 | Template | Layout Spec | Notes |
 |----------|-------------|-------|
-| `splash-fallback.html` | `design/ui-splash-view.md` | Fallback for splash |
-| `character-editor-fallback.html` | `design/ui-character-editor-view.md` | Fallback for editor |
-| `friends-fallback.html` | `design/ui-friends-view.md` | Fallback for friends |
+| `splash-fallback.html` | `ui-splash-view.md` | Fallback for splash |
+| `character-editor-fallback.html` | `ui-character-editor-view.md` | Fallback for editor |
+| `friends-fallback.html` | `ui-friends-view.md` | Fallback for friends |
 
 ---
 
@@ -169,19 +169,19 @@ Fallback templates follow same rules as their main counterparts:
 ### Basic Reference
 
 ```html
-<!-- @layout design/ui-view-name.md -->
+<!-- @layout ui-view-name.md -->
 ```
 
 ### Section Reference
 
 ```html
-<!-- @layout design/ui-view-name.md → Section Name -->
+<!-- @layout ui-view-name.md → Section Name -->
 ```
 
 ### Component Reference
 
 ```html
-<!-- @layout design/ui-view-name.md → ComponentName Component -->
+<!-- @layout ui-view-name.md → ComponentName Component -->
 ```
 
 ### Multiple Sources
@@ -189,8 +189,8 @@ Fallback templates follow same rules as their main counterparts:
 If a template combines multiple specs (rare), list all:
 
 ```html
-<!-- @layout design/ui-view-1.md → Section A -->
-<!-- @layout design/ui-view-2.md → Section B -->
+<!-- @layout ui-view-1.md → Section A -->
+<!-- @layout ui-view-2.md → Section B -->
 <!-- @spec specs/ui.combined.md -->
 ```
 
@@ -237,22 +237,22 @@ grep -rh "@layout" public/templates/ | \
 
 ✅ **Add header comment to every template**
 ```html
-<!-- @layout design/ui-view-name.md -->
+<!-- @layout ui-view-name.md -->
 ```
 
 ✅ **Reference the section for component templates**
 ```html
-<!-- @layout design/ui-view-name.md → ComponentName -->
+<!-- @layout ui-view-name.md → ComponentName -->
 ```
 
 ✅ **Use arrow notation for sections**
 ```html
-<!-- @layout design/ui-view-name.md → Section Name -->
+<!-- @layout ui-view-name.md → Section Name -->
 ```
 
 ✅ **Keep references terse and accurate**
 ```html
-<!-- @layout design/ui-splash-view.md -->
+<!-- @layout ui-splash-view.md -->
 <!-- @spec specs/ui.splash.md -->
 ```
 
@@ -266,8 +266,8 @@ grep -rh "@layout" public/templates/ | \
 
 ❌ **Don't use relative paths**
 ```html
-<!-- @layout ../design/ui-view.md -->  <!-- WRONG -->
-<!-- @layout design/ui-view.md -->     <!-- CORRECT -->
+<!-- @layout ../ui-view.md -->  <!-- WRONG -->
+<!-- @layout ui-view.md -->     <!-- CORRECT -->
 ```
 
 ❌ **Don't add excessive comments throughout template**
@@ -277,7 +277,7 @@ grep -rh "@layout" public/templates/ | \
 
 ❌ **Don't reference non-existent specs**
 ```html
-<!-- @layout design/ui-nonexistent.md -->  <!-- Verify file exists! -->
+<!-- @layout ui-nonexistent.md -->  <!-- Verify file exists! -->
 ```
 
 ---
@@ -292,7 +292,7 @@ grep -rh "@layout" public/templates/ | \
 
 ### Verification
 - [ ] Can grep `@layout` and find all templates
-- [ ] All referenced `design/ui-*.md` files exist
+- [ ] All referenced `ui-*.md` files exist
 - [ ] All referenced `specs/*.md` files exist
 - [ ] No templates missing header comments
 

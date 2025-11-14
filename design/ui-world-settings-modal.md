@@ -1,6 +1,6 @@
 # World Settings Modal
 
-**CRC Card:** design/crc-WorldSettingsModal.md
+**CRC Card:** crc-WorldSettingsModal.md
 **Source Spec:** specs/game-worlds.md (line 127)
 
 ---
@@ -186,6 +186,6 @@ Modal dialog for editing world settings: name, description, and user access cont
 
 ## Traceability
 
-**CRC Card:** design/crc-WorldSettingsModal.md
-**Sequence:** design/seq-edit-world-settings.md
+**CRC Card:** crc-WorldSettingsModal.md
+**Sequence:** seq-edit-world-settings.md
 **Future Implementation:** src/ui/WorldSettingsModal.ts (to be created)

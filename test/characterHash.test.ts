@@ -3,7 +3,7 @@
  *
  * CRC: (Utility function - no dedicated CRC card)
  * Spec: specs/storage.md (Hash-based save optimization)
- * Sequences: design/seq-save-character.md, design/seq-load-character.md
+ * Sequences: seq-save-character.md, seq-load-character.md
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';

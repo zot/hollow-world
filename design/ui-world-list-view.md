@@ -1,6 +1,6 @@
 # WorldListView
 
-**CRC Card:** design/crc-WorldListView.md
+**CRC Card:** crc-WorldListView.md
 **Source Spec:** specs/game-worlds.md (lines 110-136)
 **Current Implementation:** src/ui/AdventureView.ts (methods: showWorldListView, renderWorldListView, etc.)
 
@@ -414,15 +414,15 @@
 
 ## Traceability
 
-**CRC Card:** design/crc-WorldListView.md
+**CRC Card:** crc-WorldListView.md
 
 **Sequences:**
-- design/seq-start-adventure-mode.md (initial world list display)
-- design/seq-select-world.md (starting a world)
-- design/seq-create-world.md (creating new world)
-- design/seq-edit-world-settings.md (editing world settings)
-- design/seq-delete-world.md (deleting world)
-- design/seq-switch-to-world-list.md (navigating from adventure view)
+- seq-start-adventure-mode.md (initial world list display)
+- seq-select-world.md (starting a world)
+- seq-create-world.md (creating new world)
+- seq-edit-world-settings.md (editing world settings)
+- seq-delete-world.md (deleting world)
+- seq-switch-to-world-list.md (navigating from adventure view)
 
 **Current Implementation:** src/ui/AdventureView.ts (methods: showWorldListView, renderWorldListView, etc.)
 

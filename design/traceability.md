@@ -183,13 +183,13 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-switch-to-world-list.md
 
 **UI Specs:**
-- design/ui-adventure-mode.md
-- design/ui-adventure-view.md (updated)
-- design/ui-world-list-view.md (updated)
-- design/ui-create-world-modal.md
-- design/ui-world-settings-modal.md
-- design/ui-delete-world-modal.md
-- design/ui-join-session-modal.md
+- ui-adventure-mode.md
+- ui-adventure-view.md (updated)
+- ui-world-list-view.md (updated)
+- ui-create-world-modal.md
+- ui-world-settings-modal.md
+- ui-delete-world-modal.md
+- ui-join-session-modal.md
 
 ---
 
@@ -2348,7 +2348,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-select-world.md
 - seq-switch-to-world-list.md
 
-**UI Spec:** design/ui-adventure-mode.md
+**UI Spec:** ui-adventure-mode.md
 
 ---
 
@@ -2408,7 +2408,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-join-session.md
 - seq-switch-to-world-list.md
 
-**UI Spec:** design/ui-adventure-view.md
+**UI Spec:** ui-adventure-view.md
 
 ---
 
@@ -2463,7 +2463,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-delete-world.md
 - seq-switch-to-world-list.md
 
-**UI Spec:** design/ui-world-list-view.md
+**UI Spec:** ui-world-list-view.md
 
 ---
 
@@ -2508,7 +2508,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 **Appears in Sequences:**
 - seq-create-world.md
 
-**UI Spec:** design/ui-create-world-modal.md
+**UI Spec:** ui-create-world-modal.md
 
 ---
 
@@ -2557,7 +2557,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 **Appears in Sequences:**
 - seq-edit-world-settings.md
 
-**UI Spec:** design/ui-world-settings-modal.md
+**UI Spec:** ui-world-settings-modal.md
 
 ---
 
@@ -2595,7 +2595,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 **Appears in Sequences:**
 - seq-delete-world.md
 
-**UI Spec:** design/ui-delete-world-modal.md
+**UI Spec:** ui-delete-world-modal.md
 
 ---
 
@@ -2638,7 +2638,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 **Appears in Sequences:**
 - seq-join-session.md
 
-**UI Spec:** design/ui-join-session-modal.md
+**UI Spec:** ui-join-session-modal.md
 
 ---
 
@@ -2676,7 +2676,7 @@ This document maintains **bidirectional links** between Level 1 (specs), Level 2
 - seq-host-session.md
 - seq-join-session.md
 
-**UI Spec:** (Embedded in design/ui-adventure-view.md)
+**UI Spec:** (Embedded in ui-adventure-view.md)
 
 ---
 

@@ -1,52 +1,148 @@
-# Installation for CRC
+# CRC Modeling - Quick Setup
 
-## make sure these are in CLAUDE.md in the project root
+## What is This?
 
-### In a prominent place in the top section
+This directory contains the **CRC (Class-Responsibility-Collaboration) modeling system** - a reusable three-tier development methodology.
+
+**Three-tier system:**
+```
+Level 1: Human specs (specs/*.md)        ← Requirements
+   ↓
+Level 2: Design models (design/*.md)     ← CRC cards, sequences, UI specs
+   ↓
+Level 3: Implementation (source code)    ← Actual code
+```
+
+---
+
+## Quick Start
+
+### Initialize CRC in Your Project
+
+Run this command to set up CRC modeling:
+
+```bash
+./.claude/scripts/init-crc-project.sh
+```
+
+**What it does:**
+- Creates `specs/` and `design/` directories
+- Checks for required components (designer agent, PlantUML)
+- Creates or updates `CLAUDE.md` with CRC workflow sections (if missing)
+- Shows welcome message and next steps
+
+**Safe to run multiple times** - idempotent, won't duplicate content.
+
+**Note:** This command requires manual approval to protect your CLAUDE.md file.
+
+---
+
+## Complete Documentation
+
+📚 **See `.claude/doc/crc.md` for complete CRC modeling documentation**
+
+Topics covered:
+- What is CRC modeling?
+- Three-tier system explained
+- Directory structure
+- Required components
+- Complete workflow
+- CRC cards, sequence diagrams, UI specs
+- Traceability and bidirectional updates
+- Benefits and best practices
+
+---
+
+## Manual Setup (Alternative)
+
+If you prefer to set up manually or need to copy to another project:
+
+### 1. Copy Required Files
+
+**Essential:**
+- `.claude/agents/designer.md` - Core CRC spec generator
+- `.claude/scripts/plantuml.sh` - Sequence diagram generator
+- `.claude/skills/plantuml.md` - PlantUML skill documentation
+- `.claude/scripts/init-crc-project.sh` - Initialization command
+- `.claude/skills/init-crc-project.md` - Initialization skill
+- `.claude/doc/crc.md` - Complete documentation
+
+**Optional:**
+- `.claude/agents/diagram-converter.md` - Alternative PlantUML converter
+- `.claude/agents/gap-analyzer.md` - Gap analysis agent
+
+### 2. Download PlantUML
+
+```bash
+mkdir -p .claude/bin
+cd .claude/bin
+curl -L -o plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2024.3/plantuml-1.2024.3.jar
+```
+
+### 3. Create Directories
+
+```bash
+mkdir -p specs design
+```
+
+### 4. Update CLAUDE.md
+
+Add CRC workflow sections to your project's `CLAUDE.md`:
+
 ```markdown
+## CRC Modeling Workflow
+
 **DO NOT generate code directly from `specs/*.md` files!**
 
-All specs referenced in this file are **human-readable design documents** (intent, UX, architecture).
-
-**Use a three-tier system to implement human-written specs:**
+**Use a three-tier system:**
 ```
 Level 1: Human specs (specs/*.md)
    ↓
-Level 2: Design models (design/*.md) ← YOU CREATE THESE
+Level 2: Design models (design/*.md) ← CREATE THESE FIRST
    ↓
-Level 3: Implementation (src/**/*.ts, public/templates/*.html)
+Level 3: Implementation (source code)
 ```
 
-**Correct workflow for code generation**:
+**Workflow:**
 1. Read human specs (`specs/*.md`) for design intent
-2. **Use `designer` agent** to create/consult Level 2 design specs (CRC cards, sequences, UI specs) ⚠️ **REQUIRED**
-3. Generate/write code (templates + TypeScript) following complete specification with traceability comments
+2. Use `designer` agent to create Level 2 specs (CRC cards, sequences, UI specs)
+3. Generate code following complete specification with traceability comments
 
-**For creating designs (level 2)**: Use the `designer` agent (`.claude/agent/designer.md`) - it handles CRC cards, sequence diagrams, and UI layout specs
+See `.claude/doc/crc.md` for complete documentation.
 ```
 
-### In Daily Reminders
-```markdown
-⚠️ **CRITICAL - Creating Level 2 Specs:**
-- **Use `designer` agent** (`.claude/agent/designer.md`) when creating CRC cards, sequences, or UI specs
-  - Handles complete workflow: specs → CRC cards → sequence diagrams → UI specs
-  - Manages traceability and gap analysis
-  - Integrates with diagram-converter and gap-analyzer agents
-  - Use: `Task(subagent_type="designer", ...)`
+### 5. Configure Permissions
 
-- **Skills Opportunity**: Once per day, suggest creating new skills (`.claude/skills/*.md`) for repetitive tasks that could benefit from pre-approved scripts or commands (e.g., build/test runners, code formatting checks, log parsing). Currently available: `ascii-analyze`, `plantuml`, `trace`
+Add to `.claude/settings.local.json`:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Skill(plantuml)",
+      "Bash(./.claude/scripts/*.sh:*)",
+      "Bash(.claude/scripts/*.sh:*)"
+    ]
+  }
+}
 ```
 
-### In Development & Coding
-```markdown
-- **`designer` agent** (`.claude/agent/designer.md`) - Level 2 spec generation (CRC cards, sequences, UI specs)
-```
+**Note:** `init-crc-project` requires manual approval (not pre-approved) to protect CLAUDE.md.
 
-### In 🏗️ CRC Modeling Development Process
+---
+
+## CLAUDE.md Snippets
+
+If you need specific sections to add to CLAUDE.md, here are the key pieces:
+
+### Core Workflow Section
+
 ```markdown
+## 🏗️ CRC Modeling Development Process
+
 **Three-tier process**: Human-readable specs (`specs/*.md`) → CRC cards + Sequence diagrams + UI specs → Generated code/templates/tests
 
-- **CRC Cards** (`design/crc-*.md`): Classes, responsibilities, collaborators → TypeScript classes
+- **CRC Cards** (`design/crc-*.md`): Classes, responsibilities, collaborators → Source classes
   - One card per class in markdown format
   - Defines what each class knows (data) and does (behavior)
   - Identifies collaborations between classes
@@ -56,7 +152,7 @@ Level 3: Implementation (src/**/*.ts, public/templates/*.html)
   - Shows how objects collaborate to fulfill requirements
   - Guides implementation details
 
-- **UI Specs** (`design/ui-*.md`): Layout structure → HTML templates
+- **UI Specs** (`design/ui-*.md`): Layout structure → Templates/views
   - Organized by view (may group small related components together)
   - Defines HTML structure, CSS classes, data bindings
   - References CRC cards for data types and behavior
@@ -64,47 +160,67 @@ Level 3: Implementation (src/**/*.ts, public/templates/*.html)
 
 **Key principle**: CRC models are **source of truth** for structure, UI specs are **source of truth** for layout, human specs are **source of truth** for intent.
 
-**Creating Level 2 Specs**: Use `designer` agent (`.claude/agent/designer.md`) for complete workflow
+**Creating Level 2 Specs**: Use `designer` agent (`.claude/agents/designer.md`) for complete workflow
 **Traceability**: [`design/traceability.md`](design/traceability.md) - Links from specs → CRC → code
 
+See `.claude/doc/crc.md` for complete documentation.
+```
+
+### Daily Reminders Section
+
+```markdown
+⚠️ **CRITICAL - Creating Level 2 Specs:**
+- **Use `designer` agent** (`.claude/agents/designer.md`) when creating CRC cards, sequences, or UI specs
+  - Handles complete workflow: specs → CRC cards → sequence diagrams → UI specs
+  - Manages traceability and gap analysis
+  - Use: `Task(subagent_type="designer", ...)`
+```
+
+### Bidirectional Traceability Section
+
+```markdown
 ### 🔄 Bidirectional Traceability Principle
 
 **When changes occur at any level, propagate updates through the documentation hierarchy:**
 
 **Source Code Changes → Design Specs:**
-- Modified implementation (`.ts`, `.html`) → Update CRC cards/sequences/UI specs if structure/behavior changed
+- Modified implementation → Update CRC cards/sequences/UI specs if structure/behavior changed
 - New classes/methods → Create corresponding CRC cards
 - Changed interactions → Update sequence diagrams
-- Template changes → Update UI specs
+- Template/view changes → Update UI specs
 
 **Design Spec Changes → Architectural Specs:**
-- Modified CRC cards/sequences → Update high-level specs (`specs/*.md`) if requirements/architecture affected
+- Modified CRC cards/sequences → Update high-level specs if requirements/architecture affected
 - New components → Document in feature specs
 - Changed workflows → Update architectural documentation
 - UI pattern changes → Update UI principles
 
-**Abstraction Levels:**
-- **High-level specs** (`specs/*.md`): Intent, architecture, UX requirements, principles (WHAT and WHY)
-- **Design specs** (`design/*.md`): Structure, behavior, interactions, layout (HOW at design level)
-- **Implementation** (`src/*.ts`, `public/templates/*.html`): Code, templates, concrete implementation (HOW at code level)
-
 **Key Rules:**
 1. **Always update up**: When code/design changes, ripple changes upward through documentation
-2. **Maintain abstraction**: Each level documents at its appropriate abstraction (don't add implementation details to high-level specs)
+2. **Maintain abstraction**: Each level documents at its appropriate abstraction
 3. **Keep consistency**: All three tiers must tell the same story at their respective levels
 4. **Update traceability comments**: When docs change, update CRC/spec references in code comments
-
-**Example Flow:**
-```
-User identifies missing persistence →
-Update specs/game-worlds.md (add persistence requirement) →
-Update design/crc-AdventureMode.md (add persistence responsibility) →
-Update src/ui/AdventureMode.ts (implement + add traceability comments)
-
-Later: Bug fix in AdventureMode.ts (terminateActiveWorld logic) →
-Review if CRC card needs update (it does - split cleanup behavior) →
-Review if specs/game-worlds.md needs update (it does - clarify persistence rules)
 ```
 
-**This ensures documentation remains accurate and useful, not just aspirational.**
-```
+---
+
+## What This Provides
+
+✅ **Better Architecture** - Explicit design phase prevents shotgun surgery and god classes
+✅ **Complete Specifications** - Sequences catch edge cases before coding
+✅ **Traceability** - Every line of code traces to design and requirements
+✅ **Maintainability** - Changes propagate through all documentation levels
+✅ **Onboarding** - New developers understand system from design docs
+✅ **SOLID Principles** - CRC naturally encourages single responsibility and clear collaborations
+
+---
+
+## Learn More
+
+📚 **Complete documentation:** `.claude/doc/crc.md`
+🚀 **Initialize CRC:** `./.claude/scripts/init-crc-project.sh`
+🔧 **Designer agent:** `.claude/agents/designer.md`
+
+---
+
+**Last updated:** 2025-11-14

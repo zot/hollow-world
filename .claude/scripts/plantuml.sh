@@ -9,30 +9,33 @@ TEMP_DIR="${TEMP_DIR:-/tmp}"
 
 usage() {
     cat << EOF
-Usage: $0 sequence [OPTIONS]
+Usage: $0 sequence [PLANTUML_SOURCE]
 
-Generate ASCII sequence diagram from PlantUML syntax (via stdin)
+Generate ASCII sequence diagram from PlantUML syntax (via argument or stdin)
 
 Options:
   --help            Show this help message
 
 Examples:
-  # Simple sequence
+  # Via command-line argument (recommended - no approval needed)
+  $0 sequence "User -> View: click save
+  View -> Model: save()
+  Model --> View: success"
+
+  # Via stdin (heredoc)
   $0 sequence << 'EOF'
   User -> View: click save
   View -> Model: save()
   Model --> View: success
   EOF
 
-  # With conditions
-  $0 sequence << 'EOF'
-  User -> Editor: save
+  # Multi-line with newlines
+  $0 sequence "User -> Editor: save
   alt valid
     Editor -> Storage: save()
   else invalid
     Editor -> User: show errors
-  end
-  EOF
+  end"
 
 PlantUML Syntax:
   ->      Synchronous message
@@ -73,9 +76,16 @@ generate_sequence() {
     trap "rm -f '$temp_input' '$temp_output'" EXIT
 
     # Wrap input in PlantUML sequence diagram syntax
+    # Input can come from stdin (heredoc) or as arguments
     {
         echo "@startuml"
-        cat  # Read from stdin
+        if [ $# -gt 0 ]; then
+            # PlantUML source provided as arguments
+            echo "$@"
+        else
+            # Read from stdin (heredoc)
+            cat
+        fi
         echo "@enduml"
     } > "$temp_input"
 

@@ -15,7 +15,8 @@ All specs referenced in this file are **human-readable design documents** (inten
 **Correct workflow for code generation**:
 1. Read human specs (`specs/*.md`) for design intent
 2. **Use `design` agent** to create/consult Level 2 design specs (CRC cards, sequences, UI specs) ⚠️ **REQUIRED**
-3. Generate/write code (templates + TypeScript) following complete specification with traceability comments
+3. Design specs are markdown files located in the `design` directory: `design/crc-*.md`, `design/seq-*.md`, `design/ui-*.md`, and also `design/manifest-ui.md` (for global UI concerns)
+4. Generate/write code (templates + TypeScript) following complete specification with traceability comments
 
 **For creating Level 2 specs**: Use the `design` agent (`.claude/agent/design.md`) - it handles CRC cards, sequence diagrams, and UI layout specs
 
@@ -131,7 +132,7 @@ All specs referenced in this file are **human-readable design documents** (inten
 
 **Abstraction Levels:**
 - **High-level specs** (`specs/*.md`): Intent, architecture, UX requirements, principles (WHAT and WHY)
-- **Design specs** (`design/*.md`, `design/*.md`): Structure, behavior, interactions, layout (HOW at design level)
+- **Design specs** (`design/*.md`): Structure, behavior, interactions, layout (HOW at design level)
 - **Implementation** (`src/*.ts`, `public/templates/*.html`): Code, templates, concrete implementation (HOW at code level)
 
 **Key Rules:**
@@ -173,7 +174,7 @@ Review if specs/game-worlds.md needs update (it does - clarify persistence rules
 
 1. **Identify affected documentation**:
    - [ ] Which high-level specs (`specs/*.md`) describe this area?
-   - [ ] Which CRC cards/sequences/UI specs (`design/*.md`, `design/*.md`) are involved?
+   - [ ] Which CRC cards/sequences/UI specs (`design/*.md`) are involved?
    - [ ] Which source files will change?
 
 2. **Create comprehensive todos** using TodoWrite:

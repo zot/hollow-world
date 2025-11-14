@@ -792,7 +792,7 @@
 
 ## Behavior Implementation
 
-**CRC Card**: `design/crc-SettingsView.md`
+**CRC Card**: `crc-SettingsView.md`
 
 **Related CRC Cards**:
 - `crc-ProfileService.md` - Profile management

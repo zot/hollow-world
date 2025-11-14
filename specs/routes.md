@@ -37,8 +37,8 @@ See [`../CLAUDE.md#development-server`](../CLAUDE.md#development-server) for det
 
 | Route | View | Description | Spec | Handler |
 |-------|------|-------------|------|---------|
-| `/worlds` | World List | List/manage worlds, create/edit/delete | [`ui-world-list-view.md`](../design/ui-world-list-view.md) | `renderWorldListView()` |
-| `/world/:worldId` | Adventure Mode | TextCraft MUD adventure in specific world | [`ui-adventure-view.md`](../design/ui-adventure-view.md) | `renderAdventureMode()` |
+| `/worlds` | World List | List/manage worlds, create/edit/delete | [`ui-world-list-view.md`](../ui-world-list-view.md) | `renderWorldListView()` |
+| `/world/:worldId` | Adventure Mode | TextCraft MUD adventure in specific world | [`ui-adventure-view.md`](../ui-adventure-view.md) | `renderAdventureMode()` |
 
 **Route Selection Logic**:
 

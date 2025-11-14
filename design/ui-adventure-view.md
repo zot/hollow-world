@@ -1,6 +1,6 @@
 # AdventureView
 
-**CRC Card:** design/crc-AdventureView.md
+**CRC Card:** crc-AdventureView.md
 **Source Spec:** specs/game-worlds.md (lines 75-108)
 **Current Implementation:** src/ui/AdventureView.ts
 
@@ -256,7 +256,7 @@
 - **DeleteWorldModal** (`ui-delete-world-modal.md`) - Delete confirmation (used by WorldListView)
 
 **Networking:**
-- **HollowIPeer** (`design/crc-HollowIPeer.md`) - TextCraft IPeer adapter
+- **HollowIPeer** (`crc-HollowIPeer.md`) - TextCraft IPeer adapter
 - **P2PWebAppNetworkProvider** - Existing Hollow P2P infrastructure (MUST reuse, no duplicates)
 
 ---
@@ -319,14 +319,14 @@
 
 ## Traceability
 
-**CRC Card:** design/crc-AdventureView.md
+**CRC Card:** crc-AdventureView.md
 
 **Sequences:**
-- design/seq-select-world.md (starting a world)
-- design/seq-send-command.md (processing user commands)
-- design/seq-host-session.md (starting host mode)
-- design/seq-join-session.md (joining as guest)
-- design/seq-switch-to-world-list.md (navigating to world list)
+- seq-select-world.md (starting a world)
+- seq-send-command.md (processing user commands)
+- seq-host-session.md (starting host mode)
+- seq-join-session.md (joining as guest)
+- seq-switch-to-world-list.md (navigating to world list)
 
 **Current Implementation:** src/ui/AdventureView.ts
 

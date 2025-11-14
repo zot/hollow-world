@@ -613,7 +613,7 @@
 
 ## Behavior Implementation
 
-**CRC Card**: `design/crc-FriendsView.md`
+**CRC Card**: `crc-FriendsView.md`
 
 **Sequence Diagrams**:
 - `seq-add-friend-by-peerid.md` - Add friend by peer ID flow

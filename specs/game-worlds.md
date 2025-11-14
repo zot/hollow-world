@@ -320,7 +320,7 @@ if (currentPath === '/' && adventureMode) {
 router.initialize();
 ```
 
-See: `design/seq-app-startup.md` for detailed sequence diagram
+See: `seq-app-startup.md` for detailed sequence diagram
 
 ## Play Modes
 

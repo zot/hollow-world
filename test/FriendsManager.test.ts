@@ -1,7 +1,7 @@
 /**
  * Unit tests for FriendsManager world tracking methods
  *
- * CRC: design/crc-FriendsManager.md
+ * CRC: crc-FriendsManager.md
  * Spec: specs/friends.md, specs/p2p.md
  */
 

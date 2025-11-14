@@ -36,9 +36,9 @@ The following items that come from specs MUST have linking comments:
 /**
  * [Class/Interface Name] - [Brief description]
  *
- * CRC: design/crc-[ClassName].md
- * Spec: specs/[spec-name].md
- * Sequences: design/seq-[operation].md
+ * CRC: crc-[ClassName].md
+ * Spec: [spec-name].md
+ * Sequences: seq-[operation].md
  */
 ```
 
@@ -48,9 +48,9 @@ The following items that come from specs MUST have linking comments:
 /**
  * Character Storage Service - Handles character persistence
  *
- * CRC: design/crc-CharacterStorageService.md
- * Spec: specs/characters.md, specs/storage.md
- * Sequences: design/seq-save-character.md, design/seq-load-character.md
+ * CRC: crc-CharacterStorageService.md
+ * Spec: characters.md, storage.md
+ * Sequences: seq-save-character.md, seq-load-character.md
  */
 export class CharacterStorageService implements ICharacterStorageService {
 ```
@@ -59,8 +59,8 @@ export class CharacterStorageService implements ICharacterStorageService {
 /**
  * Profile Service - Profile-based storage isolation
  *
- * CRC: design/crc-ProfileService.md
- * Spec: specs/main.md, specs/storage.md
+ * CRC: crc-ProfileService.md
+ * Spec: main.md, storage.md
  */
 export class ProfileService implements IProfileService {
 ```
@@ -70,8 +70,8 @@ export class ProfileService implements IProfileService {
 ```typescript
 /**
  * Save character with hash-based optimization
- * Spec: specs/storage.md "Hash-based save optimization"
- * Sequence: design/seq-save-character.md (lines 46-57)
+ * Spec: storage.md "Hash-based save optimization"
+ * Sequence: seq-save-character.md (lines 46-57)
  */
 async saveCharacter(character: ICharacter): Promise<void> {
 ```
@@ -82,10 +82,10 @@ async saveCharacter(character: ICharacter): Promise<void> {
 /**
  * Get item from profile-scoped storage
  *
- * CRC: design/crc-ProfileService.md
+ * CRC: crc-ProfileService.md
  * Sequences:
- * - design/seq-load-character.md (lines 29-38)
- * - design/seq-save-character.md (lines 68-78)
+ * - seq-load-character.md (lines 29-38)
+ * - seq-save-character.md (lines 68-78)
  */
 getItem(key: string): string | null {
     return localStorage.getItem(this.getStorageKey(key));
@@ -127,7 +127,7 @@ Each CRC card section lists:
 ```markdown
 ### crc-CharacterStorageService.md
 
-**Source Spec:** specs/characters.md, specs/storage.md
+**Source Spec:** characters.md, storage.md
 
 **Implementation:**
 - **src/services/CharacterStorageService.ts**
@@ -177,7 +177,7 @@ This ensures **nothing gets missed** when adding traceability comments to code (
 ### Three-Pass Process
 
 **Pass 1: Read CRC card and traceability map**
-- Reads `design/crc-<card-name>.md` for implementation file and sequences
+- Reads `crc-<card-name>.md` for implementation file and sequences
 - Reads `design/traceability.md` for method-specific sequence references
 - Reports what was found
 
@@ -326,14 +326,14 @@ Changes made:
 /**
  * Profile Service - Profile-based storage isolation
  *
- * CRC: design/crc-ProfileService.md
- * Spec: specs/main.md, specs/storage.md
- * Sequences: design/seq-initialize-profiles.md, design/seq-switch-profile.md
+ * CRC: crc-ProfileService.md
+ * Spec: main.md, storage.md
+ * Sequences: seq-initialize-profiles.md, seq-switch-profile.md
  */
 export class ProfileService implements IProfileService {
   /**
    * Get current profile
-   * CRC: design/crc-ProfileService.md
+   * CRC: crc-ProfileService.md
    */
   getCurrentProfile(): IProfile {
     // ...
@@ -341,8 +341,8 @@ export class ProfileService implements IProfileService {
 
   /**
    * Switch to different profile
-   * CRC: design/crc-ProfileService.md
-   * Sequence: design/seq-switch-profile.md (lines 15-42)
+   * CRC: crc-ProfileService.md
+   * Sequence: seq-switch-profile.md (lines 15-42)
    */
   setCurrentProfile(name: string): void {
     // ...
@@ -356,14 +356,14 @@ export class ProfileService implements IProfileService {
 /**
  * Character Editor View - Character editing UI
  *
- * CRC: design/crc-CharacterEditorView.md
- * Spec: specs/ui.characters.md
- * Sequences: design/seq-edit-character.md, design/seq-save-character-ui.md
+ * CRC: crc-CharacterEditorView.md
+ * Spec: ui.characters.md
+ * Sequences: seq-edit-character.md, seq-save-character-ui.md
  */
 export class CharacterEditorView {
   /**
    * Save character with validation
-   * Sequence: design/seq-save-character-ui.md (lines 22-101)
+   * Sequence: seq-save-character-ui.md (lines 22-101)
    */
   private async saveCharacter(): Promise<void> {
     // ...
@@ -377,13 +377,13 @@ export class CharacterEditorView {
 /**
  * Character Calculations - Character stat calculations
  *
- * CRC: design/crc-CharacterCalculations.md
- * Spec: specs/characters.md
+ * CRC: crc-CharacterCalculations.md
+ * Spec: characters.md
  */
 export class CharacterCalculations {
   /**
    * Calculate rank from total XP (backward compatibility)
-   * CRC: design/crc-CharacterCalculations.md
+   * CRC: crc-CharacterCalculations.md
    */
   static calculateRank(totalXP: number): number {
     // ...
