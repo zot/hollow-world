@@ -60,7 +60,7 @@ Source file references have directory names:
 ### 2. Sequence Diagram Generation
 - Identify scenarios and use cases from specs
 - Create PlantUML sequence diagrams
-- Generate ASCII art output using diagram-converter agent
+- Generate ASCII art output using sequence-diagrammer agent
 - Create `design/seq-scenario.md` files
 - Show object interactions over time
 
@@ -92,7 +92,7 @@ Source file references have directory names:
    ↓
 4. IDENTIFY scenarios from specs
    ↓
-5. CREATE sequence diagrams (design/seq-*.md) with diagram-converter
+5. CREATE sequence diagrams (design/seq-*.md) with sequence-diagrammer
    ↓
 6. IDENTIFY global UI concerns from specs (routes, theme, patterns)
    ↓
@@ -104,9 +104,11 @@ Source file references have directory names:
    ↓
 10. UPDATE design/traceability.md (Level 1↔2, Level 2↔3 with checkboxes)
    ↓
-11. RUN gap-analyzer agent for comprehensive analysis
+11. RUN test-designer agent to generate test design specs
    ↓
-12. REVIEW quality checklist
+12. RUN gap-analyzer agent for comprehensive analysis
+   ↓
+13. REVIEW quality checklist
 ```
 
 ## Part 1: CRC Card Creation
@@ -245,12 +247,12 @@ Character -> CharacterEditor: character instance
 
 **CRITICAL: Use plantuml skill (DO NOT save intermediate files)**
 
-**Recommended Approach: Use Bash with argument-based input (NO heredoc)**
+**Recommended Approach: Use Python script with argument-based input (NO heredoc)**
 
-Use Bash tool to call plantuml.sh with PlantUML source as a command-line argument:
+Use Python tool to call plantuml.py with PlantUML source as a command-line argument:
 
 ```bash
-./.claude/scripts/plantuml.sh sequence "User -> SplashScreen: click \"New Character\"
+python3 ./.claude/scripts/plantuml.py sequence "User -> SplashScreen: click \"New Character\"
 SplashScreen -> CharacterEditor: navigate()
 CharacterEditor -> Character: new()
 Character --> CharacterEditor: character instance"
@@ -264,15 +266,15 @@ Character --> CharacterEditor: character instance"
 
 **Workflow:**
 1. Create PlantUML source as multi-line string
-2. Call `./.claude/scripts/plantuml.sh sequence "SOURCE HERE"`
-3. Capture ASCII output from bash command
+2. Call `python3 ./.claude/scripts/plantuml.py sequence "SOURCE HERE"`
+3. Capture ASCII output from plantuml.py command
 4. Embed directly in markdown file using Write tool
 5. **DO NOT create .plantuml or .atxt files**
 
-**Alternative: Use diagram-converter agent**
+**Alternative: Use sequence-diagrammer agent**
 ```
 Task(
-  subagent_type="diagram-converter",
+  subagent_type="sequence-diagrammer",
   description="Convert sequence to PlantUML ASCII",
   prompt="Convert the following PlantUML to ASCII art:
 
@@ -284,7 +286,7 @@ Task(
 )
 ```
 
-**DO NOT manually write sequence diagrams** - Always use plantuml skill or diagram-converter agent.
+**DO NOT manually write sequence diagrams** - Always use plantuml skill or sequence-diagrammer agent.
 **DO NOT save intermediate .plantuml or .atxt files** - Only create final .md files.
 
 #### Step 5: Write Sequence File
@@ -766,7 +768,39 @@ Use simple box diagrams to show structure:
 - All Level 1→2 links documented
 - All Level 2→3 checkboxes created
 
-## Part 5: Gap Analysis
+## Part 5: Test Design Generation
+
+### Process
+
+**Use test-designer agent:**
+
+```
+Task(
+  subagent_type="test-designer",
+  description="Generate test design specs",
+  prompt="Generate test design documents for all CRC cards and sequences in design/.
+
+  Analyze design/crc-*.md and design/seq-*.md.
+
+  Create design/test-*.md files with complete test specifications.
+
+  Ensure coverage of all responsibilities and scenarios.
+
+  Document any gaps in coverage."
+)
+```
+
+**Agent will create:**
+- Test design files (`design/test-*.md`) - One per component/feature
+- Test traceability map (`design/traceability-tests.md`)
+- Complete test coverage documentation
+
+### Output
+- Complete test design specifications
+- Test coverage analysis
+- Test traceability documentation
+
+## Part 6: Gap Analysis
 
 ### Process
 
@@ -855,6 +889,13 @@ Before completing work, verify:
 - [ ] Checkboxes for all implementation items
 - [ ] Checkboxes match actual code elements
 
+**Test Designs:**
+- [ ] test-designer agent invoked
+- [ ] Test design files created (`design/test-*.md`)
+- [ ] Test traceability map created (`design/traceability-tests.md`)
+- [ ] All CRC responsibilities have corresponding tests
+- [ ] All sequence flows have corresponding tests
+
 **Gap Analysis:**
 - [ ] `design/gaps.md` updated with phase analysis
 - [ ] Type A/B/C issues identified
@@ -864,34 +905,42 @@ Before completing work, verify:
 
 ## Tools Usage
 
-### diagram-converter Agent
+### sequence-diagrammer Agent
 **When:** Creating sequence diagrams
 **Why:** Generates PlantUML ASCII art
 **How:**
 ```
-Task(subagent_type="diagram-converter", ...)
+Task(subagent_type="sequence-diagrammer", ...)
+```
+
+### test-designer Agent
+**When:** After creating CRC cards, sequences, and UI specs
+**Why:** Generate Level 2 test design specifications
+**How:**
+```
+Task(subagent_type="test-designer", ...)
 ```
 
 ### gap-analyzer Agent
-**When:** After creating all design specs
+**When:** After creating all design specs and test designs
 **Why:** Comprehensive gap analysis
 **How:**
 ```
 Task(subagent_type="gap-analyzer", ...)
 ```
 
-### Bash: plantuml.sh with arguments
+### Python: plantuml.py with arguments
 **When:** Creating sequence diagrams (preferred method)
-**Why:** Pre-approved, no user confirmation needed
+**Why:** Pre-approved, no user confirmation needed, cross-platform
 **How:**
 ```bash
-./.claude/scripts/plantuml.sh sequence "PLANTUML_SOURCE_HERE"
+python3 ./.claude/scripts/plantuml.py sequence "PLANTUML_SOURCE_HERE"
 ```
 Pass PlantUML source as command-line argument (quoted string, NOT heredoc).
 
 **Example:**
 ```bash
-./.claude/scripts/plantuml.sh sequence "User -> View: click
+python3 ./.claude/scripts/plantuml.py sequence "User -> View: click
 View -> Model: save()
 Model --> View: success"
 ```
@@ -947,13 +996,14 @@ Task(
   Process:
   1. Read all relevant Level 1 specs (specs/characters.md and any UI-related specs)
   2. Create CRC cards for all identified classes
-  3. Create sequence diagrams for all scenarios (use diagram-converter agent)
+  3. Create sequence diagrams for all scenarios (use sequence-diagrammer agent)
   4. Identify global UI concerns from specs (routes, patterns, theme)
   5. Create/update design/manifest-ui.md with global UI documentation
   6. Create UI layout specs (reference CRC cards and manifest-ui.md)
   7. Update design/traceability.md with all mappings
-  8. Run gap-analyzer agent for comprehensive analysis
-  9. Verify quality checklist
+  8. Run test-designer agent to generate test design specs
+  9. Run gap-analyzer agent for comprehensive analysis
+  10. Verify quality checklist
 
   Expected output:
   - 3-5 CRC card files
@@ -961,6 +1011,8 @@ Task(
   - Updated/created design/manifest-ui.md (if UI changes affect global concerns)
   - 1-2 UI spec files
   - Updated design/traceability.md
+  - Test design files (design/test-*.md)
+  - Test traceability map (design/traceability-tests.md)
   - Updated design/gaps.md
 
   Report summary of created files and any issues found."
@@ -969,11 +1021,12 @@ Task(
 
 ## Important Notes
 
-1. **Use plantuml.sh with argument-based input for sequence diagrams** - Call `./.claude/scripts/plantuml.sh sequence "SOURCE"` (NOT heredoc). This is pre-approved and requires no user confirmation. diagram-converter agent is alternative for complex cases. Never manually write sequence diagrams.
+1. **Use plantuml.py with argument-based input for sequence diagrams** - Call `python3 ./.claude/scripts/plantuml.py sequence "SOURCE"` (NOT heredoc). This is pre-approved and requires no user confirmation. sequence-diagrammer agent is alternative for complex cases. Never manually write sequence diagrams.
 2. **Create manifest-ui.md for global UI concerns** - Document routes, patterns, theme before view-specific specs
 3. **UI specs reference both CRC cards and manifest-ui.md** - Layout specs point to behavior specs (CRC) and global concerns (manifest)
 4. **Maintain traceability** - Every artifact links to its source
 5. **Keep UI specs terse** - Scannable lists, ASCII art, minimal prose
-6. **Use gap-analyzer agent** - Don't manually write gap analysis
-7. **Follow naming conventions** - Consistent file naming across all specs
-8. **Complete quality checklist** - Verify all items before finishing
+6. **Invoke test-designer agent** - After creating CRC cards and sequences, automatically invoke test-designer agent to generate Level 2 test specifications (design/test-*.md). This is part of the standard design workflow.
+7. **Use gap-analyzer agent** - Don't manually write gap analysis
+8. **Follow naming conventions** - Consistent file naming across all specs
+9. **Complete quality checklist** - Verify all items before finishing

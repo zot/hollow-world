@@ -22,7 +22,11 @@ Level 3: Implementation (source code)    ← Actual code
 Run this command to set up CRC modeling:
 
 ```bash
-./.claude/scripts/init-crc-project.sh
+# Using slash command (recommended)
+/init-crc-project
+
+# Or run the script directly
+python3 ./.claude/scripts/init-crc-project.py
 ```
 
 **What it does:**
@@ -61,9 +65,9 @@ If you prefer to set up manually or need to copy to another project:
 
 **Essential:**
 - `.claude/agents/designer.md` - Core CRC spec generator
-- `.claude/scripts/plantuml.sh` - Sequence diagram generator
+- `.claude/scripts/plantuml.py` - Sequence diagram generator
 - `.claude/skills/plantuml.md` - PlantUML skill documentation
-- `.claude/scripts/init-crc-project.sh` - Initialization command
+- `.claude/scripts/init-crc-project.py` - Initialization command
 - `.claude/skills/init-crc-project.md` - Initialization skill
 - `.claude/doc/crc.md` - Complete documentation
 
@@ -110,24 +114,6 @@ Level 3: Implementation (source code)
 
 See `.claude/doc/crc.md` for complete documentation.
 ```
-
-### 5. Configure Permissions
-
-Add to `.claude/settings.local.json`:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Skill(plantuml)",
-      "Bash(./.claude/scripts/*.sh:*)",
-      "Bash(.claude/scripts/*.sh:*)"
-    ]
-  }
-}
-```
-
-**Note:** `init-crc-project` requires manual approval (not pre-approved) to protect CLAUDE.md.
 
 ---
 
@@ -218,7 +204,7 @@ See `.claude/doc/crc.md` for complete documentation.
 ## Learn More
 
 📚 **Complete documentation:** `.claude/doc/crc.md`
-🚀 **Initialize CRC:** `./.claude/scripts/init-crc-project.sh`
+🚀 **Initialize CRC:** `/init-crc-project`
 🔧 **Designer agent:** `.claude/agents/designer.md`
 
 ---

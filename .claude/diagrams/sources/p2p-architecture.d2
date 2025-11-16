@@ -1,0 +1,19 @@
+direction: right
+
+tab1: "Tab 1: Peer 12D3Koo...A" {
+  style.multiple: true
+}
+tab2: "Tab 2: Peer 12D3Koo...B" {
+  style.multiple: true
+}
+tab3: "Tab 3: Peer 12D3Koo...C" {
+  style.multiple: true
+}
+
+server: "ipfs-webapp Server" {
+  libp2p: "libp2p peer"
+}
+
+tab1 -> server.libp2p
+tab2 -> server.libp2p
+tab3 -> server.libp2p

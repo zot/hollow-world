@@ -14,11 +14,11 @@ All specs referenced in this file are **human-readable design documents** (inten
 
 **Correct workflow for code generation**:
 1. Read human specs (`specs/*.md`) for design intent
-2. **Use `design` agent** to create/consult Level 2 design specs (CRC cards, sequences, UI specs) ⚠️ **REQUIRED**
+2. **Use `designer` agent** to create/consult Level 2 design specs (CRC cards, sequences, UI specs) ⚠️ **REQUIRED**
 3. Design specs are markdown files located in the `design` directory: `design/crc-*.md`, `design/seq-*.md`, `design/ui-*.md`, and also `design/manifest-ui.md` (for global UI concerns)
 4. Generate/write code (templates + TypeScript) following complete specification with traceability comments
 
-**For creating Level 2 specs**: Use the `design` agent (`.claude/agent/design.md`) - it handles CRC cards, sequence diagrams, and UI layout specs
+**For creating Level 2 specs**: Use the `designer` agent (`.claude/agents/designer.md`) - it handles CRC cards, sequence diagrams, and UI layout specs
 
 ---
 
@@ -48,12 +48,12 @@ All specs referenced in this file are **human-readable design documents** (inten
 - **[`development.md`](specs/development.md)** - Development server, build process, workflow
 - **[`view-management.md`](specs/view-management.md)** - View manager and single-active-view architecture
 - **[`coding-standards.md`](specs/coding-standards.md)** - TypeScript, HTML, SOLID principles, best practices
-- **`design` agent** (`.claude/agent/design.md`) - Level 2 spec generation (CRC cards, sequences, UI specs)
+- **`designer` agent** (`.claude/agents/designer.md`) - Level 2 spec generation (CRC cards, sequences, UI specs)
 - **[`tooling.md`](specs/tooling.md)** - d2 diagrams, scripts, development tools
 - **[`logging.md`](specs/logging.md)** - Application logging system
 
 ### UI Specifications
-- **`design` agent** (`.claude/agent/design.md`) - Create UI layout specs (use for generating `design/*.md` files)
+- **`designer` agent** (`.claude/agents/designer.md`) - Create UI layout specs (use for generating `design/*.md` files)
 - **[`design/*.md`](design/)** - UI layout specifications (HTML structure, CSS classes, data bindings)
 - **[`ui.md`](specs/ui.md)** - General UI principles (save behavior, audio controls, navigation, western theme)
 - **[`ui.splash.md`](specs/ui.splash.md)** - Splash Screen (main menu)
@@ -107,11 +107,18 @@ All specs referenced in this file are **human-readable design documents** (inten
   - Organized by view (may group small related components together)
   - Defines HTML structure, CSS classes, data bindings
   - References CRC cards for data types and behavior
-  - Use `design` agent to create UI specs
+  - Use `designer` agent to create UI specs
 
-**Key principle**: CRC models are **source of truth** for structure, UI specs are **source of truth** for layout, human specs are **source of truth** for intent.
+- **Test Designs** (`design/test-*.md`): Test specifications → Test implementations (optional)
+  - One file per component/feature/scenario
+  - Defines test cases with name, purpose, input, expected results
+  - References CRC cards and sequence diagrams
+  - Use `test-designer` agent to create test designs
 
-**Creating Level 2 Specs**: Use `design` agent (`.claude/agent/design.md`) for complete workflow
+**Key principle**: CRC models are **source of truth** for structure, UI specs are **source of truth** for layout, test designs are **source of truth** for testing, human specs are **source of truth** for intent.
+
+**Creating Level 2 Specs**: Use `designer` agent (`.claude/agents/designer.md`) for complete workflow
+**Creating Test Designs**: Use `test-designer` agent (`.claude/agents/test-designer.md`) for test specifications (optional)
 **Traceability**: [`design/traceability.md`](design/traceability.md) - Links from specs → CRC → code
 
 ### 🔄 Bidirectional Traceability Principle
@@ -160,10 +167,10 @@ Review if specs/game-worlds.md needs update (it does - clarify persistence rules
 ## 💡 Daily Reminders
 
 ⚠️ **CRITICAL - Creating Level 2 Specs:**
-- **Use `design` agent** (`.claude/agent/design.md`) when creating CRC cards, sequences, or UI specs
+- **Use `designer` agent** (`.claude/agents/designer.md`) when creating CRC cards, sequences, or UI specs
   - Handles complete workflow: specs → CRC cards → sequence diagrams → UI specs
   - Manages traceability and gap analysis
-  - Integrates with diagram-converter and gap-analyzer agents
+  - Integrates with sequence-diagrammer and gap-analyzer agents
   - Use: `Task(subagent_type="design", ...)`
 
 - **Skills Opportunity**: Once per day, suggest creating new skills (`.claude/skills/*.md`) for repetitive tasks that could benefit from pre-approved scripts or commands (e.g., build/test runners, code formatting checks, log parsing). Currently available: `ascii-analyze`, `plantuml`, `trace`
@@ -202,19 +209,19 @@ Review if specs/game-worlds.md needs update (it does - clarify persistence rules
 **CRITICAL: Diagram Format Requirements**
 
 - **Sequence Diagrams (`design/seq-*.md`)**: MUST use PlantUML ASCII art output
-  - ⚠️ **REQUIRED APPROACH: Use the `diagram-converter` agent**
-    - Launch with Task tool: `subagent_type="diagram-converter"`
+  - ⚠️ **REQUIRED APPROACH: Use the `sequence-diagrammer` agent**
+    - Launch with Task tool: `subagent_type="sequence-diagrammer"`
     - **NEVER manually write sequence text or pseudocode** - always use this agent
     - Agent handles entire workflow: edit PlantUML source → convert to ASCII → embed in markdown
     - Handles complex conversions with reasoning and decision-making
-    - See `.claude/agent/diagram-converter.md` for details
+    - See `.claude/agents/sequence-diagrammer.md` for details
   - **ALTERNATIVE: Direct skill invocation** (for simple one-off diagrams, if agent unavailable)
     - Use Skill tool: `Skill(skill: "plantuml")`
     - Pass PlantUML source as input
     - Good for quick single diagrams
   - **FALLBACK: Bash script** (for batch conversions without Claude)
     - Script: `./.claude/scripts/convert-p2p-sequences-to-plantuml.sh`
-    - Bypasses skill system (calls plantuml.sh directly)
+    - Bypasses skill system (calls plantuml.sh/plantuml.py directly)
     - Use when agent/skill approach not available
   - PlantUML jar location: `.claude/bin/plantuml.jar`
   - ASCII art format (`-ttxt` flag for text output)

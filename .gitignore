@@ -57,3 +57,12 @@ test-stun-servers.html
 
 # Claude diagram output (regenerate from sources)
 .claude/diagrams/output/
+
+# Claude backup files (local only)
+.claude/backup/
+
+# Claude documentation drafts (project-specific)
+.claude/doc/post.md
+
+# Claude binary dependencies (download separately)
+.claude/bin/plantuml.jar
