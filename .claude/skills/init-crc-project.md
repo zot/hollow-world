@@ -24,7 +24,7 @@ Initialize CRC modeling in the current project.
 
 **Usage:**
 ```bash
-./.claude/scripts/init-crc-project.sh
+python3 ./.claude/scripts/init-crc-project.py
 ```
 
 **What it does:**
@@ -41,7 +41,7 @@ Initialize CRC modeling in the current project.
 
 ### Initialize CRC in new project
 ```bash
-./.claude/scripts/init-crc-project.sh
+python3 ./.claude/scripts/init-crc-project.py
 ```
 
 Output:
@@ -67,7 +67,7 @@ Output:
 
 To use this command, your project needs:
 - `.claude/agents/designer.md` - Core CRC agent
-- `.claude/scripts/plantuml.sh` - Sequence diagram generator
+- `.claude/scripts/plantuml.py` - Sequence diagram generator
 - `.claude/skills/plantuml.md` - PlantUML skill
 - `CLAUDE.md` - Project instructions file
 
@@ -77,4 +77,4 @@ See `.claude/doc/crc.md` for complete CRC modeling documentation.
 
 ## Implementation
 
-See `.claude/scripts/init-crc-project.sh` for the implementation script.
+See `.claude/scripts/init-crc-project.py` for the implementation script.

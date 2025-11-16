@@ -264,11 +264,11 @@ Use the trace verification script for **bidirectional sync** between traceabilit
 
 ```bash
 # Default to Phase 1
-./.claude/scripts/trace-verify.sh
+python3 ./.claude/scripts/trace-verify.py
 
 # Verify specific phase
-./.claude/scripts/trace-verify.sh 1
-./.claude/scripts/trace-verify.sh 2
+python3 ./.claude/scripts/trace-verify.py 1
+python3 ./.claude/scripts/trace-verify.py 2
 ```
 
 **What it does:**
@@ -309,9 +309,9 @@ Changes made:
 
 1. **Add comments AFTER code exists** - Don't try to add comments while generating code
 2. **Use /trace command** - Automates most of the work
-3. **Run trace-verify.sh** - Automatically syncs checkboxes in traceability.md with code
+3. **Run trace-verify.py** - Automatically syncs checkboxes in traceability.md with code
 4. **Fix unchecked items** - If script unchecks boxes, add the missing CRC comments
-5. **Re-run to verify** - Run trace-verify.sh again until all items are in sync
+5. **Re-run to verify** - Run trace-verify.py again until all items are in sync
 6. **Keep comments up-to-date** - When refactoring, update traceability comments and re-sync
 7. **Link to lines** - Include line numbers in sequence references
 8. **Be specific** - Link to the exact CRC card or sequence diagram
@@ -403,15 +403,15 @@ export class CharacterCalculations {
 - `traceability.md` - Single source of truth for what should be commented
 - CRC comment format - Links in every file
 - `/trace` command - Automated comment insertion
-- `trace-verify.sh` - Automated bidirectional sync
+- `trace-verify.py` - Automated bidirectional sync
 
 **Process:**
 1. Create CRC cards from specs
 2. Generate code from CRC cards
 3. Fill out traceability.md with checkboxes
 4. Add traceability comments to code (use /trace)
-5. Run trace-verify.sh to sync checkboxes with code reality
+5. Run trace-verify.py to sync checkboxes with code reality
 6. Add missing comments for unchecked items
-7. Re-run trace-verify.sh until all items are in sync
+7. Re-run trace-verify.py until all items are in sync
 
 **Result:** Complete bidirectional traceability with automated synchronization ensuring design intent is preserved forever.

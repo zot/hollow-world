@@ -11,7 +11,7 @@ Add traceability comments to implementation methods based on CRC cards.
 ./.claude/scripts/trace-add-comments.py --cleanup <CRC-card-name>
 
 # Verify traceability comments are present
-./.claude/scripts/trace-verify.sh [phase-number]
+./.claude/scripts/trace-verify.py [phase-number]
 
 # Find specs with no implementation
 ./.claude/scripts/trace-gap-analysis.py [--output FILE]
@@ -20,8 +20,7 @@ Add traceability comments to implementation methods based on CRC cards.
 Examples:
 - `./.claude/scripts/trace-add-comments.py ProfileService` - Add comments
 - `./.claude/scripts/trace-add-comments.py --cleanup ProfileService` - Cleanup
-- `./.claude/scripts/trace-verify.sh` - Verify all files
-- `./.claude/scripts/trace-verify.sh 1` - Verify Phase 1 only
+- `./.claude/scripts/trace-verify.py` - Verify all files
 - `./.claude/scripts/trace-gap-analysis.py` - Print gap analysis to stdout
 - `./.claude/scripts/trace-gap-analysis.py --output plan.md` - Save to file
 
@@ -163,12 +162,7 @@ methodName(): void {
 ### Usage
 
 ```bash
-# Default to Phase 1
-./.claude/scripts/trace-verify.sh
-
-# Verify specific phase
-./.claude/scripts/trace-verify.sh 1
-./.claude/scripts/trace-verify.sh 2
+python3 ./.claude/scripts/trace-verify.py
 ```
 
 ### Output
