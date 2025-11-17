@@ -1,6 +1,6 @@
 # Sequence: Application Startup
 
-**Source Spec:** specs/ui.splash.md, specs/audio.md
+**Source Spec:** ui.splash.md, audio.md
 **Existing Code:** src/main.ts
 
 ## Participants
@@ -147,7 +147,7 @@
 
 Matches spec requirements:
 - **Profile initialization**: Profile service initialized before other systems
-- **Audio initialization early**: Audio system created as early as possible (specs/audio.md)
+- **Audio initialization early**: Audio system created as early as possible (audio.md)
 - **P2P initialization**: HollowPeer initialized asynchronously in background
 - **ViewManager registration**: Views registered with ViewManager for centralized management
 - **Adventure Mode initialization**: AdventureMode loads active world from storage and registers routes

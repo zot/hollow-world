@@ -1,7 +1,7 @@
 # Create World Modal
 
 **CRC Card:** crc-CreateWorldModal.md
-**Source Spec:** specs/game-worlds.md (lines 126-128)
+**Source Spec:** game-worlds.md (lines 126-128)
 
 ---
 

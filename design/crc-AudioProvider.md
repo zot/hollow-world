@@ -1,6 +1,6 @@
 # crc-AudioProvider
 
-**Source Spec:** specs/audio.md (implied by AudioManager requirements)
+**Source Spec:** audio.md (implied by AudioManager requirements)
 **Existing Code:** src/audio/AudioManager.ts (IAudioProvider interface, HTMLAudioProvider implementation)
 
 ## Responsibilities

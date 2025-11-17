@@ -1,6 +1,6 @@
 # SessionControls
 
-**Source Spec:** specs/game-worlds.md (lines 138-142, implicit from session management)
+**Source Spec:** game-worlds.md (lines 138-142, implicit from session management)
 
 ## Responsibilities
 

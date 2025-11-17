@@ -1,6 +1,6 @@
 # TemplateEngine
 
-**Source Spec:** specs/ui.md, specs/coding-standards.md
+**Source Spec:** ui.md, coding-standards.md
 **Existing Code:** src/utils/TemplateEngine.ts
 
 ## Responsibilities

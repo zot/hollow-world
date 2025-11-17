@@ -1,6 +1,6 @@
 # Sequence: Log Message
 
-**Source Spec:** specs/logging.md
+**Source Spec:** logging.md
 **Use Case:** Application logs a message (with automatic trimming)
 
 ## Participants

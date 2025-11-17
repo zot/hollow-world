@@ -1,6 +1,6 @@
 # CharacterEditorView
 
-**Source**: `specs/ui.characters.md` → Editor Interface section
+**Source**: `ui.characters.md` → Editor Interface section
 
 **Route**: `/character/:id` (see `manifest-ui.md`)
 
@@ -13,7 +13,7 @@
 **Overall Layout**:
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ [Bob Smith___________________________________]           │ ← Name (editable)
+│ [🏠] [Bob Smith_______________________________]          │ ← Home + Name (editable)
 ├──────────────────────────────────────────────────────────┤
 │ Rank: [3] DC: 15  Dust: 100                              │ ← Top stats
 │ Available XP (30): 5   Attribute Chips (18): 2           │
@@ -56,6 +56,7 @@
 **Structure**:
 ```html
 <div class="character-name-section">
+  <button class="home-btn">🏠</button>
   <input type="text" class="character-name-input"
          data-field="name"
          value="{{character.name}}"
@@ -64,15 +65,18 @@
 ```
 
 **Behavior**:
+- Home button navigates to splash screen
 - Inline editable text field
 - Updates on blur (not real-time)
 - Auto-save disabled (requires "Yep" button)
 
 **Events**:
+- `clickHome()` - Navigate to splash screen
 - `updateField(field: 'name', value)` - Update character name
 
 **CSS Classes**:
 - `character-name-section` - Container
+- `home-btn` - Home button (top-left)
 - `character-name-input` - Text input (large, bold, western-themed)
 
 ---

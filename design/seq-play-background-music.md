@@ -1,6 +1,6 @@
 # Sequence: Play Background Music with Cycling
 
-**Source Spec:** specs/audio.md
+**Source Spec:** audio.md
 **Existing Code:** src/audio/AudioManager.ts
 
 ## Participants

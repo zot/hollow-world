@@ -1,6 +1,6 @@
 # Sequence: Delete World
 
-**Source Spec:** specs/game-worlds.md (line 127)
+**Source Spec:** game-worlds.md (line 127)
 **Use Case:** User deletes a world with confirmation dialog
 
 ## Participants

@@ -1,6 +1,6 @@
 # Sequence: Increment Attribute
 
-**Source Spec:** specs/ui.characters.md
+**Source Spec:** ui.characters.md
 **Use Case:** User clicks increment button or scrolls mouse wheel up on attribute
 
 ## Participants

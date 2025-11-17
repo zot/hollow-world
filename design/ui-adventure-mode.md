@@ -1,7 +1,7 @@
 # Adventure Mode UI
 
 **CRC Card:** crc-AdventureMode.md
-**Source Spec:** specs/game-worlds.md (lines 66-73)
+**Source Spec:** game-worlds.md (lines 66-73)
 
 ---
 

@@ -1,6 +1,6 @@
 # SettingsView
 
-**Source**: `specs/ui.settings.md`
+**Source**: `ui.settings.md`
 
 **Route**: `/settings` (see `manifest-ui.md`)
 
@@ -13,7 +13,7 @@
 **Overall Layout**:
 ```
 ┌────────────────────────────────────────────────────────┐
-│ 🔗 Peers: 3            Settings                        │ ← Header + Peer count
+│ [🏠] 🔗 Peers: 3       Settings                        │ ← Home + Header + Peer count
 │                        {Alice}                         │    (profile if not Default)
 ├────────────────────────────────────────────────────────┤
 │ Player Name: [Alice Smith______________]               │ ← Player name
@@ -53,6 +53,7 @@
 **Structure**:
 ```html
 <header class="settings-header">
+  <button class="home-btn">🏠</button>
   <h1>Settings</h1>
   {{#unless profile === 'Default'}}
     <div class="profile-badge">{{{profile}}}</div>
@@ -61,10 +62,15 @@
 ```
 
 **Behavior**:
+- Home button navigates to splash screen
 - If profile is not "Default", display profile name in curly braces under title
+
+**Events**:
+- `clickHome()` - Navigate to splash screen
 
 **CSS Classes**:
 - `settings-header` - Header container
+- `home-btn` - Home button (top-left)
 - `profile-badge` - Profile name display
 
 ---
@@ -151,7 +157,7 @@
 
 ## P2P Network Settings
 
-**Source**: `specs/ui.settings.md` → P2P Network Settings
+**Source**: `ui.settings.md` → P2P Network Settings
 
 **Purpose**: Configure pubsub topic and peer protocol for P2P networking
 
@@ -395,7 +401,7 @@
 
 ## ProfilePickerDialog Component
 
-**Source**: `specs/ui.settings.md` → Profiles button section
+**Source**: `ui.settings.md` → Profiles button section
 
 **Purpose**: Select or create profiles
 
@@ -496,7 +502,7 @@
 
 ## LogView Component
 
-**Source**: `specs/ui.settings.md` → Log button section
+**Source**: `ui.settings.md` → Log button section
 
 **Route**: `/settings/log` (see `manifest-ui.md`)
 
@@ -581,7 +587,7 @@
 
 ## EventsView Component
 
-**Source**: `specs/ui.md` → Events section
+**Source**: `ui.md` → Events section
 
 **Purpose**: Display persistent events with actions
 

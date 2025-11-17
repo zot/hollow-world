@@ -1,6 +1,6 @@
 # CharacterHash (Utilities)
 
-**Source Spec:** specs/characters.md, specs/storage.md
+**Source Spec:** characters.md, storage.md
 **Existing Code:** src/utils/characterHash.ts
 
 ## Responsibilities

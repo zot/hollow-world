@@ -10,17 +10,42 @@
 
 **DO NOT generate code directly from `specs/*.md` files!**
 
-All specs referenced in this file are **human-readable design documents** (intent, UX, architecture).
+**Use a three-tier system:**
+```
+Level 1: Human specs (specs/*.md)
+   ↓
+Level 2: Design models (design/*.md) ← CREATE THESE FIRST
+   ↓
+Level 3: Implementation (source code)
+```
 
-**Correct workflow for code generation**:
+**Workflow:**
 1. Read human specs (`specs/*.md`) for design intent
-2. **Use `designer` agent** to create/consult Level 2 design specs (CRC cards, sequences, UI specs) ⚠️ **REQUIRED**
-3. Design specs are markdown files located in the `design` directory: `design/crc-*.md`, `design/seq-*.md`, `design/ui-*.md`, and also `design/manifest-ui.md` (for global UI concerns)
-4. Generate/write code (templates + TypeScript) following complete specification with traceability comments
+2. Use `designer` agent to create Level 2 specs (CRC cards, sequences, UI specs, architecture mapping)
+3. Generate code following complete specification with traceability comments
 
-**For creating Level 2 specs**: Use the `designer` agent (`.claude/agents/designer.md`) - it handles CRC cards, sequence diagrams, and UI layout specs
+**Design Entry Point:**
+- `design/architecture.md` serves as the "main program" for the design
+- Shows how design elements are organized into logical systems
+- Start here to understand the overall architecture
+- **Use for problem diagnosis and impact analysis** - quickly localize issues and assess change scope
 
----
+**When to Read architecture.md:**
+- **When working with design files, implementing features, or diagnosing issues, always read `design/architecture.md` first to understand the system structure and component relationships.**
+
+**Traceability Comment Format:**
+- Use simple filenames WITHOUT directory paths
+- ✅ Correct: `CRC: crc-Person.md`, `Spec: main.md`, `Sequence: seq-create-user.md`
+- ❌ Wrong: `CRC: design/crc-Person.md`, `Spec: specs/main.md`
+
+**Test Implementation:**
+- Test files belong in top-level `tests/` directory (NOT nested under `src/`)
+- Test designs reference: `Test Design: test-ComponentName.md`
+- When configuring build tools (Vite, Webpack, etc.), ensure test runner configurations are separate from application build configurations
+- If build config sets a custom `root` directory, create a separate test configuration file to avoid test discovery issues
+- Run `npm test` to verify test discovery works correctly before considering tests complete
+
+See `.claude/doc/crc.md` for complete documentation.
 
 **📋 Main Specification**: See [`specs/main.md`](specs/main.md) for comprehensive project specifications
 
@@ -129,12 +154,13 @@ All specs referenced in this file are **human-readable design documents** (inten
 - Modified implementation (`.ts`, `.html`) → Update CRC cards/sequences/UI specs if structure/behavior changed
 - New classes/methods → Create corresponding CRC cards
 - Changed interactions → Update sequence diagrams
-- Template changes → Update UI specs
+- Template/view changes → Update UI specs
 
 **Design Spec Changes → Architectural Specs:**
 - Modified CRC cards/sequences → Update high-level specs (`specs/*.md`) if requirements/architecture affected
-- New components → Document in feature specs
+- New components → Document in feature specs and update `design/architecture.md`
 - Changed workflows → Update architectural documentation
+- System reorganization → Update `design/architecture.md` to reflect new system boundaries
 - UI pattern changes → Update UI principles
 
 **Abstraction Levels:**
@@ -148,22 +174,25 @@ All specs referenced in this file are **human-readable design documents** (inten
 3. **Keep consistency**: All three tiers must tell the same story at their respective levels
 4. **Update traceability comments**: When docs change, update CRC/spec references in code comments
 
-**Example Flow:**
-```
-User identifies missing persistence →
-Update specs/game-worlds.md (add persistence requirement) →
-Update design/crc-AdventureMode.md (add persistence responsibility) →
-Update src/ui/AdventureMode.ts (implement + add traceability comments)
+### 📚 Documentation Generation
 
-Later: Bug fix in AdventureMode.ts (terminateActiveWorld logic) →
-Review if CRC card needs update (it does - split cleanup behavior) →
-Review if specs/game-worlds.md needs update (it does - clarify persistence rules)
-```
+**After completing design or implementation work, offer to generate or update project documentation.**
 
-**This ensures documentation remains accurate and useful, not just aspirational.**
+Use the `documenter` agent to create:
+- `docs/requirements.md` - Requirements documentation from specs
+- `docs/design.md` - Design overview from CRC cards and sequences
+- `docs/developer-guide.md` - Developer documentation with architecture and setup
+- `docs/user-manual.md` - User manual with features and how-to guides
+- `design/traceability-docs.md` - Documentation traceability map
 
----
+**When to offer documentation generation:**
+- After creating/updating Level 2 design specs
+- After implementing Level 3 code
+- When specs or design changes significantly
+- When user explicitly requests it
 
+**Example offer:**
+"I've completed the [design/implementation]. Would you like me to generate/update the project documentation (requirements, design overview, developer guide, and user manual)?"
 ## 💡 Daily Reminders
 
 ⚠️ **CRITICAL - Creating Level 2 Specs:**

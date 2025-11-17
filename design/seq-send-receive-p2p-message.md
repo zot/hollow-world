@@ -1,6 +1,6 @@
 # Sequence: Send/Receive P2P Message (Ping/Pong)
 
-**Source Spec:** specs/p2p-messages.md, specs/p2p.md
+**Source Spec:** p2p-messages.md, p2p.md
 **Existing Code:** src/p2p/HollowPeer.ts, src/p2p/P2PWebAppNetworkProvider.ts
 
 ## Participants

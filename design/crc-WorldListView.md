@@ -1,6 +1,6 @@
 # WorldListView
 
-**Source Spec:** specs/game-worlds.md (lines 110-136)
+**Source Spec:** game-worlds.md (lines 110-136)
 
 ## Responsibilities
 

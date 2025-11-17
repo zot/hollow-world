@@ -1,6 +1,6 @@
 # Sequence: Render Character List
 
-**Source Spec:** specs/ui.characters.md
+**Source Spec:** ui.characters.md
 **Use Case:** Display list of all characters with cards
 
 ## Participants

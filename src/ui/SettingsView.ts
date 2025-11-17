@@ -331,6 +331,14 @@ export class SettingsView implements ISettingsView, IEnhancedAudioControlSupport
             await this.showProfilePicker();
         });
 
+        // Home button handler
+        const homeBtn = this.container?.querySelector('#settings-home-btn');
+        homeBtn?.addEventListener('click', async () => {
+            await AudioControlUtils.playButtonSound(this.audioManager);
+            this.saveSettings(); // Auto-save when leaving
+            this.router.navigate('/');
+        });
+
         if (this.backButtonElement) {
             this.backButtonElement.addEventListener('click', async () => {
                 await AudioControlUtils.playButtonSound(this.audioManager);

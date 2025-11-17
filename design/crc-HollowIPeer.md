@@ -1,6 +1,6 @@
 # HollowIPeer
 
-**Source Spec:** specs/integrate-textcraft.md
+**Source Spec:** integrate-textcraft.md
 **Existing Code:** src/textcraft/hollow-peer.ts
 **Test Code:** (none - Phase 6)
 

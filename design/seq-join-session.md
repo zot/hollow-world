@@ -1,6 +1,6 @@
 # Sequence: Join Session
 
-**Source Spec:** specs/game-worlds.md (line 138)
+**Source Spec:** game-worlds.md (line 138)
 **Use Case:** User joins a multiplayer session hosted by another peer
 
 ## Participants

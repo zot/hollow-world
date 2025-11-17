@@ -1,6 +1,6 @@
 # CharacterFactory
 
-**Source Spec:** specs/characters.md (implied by creation workflow)
+**Source Spec:** characters.md (implied by creation workflow)
 **Existing Code:** src/character/CharacterUtils.ts (CharacterFactory class)
 
 ## Responsibilities

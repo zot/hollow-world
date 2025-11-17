@@ -1,6 +1,6 @@
 # CharacterValidation
 
-**Source Spec:** specs/characters.md
+**Source Spec:** characters.md
 **Existing Code:** src/character/CharacterUtils.ts (CharacterValidation class)
 
 ## Responsibilities
@@ -40,7 +40,7 @@
 
 ⚠️ **Potential issue:**
 - Attribute range inconsistency:
-  - Spec says: -2 to 15 (specs/characters.md line 510)
+  - Spec says: -2 to 15 (characters.md line 510)
   - Code validates: 0-4 in creation, -2 to 15 in storage
   - Need clarification on actual range
 

@@ -238,6 +238,14 @@ export class CharacterEditorView implements ICharacterEditor, IEnhancedAudioCont
             });
         }
 
+        const homeBtn = this.container.querySelector('#character-editor-home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                this.router.navigate('/');
+            });
+        }
+
         // Set up music button event listener using shared utility
         AudioControlUtils.setupMusicButtonEventListener(this);
 

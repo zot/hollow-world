@@ -14,9 +14,8 @@ class Colors:
     NC = '\033[0m'  # No Color
 
 def get_paths():
-    """Get script directory and project root paths."""
-    script_dir = Path(__file__).parent.resolve()
-    project_root = script_dir.parent.parent
+    """Get current working directory as project root."""
+    project_root = Path.cwd()
     return project_root
 
 def create_directories(project_root):
@@ -115,8 +114,17 @@ Level 3: Implementation (source code)
 
 **Workflow:**
 1. Read human specs (`specs/*.md`) for design intent
-2. Use `designer` agent to create Level 2 specs (CRC cards, sequences, UI specs)
+2. Use `designer` agent to create Level 2 specs (CRC cards, sequences, UI specs, architecture mapping)
 3. Generate code following complete specification with traceability comments
+
+**Design Entry Point:**
+- `design/architecture.md` serves as the "main program" for the design
+- Shows how design elements are organized into logical systems
+- Start here to understand the overall architecture
+- **Use for problem diagnosis and impact analysis** - quickly localize issues and assess change scope
+
+**When to Read architecture.md:**
+- **When working with design files, implementing features, or diagnosing issues, always read `design/architecture.md` first to understand the system structure and component relationships.**
 
 **Traceability Comment Format:**
 - Use simple filenames WITHOUT directory paths
@@ -144,8 +152,9 @@ See `.claude/doc/crc.md` for complete documentation.
 
 **Design Spec Changes → Architectural Specs:**
 - Modified CRC cards/sequences → Update high-level specs if requirements/architecture affected
-- New components → Document in feature specs
+- New components → Document in feature specs and update `design/architecture.md`
 - Changed workflows → Update architectural documentation
+- System reorganization → Update `design/architecture.md` to reflect new system boundaries
 
 **Key Rules:**
 1. **Always update up**: When code/design changes, ripple changes upward through documentation

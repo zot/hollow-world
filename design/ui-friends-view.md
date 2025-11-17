@@ -1,6 +1,6 @@
 # FriendsView
 
-**Source**: `specs/ui.friends.md`
+**Source**: `ui.friends.md`
 
 **Route**: `/friends` (see `manifest-ui.md`)
 
@@ -13,7 +13,7 @@
 **Overall Layout**:
 ```
 ┌────────────────────────────────────────────────────────┐
-│ Friends                                                │ ← Header
+│ [🏠] Friends                                           │ ← Header
 ├────────────────────────────────────────────────────────┤
 │ ┌────────────────────────────────────────────────────┐ │
 │ │ Alice Smith  📤 Unsent                        [💀] │ │ ← FriendCard (collapsed)
@@ -52,12 +52,17 @@
 **Structure**:
 ```html
 <header class="friends-header">
+  <button class="home-btn">🏠</button>
   <h1>Friends</h1>
 </header>
 ```
 
+**Events**:
+- `clickHome()` - Navigate to splash screen
+
 **CSS Classes**:
 - `friends-header` - Header container
+- `home-btn` - Home button (top-left)
 
 ---
 
@@ -92,7 +97,7 @@
 
 ## FriendCard Component
 
-**Source**: `specs/ui.friends.md` → Friend Cards section
+**Source**: `ui.friends.md` → Friend Cards section
 
 **Purpose**: Display single friend with expand/collapse functionality
 
@@ -408,7 +413,7 @@
 
 ## Banned Peers Section
 
-**Source**: `specs/ui.friends.md` → Banned Peers Section
+**Source**: `ui.friends.md` → Banned Peers Section
 
 **Purpose**: Manage banned peers list
 

@@ -291,6 +291,15 @@ export class FriendsView implements IFriendsView, IEnhancedAudioControlSupport {
     private setupEventHandlers(): void {
         if (!this.container) return;
 
+        // Home button
+        const homeBtn = this.container.querySelector('#friends-home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                this.router.navigate('/');
+            });
+        }
+
         // Back button
         if (this.backButtonElement) {
             this.backButtonElement.addEventListener('click', async () => {

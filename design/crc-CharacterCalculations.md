@@ -1,6 +1,6 @@
 # CharacterCalculations
 
-**Source Spec:** specs/characters.md
+**Source Spec:** characters.md
 **Existing Code:** src/character/CharacterUtils.ts (CharacterCalculations class)
 
 ## Responsibilities

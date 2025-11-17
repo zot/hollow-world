@@ -1,6 +1,6 @@
 # Sequence: Send Command
 
-**Source Spec:** specs/game-worlds.md (lines 85-87)
+**Source Spec:** game-worlds.md (lines 85-87)
 **Use Case:** User types a command and presses Enter to interact with the MUD world
 
 ## Participants

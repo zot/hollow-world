@@ -29,10 +29,12 @@ python3 ./.claude/scripts/init-crc-project.py
 
 **What it does:**
 - Creates `specs/` directory for Level 1 human-written specs
-- Creates `design/` directory for Level 2 CRC cards, sequences, UI specs
+- Creates `design/` directory for Level 2 CRC cards, sequences, UI specs, architecture mapping
 - Checks for designer agent (`.claude/agents/designer.md`)
 - Checks for PlantUML setup (script, skill, jar)
 - Updates `CLAUDE.md` with CRC workflow sections (if not present)
+  - Includes architecture.md as design entry point
+  - Includes diagnostic usage guidance
 - Displays welcome message and documentation link
 
 **Safe to run multiple times** - idempotent, won't duplicate content.

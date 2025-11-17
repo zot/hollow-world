@@ -1,6 +1,6 @@
 # Sequence: Play Sound Effect (Gunshot on Button Click)
 
-**Source Spec:** specs/audio.md
+**Source Spec:** audio.md
 **Existing Code:** src/audio/AudioManager.ts, src/utils/AudioControlUtils.ts
 
 ## Participants

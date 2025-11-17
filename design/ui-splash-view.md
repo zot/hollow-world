@@ -1,6 +1,6 @@
 # SplashView
 
-**Source**: `specs/ui.splash.md`
+**Source**: `ui.splash.md`
 
 **Route**: `/` (see `manifest-ui.md`)
 

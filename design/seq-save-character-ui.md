@@ -1,6 +1,6 @@
 # Sequence: Save Character (UI)
 
-**Source Spec:** specs/ui.characters.md, specs/storage.md
+**Source Spec:** ui.characters.md, storage.md
 **Use Case:** User clicks "Yep" button to save character edits
 
 **Note:** This sequence shows the UI side of saving. For storage internals, see seq-save-character.md (Phase 1).
@@ -145,7 +145,7 @@
 - Enable Yep button only when there are unsaved changes ✓
 - Save workflow uses CharacterStorageService ✓
 
-**📝 Save workflow (per specs/storage.md):**
+**📝 Save workflow (per storage.md):**
 The full save workflow is:
 1. Load original character from storage → temporary variable
 2. Save current (edited) character to storage

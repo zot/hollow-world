@@ -1,7 +1,7 @@
 # Sequence: TextCraft Solo Mode Command Execution
 
 **CRC Cards:** crc-LocalMudSession.md, crc-WorldLoader.md
-**Spec:** specs/integrate-textcraft.md
+**Spec:** integrate-textcraft.md
 
 ## Overview
 

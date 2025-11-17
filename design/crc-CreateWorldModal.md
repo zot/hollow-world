@@ -1,6 +1,6 @@
 # CreateWorldModal
 
-**Source Spec:** specs/game-worlds.md (lines 127-128, implicit from world list behavior)
+**Source Spec:** game-worlds.md (lines 127-128, implicit from world list behavior)
 
 ## Responsibilities
 

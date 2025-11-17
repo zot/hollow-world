@@ -1,6 +1,6 @@
 # Character
 
-**Source Spec:** specs/characters.md
+**Source Spec:** characters.md
 **Existing Code:** src/character/types.ts (ICharacter interface)
 
 ## Responsibilities

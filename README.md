@@ -8,6 +8,10 @@ A P2P web-based RPG client for the Hollow frontier game system.
 
 Welcome to Hollow World - a single-page web application that brings the mysterious frontier of the Hollow RPG system to life. Create characters, manage your outlaw personas, and connect with other players in this peer-to-peer western adventure.
 
+## 📐 CRC-Driven Development
+
+This project uses **CRC (Class-Responsibility-Collaboration) modeling** for design and development. The CRC infrastructure and tooling developed here has been extracted into a standalone project: **[claude-crc](https://github.com/zot/claude-crc)** - a reusable framework for CRC-driven development with Claude Code.
+
 ## ✅ Current Implementation Status
 
 ### **Real P2P Network Integration**
@@ -80,6 +84,12 @@ Built with:
 npm test         # Run unit tests
 npm run test:ui  # Run tests with UI
 ```
+
+---
+
+## 📜 Historical Note
+
+The CRC (Class-Responsibility-Collaboration) methodology and tooling used in this project was originally developed as part of HollowWorld's design process. As the CRC infrastructure matured, it was extracted into the standalone **[claude-crc](https://github.com/zot/claude-crc)** project to make it reusable for other Claude Code projects. The CRC system provides a three-tier documentation approach (Level 1 specs → Level 2 design models → Level 3 implementation) with comprehensive traceability and gap analysis tools.
 
 ---
 

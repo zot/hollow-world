@@ -1,6 +1,6 @@
 # Router
 
-**Source Spec:** specs/ui.md, specs/routes.md
+**Source Spec:** ui.md, routes.md
 **Existing Code:** src/utils/Router.ts
 
 ## Responsibilities
@@ -122,7 +122,7 @@ router.navigate('/character/123');
 router.replace('/character/123');
 ```
 
-**Route Registration (per specs/routes.md):**
+**Route Registration (per routes.md):**
 ```typescript
 // Basic application routes (registered in main.ts setupRoutes())
 router.addRoute('/', handleSplashScreen);

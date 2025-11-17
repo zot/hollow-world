@@ -1,6 +1,6 @@
 # Sequence: Navigate from Splash Screen
 
-**Source Spec:** specs/ui.splash.md, specs/routes.md
+**Source Spec:** ui.splash.md, routes.md
 **Existing Code:** src/ui/SplashScreen.ts, src/main.ts
 
 ## Participants

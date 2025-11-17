@@ -1,6 +1,6 @@
 # Application
 
-**Source Spec:** specs/main.md
+**Source Spec:** main.md
 **Existing Code:** src/main.ts
 **Test Code:** (none - Phase 7)
 

@@ -1,6 +1,6 @@
 # Sequence: Edit World Settings
 
-**Source Spec:** specs/game-worlds.md (line 127)
+**Source Spec:** game-worlds.md (line 127)
 **Use Case:** User edits world settings (name, description, allowed users)
 
 ## Participants

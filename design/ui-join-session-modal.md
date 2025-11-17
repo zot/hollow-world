@@ -1,7 +1,7 @@
 # Join Session Modal
 
 **CRC Card:** crc-JoinSessionModal.md
-**Source Spec:** specs/game-worlds.md (line 138, implicit from multiplayer modes)
+**Source Spec:** game-worlds.md (line 138, implicit from multiplayer modes)
 
 ---
 

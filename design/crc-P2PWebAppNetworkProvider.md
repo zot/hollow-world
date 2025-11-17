@@ -1,6 +1,6 @@
 # CRC Card: P2PWebAppNetworkProvider
 
-**Source Spec:** specs/p2p.md
+**Source Spec:** p2p.md
 **Existing Code:** src/p2p/P2PWebAppNetworkProvider.ts
 
 ## Class Responsibilities

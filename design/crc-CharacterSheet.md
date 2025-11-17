@@ -1,6 +1,6 @@
 # CharacterSheet
 
-**Source Spec:** specs/ui.characters.md, specs/characters.md
+**Source Spec:** ui.characters.md, characters.md
 **Existing Code:** src/character/CharacterSheet.ts
 
 ## Responsibilities

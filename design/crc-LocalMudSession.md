@@ -1,6 +1,6 @@
 # LocalMudSession
 
-**Source Spec:** specs/integrate-textcraft.md
+**Source Spec:** integrate-textcraft.md
 **Existing Code:** src/textcraft/local-session.ts
 **Test Code:** (none - Phase 6)
 

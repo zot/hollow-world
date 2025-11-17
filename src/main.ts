@@ -358,19 +358,9 @@ async function createApp(): Promise<void> {
             console.log('🪟 Adventure Mode registered with ViewManager');
         }
 
-        // Check if we should resume an active world before router handles initial path
-        // If active world exists and we're at root path, navigate to it before router.initialize()
-        const currentPath = router.getCurrentPath();
-        if (currentPath === '/' && adventureMode) {
-            const defaultRoute = adventureMode.getDefaultRoute();
-            if (defaultRoute !== '/worlds') {
-                // Active world exists - update path before router.initialize()
-                console.log('🔄 Resuming active world before router init:', defaultRoute);
-                window.history.replaceState({ path: defaultRoute }, document.title, defaultRoute);
-                // Update router's internal currentPath to match
-                (router as any).currentPath = defaultRoute;
-            }
-        }
+        // Note: Removed automatic active world restoration on home route
+        // Users must explicitly navigate to their world from the splash screen or world list
+        // This allows proper navigation to the splash screen via the home URL
 
         // Initialize router AFTER all routes (including adventure mode) are registered
         // This ensures the router can properly handle the initial URL on page load

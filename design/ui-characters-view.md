@@ -1,6 +1,6 @@
 # CharactersView
 
-**Source**: `specs/ui.characters.md` → Character List Display section
+**Source**: `ui.characters.md` → Character List Display section
 
 **Route**: `/characters` (see `manifest-ui.md`)
 
@@ -13,7 +13,7 @@
 **Overall Layout**:
 ```
 ┌────────────────────────────────────────────────────────┐
-│ Characters                                             │ ← Header
+│ [🏠] Characters                                        │ ← Header
 ├────────────────────────────────────────────────────────┤
 │ ┌────────────────────────────────────────────────────┐ │
 │ │ Bob Smith          Rank: 3 XP: 150 DC: 15 Dust: 25 │ │
@@ -44,12 +44,17 @@
 **Structure**:
 ```html
 <header class="characters-header">
+  <button class="home-btn">🏠</button>
   <h1>Characters</h1>
 </header>
 ```
 
+**Events**:
+- `clickHome()` - Navigate to splash screen
+
 **CSS Classes**:
 - `characters-header` - Header container
+- `home-btn` - Home button (top-left)
 - Western-themed title styling
 
 ---

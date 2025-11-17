@@ -1,6 +1,6 @@
 # crc-AudioControlUtils
 
-**Source Spec:** specs/audio.md (audio control UI requirements)
+**Source Spec:** audio.md (audio control UI requirements)
 **Existing Code:** src/utils/AudioControlUtils.ts
 
 ## Responsibilities

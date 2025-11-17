@@ -1,7 +1,7 @@
 # Sequence: View Transition (Route-Based Navigation)
 
 **CRC Cards:** crc-Application.md, crc-Router.md
-**Spec:** specs/main.md, specs/routes.md
+**Spec:** main.md, routes.md
 
 ## Overview
 

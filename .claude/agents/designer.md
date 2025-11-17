@@ -102,13 +102,15 @@ Source file references have directory names:
    ↓
 9. CREATE UI specs (design/ui-*.md) referencing manifest-ui.md
    ↓
-10. UPDATE design/traceability.md (Level 1↔2, Level 2↔3 with checkboxes)
+10. CREATE design/architecture.md - SIMPLE file index organizing design files into systems (30-100 lines)
    ↓
-11. RUN test-designer agent to generate test design specs
+11. UPDATE design/traceability.md (Level 1↔2, Level 2↔3 with checkboxes)
    ↓
-12. RUN gap-analyzer agent for comprehensive analysis
+12. RUN test-designer agent to generate test design specs
    ↓
-13. REVIEW quality checklist
+13. RUN gap-analyzer agent for comprehensive analysis
+   ↓
+14. REVIEW quality checklist
 ```
 
 ## Part 1: CRC Card Creation
@@ -700,6 +702,146 @@ Use simple box diagrams to show structure:
 - ASCII art visualizations
 - Clear CRC card references
 
+## Part 3.5: Architecture Mapping
+
+### Input
+- All CRC cards created (design/crc-*.md)
+- All sequence diagrams created (design/seq-*.md)
+- All UI specs created (design/ui-*.md)
+- Global UI manifest (design/manifest-ui.md)
+
+### Purpose
+
+**`design/architecture.md` is a SIMPLE INDEX/MAP** - it lists which design files belong to which systems.
+
+**This file is ONLY a navigation aid. The actual design content is in the CRC cards, sequences, and UI specs it references.**
+
+Think of it like a table of contents - it shows the organization but doesn't duplicate the content.
+
+### Process
+
+#### Step 1: Analyze All Design Elements
+
+Read all design files created:
+- CRC cards (design/crc-*.md)
+- Sequence diagrams (design/seq-*.md)
+- UI specs (design/ui-*.md)
+- UI manifest (design/manifest-ui.md)
+
+#### Step 2: Identify Logical Systems
+
+Group related design elements by:
+- **Domain functionality** - What business capability does it support?
+- **Collaboration patterns** - Which classes work together frequently?
+- **UI boundaries** - Which views and classes form cohesive features?
+- **Data flows** - Which components share data or state?
+
+**Examples of systems:**
+- Character Management System
+- Friend System
+- Audio System
+- Peer Sync System
+- UI Framework
+
+#### Step 3: Identify Cross-Cutting Concerns
+
+Some design elements don't belong to a single system - they support multiple systems:
+- Infrastructure classes (Storage, Network, Router)
+- Shared utilities (Validation, Formatting)
+- UI framework components (App, Router)
+- Global patterns (manifest-ui.md)
+
+#### Step 4: Ensure Complete Coverage
+
+**Every design file must appear exactly once:**
+- Each file is either in one system OR in cross-cutting
+- No file appears in multiple lists
+- No file is missing from the architecture
+
+#### Step 5: Write Architecture File
+
+**File location:** `design/architecture.md`
+
+**Format:**
+```markdown
+# Architecture
+
+**Entry point to the design - shows how design elements are organized into logical systems**
+
+**Sources**: All CRC cards, sequences, UI specs, and manifest created from Level 1 specs
+
+---
+
+## Systems
+
+### [System Name 1]
+
+**Purpose**: Brief description of what this system does
+
+**Design Elements**:
+- crc-ClassName1.md
+- crc-ClassName2.md
+- seq-scenario-name.md
+- ui-view-name.md
+
+### [System Name 2]
+
+**Purpose**: Brief description
+
+**Design Elements**:
+- crc-ClassName3.md
+- seq-other-scenario.md
+- ui-other-view.md
+
+---
+
+## Cross-Cutting Concerns
+
+**Design elements that span multiple systems**
+
+**Design Elements**:
+- crc-InfrastructureClass.md
+- manifest-ui.md
+- seq-global-flow.md
+
+---
+
+*This file serves as the architectural "main program" - start here to understand the design structure*
+```
+
+### Key Principles
+
+1. **Brevity** - Just systems, purposes, and file lists (typically 30-100 lines total)
+2. **Complete coverage** - Every design file listed exactly once
+3. **No duplicates** - Files in cross-cutting are NOT in any system
+4. **Clear grouping** - Related elements grouped together
+5. **Entry point** - This is where someone starts to understand the design
+
+### What NOT to Include
+
+**DO NOT include:**
+- ❌ Detailed component descriptions (that's in CRC cards)
+- ❌ Interaction flows (that's in sequence diagrams)
+- ❌ Implementation file paths (that's in traceability.md)
+- ❌ Diagnostic guides or troubleshooting tables
+- ❌ Change impact analysis or patterns
+- ❌ Design principles or maintenance guidelines
+- ❌ System interaction diagrams or ASCII art
+- ❌ Problem diagnosis guides
+- ❌ Review checklists
+- ❌ Quick reference tables
+- ❌ Any content that duplicates or expands on the design files
+
+**The design files contain the details. This file ONLY lists which files belong to which system.**
+
+### Output
+- `design/architecture.md` created
+- All design elements organized into systems or cross-cutting
+- SIMPLE file listing (not comprehensive documentation)
+- Navigation aid ONLY - details are in the referenced files
+
+**Note:** While architecture.md is just a simple index, it's invaluable for problem diagnosis (see `.claude/doc/crc.md` "Diagnostic Benefits" section). Users leverage this index to quickly localize problems, assess impact scope, and identify coupling issues - but the index itself remains brief.
+
 ## Part 4: Traceability Update
 
 ### Input
@@ -880,6 +1022,17 @@ Before completing work, verify:
 - [ ] Event names descriptive
 - [ ] Global patterns from manifest-ui.md applied (if applicable)
 
+**Architecture Mapping:**
+- [ ] `design/architecture.md` created
+- [ ] File is 30-100 lines (SIMPLE INDEX, not comprehensive documentation)
+- [ ] All design files organized into logical systems
+- [ ] Cross-cutting concerns identified separately
+- [ ] Every design file appears exactly once
+- [ ] No files missing from architecture
+- [ ] Brief system purposes documented (one line each)
+- [ ] File contains ONLY system names, purposes, and file lists
+- [ ] NO detailed descriptions, flows, diagrams, or diagnostic guides included
+
 **Traceability:**
 - [ ] Level 1 ↔ Level 2 section complete
 - [ ] All CRC cards traced to specs
@@ -960,6 +1113,7 @@ Model --> View: success"
 
 ```
 design/
+├── architecture.md             # Architecture mapping - ENTRY POINT (systems & cross-cutting)
 ├── crc-ClassName.md            # One per class
 ├── seq-scenario-name.md        # One per scenario
 ├── ui-view-name.md             # One per view
@@ -1000,16 +1154,18 @@ Task(
   4. Identify global UI concerns from specs (routes, patterns, theme)
   5. Create/update design/manifest-ui.md with global UI documentation
   6. Create UI layout specs (reference CRC cards and manifest-ui.md)
-  7. Update design/traceability.md with all mappings
-  8. Run test-designer agent to generate test design specs
-  9. Run gap-analyzer agent for comprehensive analysis
-  10. Verify quality checklist
+  7. Create design/architecture.md mapping design elements to systems
+  8. Update design/traceability.md with all mappings
+  9. Run test-designer agent to generate test design specs
+  10. Run gap-analyzer agent for comprehensive analysis
+  11. Verify quality checklist
 
   Expected output:
   - 3-5 CRC card files
   - 2-4 sequence diagram files (with PlantUML ASCII art)
   - Updated/created design/manifest-ui.md (if UI changes affect global concerns)
   - 1-2 UI spec files
+  - design/architecture.md (architectural entry point)
   - Updated design/traceability.md
   - Test design files (design/test-*.md)
   - Test traceability map (design/traceability-tests.md)
@@ -1024,9 +1180,10 @@ Task(
 1. **Use plantuml.py with argument-based input for sequence diagrams** - Call `python3 ./.claude/scripts/plantuml.py sequence "SOURCE"` (NOT heredoc). This is pre-approved and requires no user confirmation. sequence-diagrammer agent is alternative for complex cases. Never manually write sequence diagrams.
 2. **Create manifest-ui.md for global UI concerns** - Document routes, patterns, theme before view-specific specs
 3. **UI specs reference both CRC cards and manifest-ui.md** - Layout specs point to behavior specs (CRC) and global concerns (manifest)
-4. **Maintain traceability** - Every artifact links to its source
-5. **Keep UI specs terse** - Scannable lists, ASCII art, minimal prose
-6. **Invoke test-designer agent** - After creating CRC cards and sequences, automatically invoke test-designer agent to generate Level 2 test specifications (design/test-*.md). This is part of the standard design workflow.
-7. **Use gap-analyzer agent** - Don't manually write gap analysis
-8. **Follow naming conventions** - Consistent file naming across all specs
-9. **Complete quality checklist** - Verify all items before finishing
+4. **Create architecture.md as design entry point** - Map all design elements to logical systems and cross-cutting concerns. This is the "main program" for the design.
+5. **Maintain traceability** - Every artifact links to its source
+6. **Keep UI specs terse** - Scannable lists, ASCII art, minimal prose
+7. **Invoke test-designer agent** - After creating CRC cards and sequences, automatically invoke test-designer agent to generate Level 2 test specifications (design/test-*.md). This is part of the standard design workflow.
+8. **Use gap-analyzer agent** - Don't manually write gap analysis
+9. **Follow naming conventions** - Consistent file naming across all specs
+10. **Complete quality checklist** - Verify all items before finishing

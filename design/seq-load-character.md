@@ -1,6 +1,6 @@
 # Sequence: Load Character
 
-**Source Spec:** specs/characters.md, specs/storage.md
+**Source Spec:** characters.md, storage.md
 **Use Case:** User selects a character to edit (includes version migration and hash initialization)
 
 ## Participants

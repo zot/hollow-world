@@ -1,7 +1,7 @@
 # WorldListView
 
 **CRC Card:** crc-WorldListView.md
-**Source Spec:** specs/game-worlds.md (lines 110-136)
+**Source Spec:** game-worlds.md (lines 110-136)
 **Current Implementation:** src/ui/AdventureView.ts (methods: showWorldListView, renderWorldListView, etc.)
 
 **Route**: `/worlds`
@@ -17,7 +17,7 @@
 **Overall Layout**:
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ 🌵 Your Worlds                      [➕ New World]      │ ← Header
+│ [🏠] 🌵 Your Worlds                 [➕ New World]      │ ← Header
 ├──────────────────────────────────────────────────────────┤
 │ [⭐] Test Room ⚡    [📜 Bob]  [⚙️ Edit]  [💀 Delete]   │ ← Active world (⚡ indicator)
 │ [⭐] Dusty Creek    [📜 Alice] [⚙️ Edit]  [💀 Delete]   │ ← Inactive world
@@ -36,29 +36,33 @@
 
 ### Header
 
-**Purpose**: Title and world creation
+**Purpose**: Navigation, title, and world creation
 
 **Layout**:
 ```
-┌─────────────────────────────────────────────────┐
-│ 🌵 Your Worlds            [➕ New World]       │
-│ ↑ title                   ↑ create button      │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│ [🏠] 🌵 Your Worlds         [➕ New World]      │
+│  ↑    ↑ title               ↑ create button     │
+│  home                                            │
+└──────────────────────────────────────────────────┘
 ```
 
 **Structure**:
 ```html
 <div class="world-list-header">
+  <button class="home-btn">🏠</button>
   <h2 class="world-list-title">🌵 Your Worlds</h2>
   <button class="world-list-create-btn">➕ New World</button>
 </div>
 ```
 
 **Events**:
+- `clickHome()` - Navigate to splash screen
 - `clickCreateWorld()` - Show create world modal
 
 **CSS Classes**:
 - `world-list-header` - Header container
+- `home-btn` - Home button (top-left)
 - `world-list-title` - Title text
 - `world-list-create-btn` - Create button
 

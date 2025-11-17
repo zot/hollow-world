@@ -14,10 +14,11 @@ Complete guide to Class-Responsibility-Collaboration (CRC) modeling for software
 8. [CRC Cards](#crc-cards)
 9. [Sequence Diagrams](#sequence-diagrams)
 10. [UI Specifications](#ui-specifications)
-11. [Traceability](#traceability)
-12. [Bidirectional Updates](#bidirectional-updates)
-13. [Benefits](#benefits)
-14. [Reverse Engineering Existing Projects](#reverse-engineering-existing-projects)
+11. [Architecture Mapping](#architecture-mapping)
+12. [Traceability](#traceability)
+13. [Bidirectional Updates](#bidirectional-updates)
+14. [Benefits](#benefits)
+15. [Reverse Engineering Existing Projects](#reverse-engineering-existing-projects)
 
 ---
 
@@ -278,6 +279,7 @@ project-root/
 │   ├── feature1.md
 │   └── feature2.md
 ├── design/                       # Level 2: Generated CRC/sequences/UI specs
+│   ├── architecture.md          # Architecture mapping - ENTRY POINT (systems & cross-cutting)
 │   ├── crc-ClassName.md         # CRC cards (one per class)
 │   ├── seq-scenario.md          # Sequence diagrams (one per scenario)
 │   ├── ui-view-name.md          # UI layout specs (one per view)
@@ -621,6 +623,124 @@ UI specs define **layout structure** for views and components.
 2. **Terseness**: Scannable lists, ASCII art, minimal prose
 3. **Data clarity**: Always reference CRC cards for types
 4. **References**: Point to CRC cards for behavior, manifest-ui.md for global concerns
+
+---
+
+## Architecture Mapping
+
+### Purpose
+
+**`design/architecture.md` serves as the "main program" for the design** - the entry point that organizes all design elements into logical systems.
+
+This file:
+- Groups related design elements (CRC cards, sequences, UI specs) into cohesive systems
+- Identifies cross-cutting concerns that span multiple systems
+- Provides a navigational overview of the entire design
+- Makes the architectural structure immediately clear
+
+### Why This Matters
+
+When reviewing or working with a design, `architecture.md` answers:
+- **"What systems exist?"** - See logical groupings at a glance
+- **"Where do I start?"** - Entry point to understand the design structure
+- **"Which components work together?"** - Related elements are grouped
+- **"What's shared?"** - Cross-cutting concerns are explicit
+
+### Structure
+
+**File:** `design/architecture.md`
+
+**Format:**
+```markdown
+# Architecture
+
+**Entry point to the design - shows how design elements are organized into logical systems**
+
+**Sources**: All CRC cards, sequences, UI specs, and manifest created from Level 1 specs
+
+---
+
+## Systems
+
+### Character Management System
+
+**Purpose**: Handle character creation, editing, and persistence
+
+**Design Elements**:
+- crc-Character.md
+- crc-CharacterEditor.md
+- seq-create-character.md
+- ui-character-editor.md
+
+### Friend System
+
+**Purpose**: Manage peer relationships and friend lists
+
+**Design Elements**:
+- crc-Friend.md
+- crc-FriendsManager.md
+- seq-add-friend.md
+- ui-friends-view.md
+
+---
+
+## Cross-Cutting Concerns
+
+**Design elements that span multiple systems**
+
+**Design Elements**:
+- crc-Storage.md
+- crc-Router.md
+- manifest-ui.md
+- seq-app-startup.md
+
+---
+
+*This file serves as the architectural "main program" - start here to understand the design structure*
+```
+
+### Key Principles
+
+1. **Brevity** - Just systems, purposes, and file lists
+2. **Complete coverage** - Every design file listed exactly once
+3. **No duplicates** - Files in cross-cutting are NOT in any system
+4. **Clear grouping** - Related elements grouped together
+5. **Entry point** - Start here to understand the design
+
+### Created When
+
+The `designer` agent creates `architecture.md` after generating all CRC cards, sequences, and UI specs. It's part of the standard design workflow (step 10).
+
+### Diagnostic Benefits
+
+**`architecture.md` is invaluable for diagnosing problems:**
+
+**1. Rapid Problem Localization**
+- Immediately identify which system owns the functionality
+- See all related components (CRC cards, sequences, UI specs) at a glance
+- Identify cross-cutting concerns that might be involved
+
+**2. Understanding Impact Scope**
+- Is this isolated to one system? (Safe to change)
+- Does it span multiple systems? (Need to coordinate changes)
+- Is it in cross-cutting concerns? (Changes affect everything)
+
+**3. Gap Detection**
+- Missing components become obvious ("UI but no CRC card?")
+- Unclear responsibilities stand out ("Why is this in two systems?")
+- Unnecessary components are visible ("Doesn't fit anywhere... is it needed?")
+
+**4. Communication with LLMs**
+- Point to specific system: "Fix the Friend System's add-friend flow"
+- LLM reads architecture.md → knows exactly which files to examine
+- Faster, more accurate fixes with no guessing
+
+**5. Debugging Interaction Problems**
+- See system boundaries clearly ("Character System shouldn't call Friend System directly")
+- Check cross-cutting patterns ("Should this go through Router instead?")
+- Identify coupling issues ("Too many connections between these systems")
+
+**In short:** `architecture.md` is a **map of the codebase at the design level** - diagnose architectural problems before even looking at code.
 
 ---
 

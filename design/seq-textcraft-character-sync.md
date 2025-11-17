@@ -1,7 +1,7 @@
 # Sequence: TextCraft Character Synchronization
 
 **CRC Cards:** crc-CharacterSync.md, crc-Character.md
-**Spec:** specs/integrate-textcraft.md
+**Spec:** integrate-textcraft.md
 
 ## Overview
 

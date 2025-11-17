@@ -1,6 +1,6 @@
 # AdventureMode
 
-**Source Spec:** specs/game-worlds.md (lines 66-73, Active World State Management)
+**Source Spec:** game-worlds.md (lines 66-73, Active World State Management)
 **Existing Code:** src/ui/AdventureMode.ts
 **Test Code:** (none - Phase 7)
 

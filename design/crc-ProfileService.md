@@ -1,6 +1,6 @@
 # ProfileService
 
-**Source Spec:** specs/storage.md
+**Source Spec:** storage.md
 **Existing Code:** src/services/ProfileService.ts
 
 ## Responsibilities

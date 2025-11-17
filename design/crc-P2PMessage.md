@@ -1,6 +1,6 @@
 # CRC Card: P2PMessage Types
 
-**Source Spec:** specs/p2p-messages.md
+**Source Spec:** p2p-messages.md
 **Existing Code:** src/p2p/types.ts
 
 ## Type Definitions

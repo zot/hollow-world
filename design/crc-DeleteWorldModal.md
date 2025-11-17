@@ -1,6 +1,6 @@
 # DeleteWorldModal
 
-**Source Spec:** specs/game-worlds.md (line 127)
+**Source Spec:** game-worlds.md (line 127)
 
 ## Responsibilities
 

@@ -1,6 +1,6 @@
 # CRC Card: FriendsView
 
-**Source Spec:** specs/ui.friends.md
+**Source Spec:** ui.friends.md
 **Existing Code:** src/ui/FriendsView.ts
 
 ## Class Responsibilities

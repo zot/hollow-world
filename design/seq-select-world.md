@@ -1,6 +1,6 @@
 # Sequence: Select World
 
-**Source Spec:** specs/game-worlds.md (lines 118-120)
+**Source Spec:** game-worlds.md (lines 118-120)
 **Use Case:** User selects a world from the world list to start playing
 
 ## Participants

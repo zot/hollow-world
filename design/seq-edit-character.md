@@ -1,6 +1,6 @@
 # Sequence: Edit Character
 
-**Source Spec:** specs/ui.characters.md
+**Source Spec:** ui.characters.md
 **Use Case:** User navigates to character editor from character list
 
 ## Participants

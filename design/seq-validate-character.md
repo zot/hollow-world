@@ -1,6 +1,6 @@
 # Sequence: Validate Character
 
-**Source Spec:** specs/characters.md
+**Source Spec:** characters.md
 **Use Case:** Validate character data before saving (called from editor)
 
 ## Participants

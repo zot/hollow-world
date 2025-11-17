@@ -1,6 +1,6 @@
 # JoinSessionModal
 
-**Source Spec:** specs/game-worlds.md (line 138, implicit from multiplayer modes)
+**Source Spec:** game-worlds.md (line 138, implicit from multiplayer modes)
 
 ## Responsibilities
 

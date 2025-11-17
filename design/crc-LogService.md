@@ -1,6 +1,6 @@
 # LogService
 
-**Source Spec:** specs/logging.md
+**Source Spec:** logging.md
 **Existing Code:** src/services/LogService.ts
 
 ## Responsibilities

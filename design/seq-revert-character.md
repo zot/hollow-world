@@ -1,6 +1,6 @@
 # Sequence: Revert Character
 
-**Source Spec:** specs/ui.characters.md, specs/storage.md
+**Source Spec:** ui.characters.md, storage.md
 **Use Case:** User clicks "Nope" button to discard changes and reload from storage
 
 ## Participants
@@ -136,7 +136,7 @@
 - Update fields: Display original stats in all fields ✓
 - Enable only if there are changes to revert ✓
 
-**📝 Revert workflow (per specs/storage.md):**
+**📝 Revert workflow (per storage.md):**
 1. Load original character from storage
 2. Update character hash with original
 3. Replace current character with original

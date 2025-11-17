@@ -1,6 +1,6 @@
 # AdventureView
 
-**Source Spec:** specs/game-worlds.md (lines 75-108)
+**Source Spec:** game-worlds.md (lines 75-108)
 
 ## Responsibilities
 

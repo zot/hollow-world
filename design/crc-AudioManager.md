@@ -1,6 +1,6 @@
 # crc-AudioManager
 
-**Source Spec:** specs/audio.md
+**Source Spec:** audio.md
 **Existing Code:** src/audio/AudioManager.ts
 
 ## Responsibilities

@@ -1,6 +1,6 @@
 # EventModal
 
-**Source Spec:** specs/friends.md, specs/ui.settings.md
+**Source Spec:** friends.md, ui.settings.md
 **Existing Code:** src/ui/EventModal.ts
 **Test Code:** (none - Phase 7)
 

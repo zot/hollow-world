@@ -1,6 +1,6 @@
 # CRC Card: Friend (Data Type)
 
-**Source Spec:** specs/friends.md
+**Source Spec:** friends.md
 **Existing Code:** src/p2p/types.ts
 
 ## Data Structure

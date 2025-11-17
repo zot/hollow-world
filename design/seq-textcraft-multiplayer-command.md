@@ -1,7 +1,7 @@
 # Sequence: TextCraft Multiplayer Command Execution
 
 **CRC Cards:** crc-HollowIPeer.md, crc-P2PWebAppNetworkProvider.md
-**Spec:** specs/integrate-textcraft.md
+**Spec:** integrate-textcraft.md
 
 ## Overview
 

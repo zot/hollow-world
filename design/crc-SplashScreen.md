@@ -1,6 +1,6 @@
 # crc-SplashScreen
 
-**Source Spec:** specs/ui.splash.md
+**Source Spec:** ui.splash.md
 **Existing Code:** src/ui/SplashScreen.ts
 
 ## Responsibilities

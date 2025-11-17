@@ -1,6 +1,6 @@
 # Sequence: Friend Status Change (Mutual Acceptance)
 
-**Source Spec:** specs/friends.md, specs/p2p-messages.md
+**Source Spec:** friends.md, p2p-messages.md
 **Existing Code:** src/p2p/HollowPeer.ts, src/p2p/FriendsManager.ts
 
 ## Participants

@@ -1,6 +1,6 @@
 # GlobalAudioControl
 
-**Source Spec:** specs/audio.md, specs/ui.md
+**Source Spec:** audio.md, ui.md
 **Existing Code:** src/ui/GlobalAudioControl.ts
 **Test Code:** (none - Phase 7)
 

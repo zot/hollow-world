@@ -1,6 +1,6 @@
 # Sequence: Host Session
 
-**Source Spec:** specs/game-worlds.md (line 138)
+**Source Spec:** game-worlds.md (line 138)
 **Use Case:** User starts hosting a multiplayer session for others to join
 
 ## Participants

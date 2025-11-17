@@ -3,15 +3,15 @@
 **Global UI structure, routes, view relationships, and shared components for HollowWorld**
 
 **Sources**:
-- `specs/routes.md` - Route definitions
-- `specs/ui.md` - Global UI principles
-- `specs/audio.md` - Audio control specifications
+- `routes.md` - Route definitions
+- `ui.md` - Global UI principles
+- `audio.md` - Audio control specifications
 
 ---
 
 ## Routes
 
-**Source**: `specs/routes.md`
+**Source**: `routes.md`
 
 All application routes and their corresponding views:
 
@@ -44,7 +44,7 @@ All routes MUST support:
 
 ## View Hierarchy
 
-**Source**: `specs/routes.md` + navigation patterns
+**Source**: `routes.md` + navigation patterns
 
 ```
 SplashView (/)
@@ -88,7 +88,7 @@ SplashView (/)
 
 ### 1. GlobalAudioControl
 
-**Source**: `specs/audio.md` - Audio Control UI Requirements
+**Source**: `audio.md` - Audio Control UI Requirements
 
 **Purpose**: Background music playback and control, persistent across all views
 
@@ -149,7 +149,7 @@ SplashView (/)
 
 ### 2. EventNotificationButton
 
-**Source**: `specs/ui.md` - Events section
+**Source**: `ui.md` - Events section
 
 **Purpose**: Display count of pending events and provide access to event list
 
@@ -175,7 +175,7 @@ SplashView (/)
 
 ## Global UI Patterns
 
-**Source**: `specs/ui.md` - General Principles
+**Source**: `ui.md` - General Principles
 
 ### Save Behavior
 
@@ -309,7 +309,7 @@ SplashView → WorldSelectorView → AdventureModeView
 
 ## Asset URL Management
 
-**Source**: `specs/routes.md` - Asset Loading
+**Source**: `routes.md` - Asset Loading
 
 **CRITICAL**: All asset paths MUST be absolute from origin
 
@@ -343,7 +343,7 @@ window.Base = new URL('', document.location);
 
 ## Western Frontier Theme
 
-**Source**: `specs/ui.md` - Visual Design & Western Frontier Theme
+**Source**: `ui.md` - Visual Design & Western Frontier Theme
 
 **Global theme requirements for all views**
 
@@ -427,7 +427,7 @@ All views must follow:
 
 ## Browser History Integration
 
-**Source**: `specs/ui.md` - Navigation
+**Source**: `ui.md` - Navigation
 
 **Pattern**: URL-based navigation with browser history
 
@@ -452,7 +452,7 @@ All views must follow:
 
 ## Development Server
 
-**Source**: `specs/routes.md`
+**Source**: `routes.md`
 
 **Base URL**: `https://localhost:3000` (NOT port 5173)
 

@@ -224,6 +224,12 @@ export class WorldListView implements IWorldListView {
     private attachEventListeners(): void {
         if (!this.container) return;
 
+        // Home button
+        const homeBtn = this.container.querySelector('#world-list-home-btn');
+        homeBtn?.addEventListener('click', () => {
+            this.router.navigate('/');
+        });
+
         // New world button
         const newWorldBtn = this.container.querySelector('[data-action="createWorld"]');
         newWorldBtn?.addEventListener('click', () => {

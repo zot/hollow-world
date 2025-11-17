@@ -1,6 +1,6 @@
 # Sequence: Start Adventure Mode
 
-**Source Spec:** specs/game-worlds.md (line 73)
+**Source Spec:** game-worlds.md (line 73)
 **Use Case:** User navigates from Splash Screen to world list to begin playing
 
 ## Participants

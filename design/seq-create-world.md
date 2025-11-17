@@ -1,6 +1,6 @@
 # Sequence: Create World
 
-**Source Spec:** specs/game-worlds.md (lines 126-128)
+**Source Spec:** game-worlds.md (lines 126-128)
 **Use Case:** User creates a new MUD world from the world list
 
 ## Participants

@@ -1,6 +1,6 @@
 # CRC Card: HollowPeer
 
-**Source Spec:** specs/p2p.md, specs/p2p-messages.md, specs/friends.md
+**Source Spec:** p2p.md, p2p-messages.md, friends.md
 **Existing Code:** src/p2p/HollowPeer.ts
 
 ## Class Responsibilities

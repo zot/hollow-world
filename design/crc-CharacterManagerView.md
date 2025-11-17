@@ -1,6 +1,6 @@
 # CharacterManagerView
 
-**Source Spec:** specs/ui.characters.md, specs/ui.md
+**Source Spec:** ui.characters.md, ui.md
 **Existing Code:** src/ui/CharacterManagerView.ts
 
 ## Responsibilities

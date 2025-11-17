@@ -1,6 +1,6 @@
 # WorldLoader
 
-**Source Spec:** specs/integrate-textcraft.md
+**Source Spec:** integrate-textcraft.md
 **Existing Code:** src/textcraft/world-loader.ts
 **Test Code:** (none - Phase 6)
 

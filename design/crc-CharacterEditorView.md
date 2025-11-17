@@ -1,6 +1,6 @@
 # CharacterEditorView
 
-**Source Spec:** specs/ui.characters.md, specs/ui.md
+**Source Spec:** ui.characters.md, ui.md
 **Existing Code:** src/ui/CharacterEditorView.ts
 
 ## Responsibilities
@@ -89,7 +89,7 @@ setInterval(() => {
 }, 250);
 ```
 
-**Save Workflow (per specs/storage.md):**
+**Save Workflow (per storage.md):**
 ```typescript
 async saveCharacter() {
     // 1. Load original from storage

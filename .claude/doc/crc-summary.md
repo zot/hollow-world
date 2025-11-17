@@ -2,9 +2,11 @@
 
 ## The Core Problem
 
-CRC modeling solves the fundamental communication gap between developers and AI assistants. It forces the AI to document its interpretation of your requirements in human-readable design artifacts before writing any code.
+Claude "generously" infers features that aren't in your specs. By the time you notice (when a spec change removes a feature you rely on), you've invested hours reviewing thousands of lines of code.
 
-**What you get:** The power to catch misunderstandings, architectural flaws, and missing edge cases when they're trivial to fix rather than expensive to refactor.
+**The fundamental issue:** You need to verify Claude's interpretation of your requirements *before* it generates code, not after.
+
+**What you get:** The power to catch misunderstandings, architectural flaws, and unwanted inferences when they're trivial to fix rather than expensive to refactor.
 
 ## The Solution
 
@@ -18,25 +20,14 @@ The three-tier system (specs → design → code) with bidirectional traceabilit
 
 ## Key Benefits
 
-**Architectural clarity:**
-- Review and validate design before committing to code
-- Maintain coherence across coding sessions
-- Document design decisions automatically as you work
-
-**Knowledge retention:**
-- Comprehensive documentation survives staff transitions
-- Design artifacts capture architectural intent permanently
-- Navigate complex systems through explicit design maps
-
-**Compliance and governance:**
-- Create audit trails linking requirements to implementation
-- Document business logic and design decisions formally
-- Maintain verifiable records of system architecture
-
-**Quality and confidence:**
-- Catch misunderstandings before they become code
-- Ship with confidence in your architecture
-- Trace bugs cleanly from symptom → requirement
+✅ **Catch misunderstandings early** - Review design before committing to code
+✅ **Stop losing features** - Detect "generous" inferences before they become code
+✅ **Maintain coherence** - Design layer provides consistency across sessions
+✅ **Knowledge retention** - Documentation survives staff transitions
+✅ **Trace bugs cleanly** - Follow from symptom → code → design → requirement
+✅ **Safe refactoring** - Impact analysis prevents breaking changes
+✅ **Audit trails** - Link requirements to implementation for compliance
+✅ **Ship with confidence** - Validate architecture before writing thousands of lines
 
 ## Key Capabilities
 

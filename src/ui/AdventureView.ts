@@ -73,6 +73,7 @@ export class AdventureView {
     private joinSessionModal: JoinSessionModal | null = null;
 
     // Event handler references for proper cleanup
+    private boundHomeClickHandler: (() => void) | null = null;
     private boundBackClickHandler: (() => void) | null = null;
     private boundWorldsButtonClickHandler: (() => void) | null = null;
 
@@ -214,6 +215,20 @@ export class AdventureView {
      * CRC: crc-AdventureView.md
      */
     private setupEventListeners(): void {
+        // Home button
+        const homeBtn = this.container?.querySelector('#adventure-home-btn');
+        if (homeBtn) {
+            // Remove old listener if it exists
+            if (this.boundHomeClickHandler) {
+                homeBtn.removeEventListener('click', this.boundHomeClickHandler);
+            }
+            // Create and store new bound handler
+            this.boundHomeClickHandler = () => {
+                this.router?.navigate('/');
+            };
+            homeBtn.addEventListener('click', this.boundHomeClickHandler);
+        }
+
         // Back button
         const backBtn = this.container?.querySelector('#adventure-back-btn');
         if (backBtn) {
@@ -697,6 +712,11 @@ export class AdventureView {
      */
     destroy(): void {
         // Clean up event listeners
+        const homeBtn = this.container?.querySelector('#adventure-home-btn');
+        if (homeBtn && this.boundHomeClickHandler) {
+            homeBtn.removeEventListener('click', this.boundHomeClickHandler);
+        }
+
         const backBtn = this.container?.querySelector('#adventure-back-btn');
         if (backBtn && this.boundBackClickHandler) {
             backBtn.removeEventListener('click', this.boundBackClickHandler);

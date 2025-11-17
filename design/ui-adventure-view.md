@@ -1,7 +1,7 @@
 # AdventureView
 
 **CRC Card:** crc-AdventureView.md
-**Source Spec:** specs/game-worlds.md (lines 75-108)
+**Source Spec:** game-worlds.md (lines 75-108)
 **Current Implementation:** src/ui/AdventureView.ts
 
 **Route**: `/world/:worldId`
@@ -17,7 +17,7 @@
 **Overall Layout**:
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ [Dusty Creek] [🌵 Worlds]  ⟨space⟩  ● Solo  [⬅️ Back]  │ ← Header banner
+│ [🏠] [Dusty Creek] [🌵 Worlds] ⟨space⟩ ● Solo [⬅️ Back] │ ← Header banner
 ├──────────────────────────────────────────────────────────┤
 │                                                          │
 │  Welcome to Dusty Creek!                                 │
@@ -53,14 +53,15 @@
 **Layout**:
 ```
 ┌────────────────────────────────────────────────────────────┐
-│ [Test Room] [🌵 Worlds]  ⟨flexible space⟩  ● Solo [⬅️ Back] │
-│ ↑ world-info            ↑ header-spacer  ↑ status  ↑ back │
+│ [🏠] [Test Room] [🌵 Worlds] ⟨flexible space⟩ ● Solo [⬅️ Back] │
+│ ↑ home ↑ world-info         ↑ header-spacer  ↑ status ↑ back │
 └────────────────────────────────────────────────────────────┘
 ```
 
 **Structure**:
 ```html
 <div class="adventure-header">
+  <button class="home-btn">🏠</button>
   <div class="adventure-world-info">
     <span class="world-name">{{worldName}}</span>
     <button class="worlds-btn">🌵 Worlds</button>
@@ -79,11 +80,13 @@
 - `mode` - Current session mode: "Solo", "Host", or "Guest"
 
 **Events**:
+- `clickHome()` - Navigate to splash screen
 - `clickWorldsBtn()` - Navigate to `/worlds` (world list overlay via AdventureMode)
 - `clickBackBtn()` - Navigate to `/` (splash screen)
 
 **CSS Classes**:
 - `adventure-header` - Header container
+- `home-btn` - Home button (top-left)
 - `adventure-world-info` - Left section (world name + button)
 - `world-name` - World name display
 - `worlds-btn` - Button to show world list
@@ -240,6 +243,142 @@
 ---
 
 **Note**: Join Session Modal is now a separate component. See [`join-session-modal.md`](join-session-modal.md) for complete specifications.
+
+---
+
+## Output Persistence & Lifecycle
+
+**Purpose**: Preserve output lines across page refreshes while cleaning up on world deactivation
+
+**Key Constraint**: Only one world can be active at a time in the application.
+
+### LocalStorage Keys
+
+**Output Storage**:
+- Key: `adventureOutput` (profile-scoped)
+- Value: JSON array of output line objects `{ text: string, className: string }`
+- Single key because only one world can be active at a time
+
+**Close Timestamp**:
+- Key: `adventureClosedTimestamp` (profile-scoped)
+- Value: Unix timestamp (milliseconds) - set on page close
+- Presence indicates world was closed (not just refreshed)
+
+### Lifecycle Events
+
+**World Activation** (user navigates to `/world/:worldId`):
+1. Attempt to create peer via p2p-webapp
+2. **If peer creation fails** (duplicate peer key - tab duplication):
+   - Show error: "Cannot activate world - already active in another tab"
+   - Do not activate world
+   - Do not load or modify LocalStorage
+   - Allow navigation away via Back/Worlds buttons
+3. **If peer creation succeeds**:
+   - Check for `adventureClosedTimestamp` in LocalStorage
+   - If timestamp exists → Scrub output (page was closed)
+   - If no timestamp exists → Load output from LocalStorage (page was refreshed)
+   - Activate world normally
+
+**Normal Operation** (peer successfully created):
+- Output persists to LocalStorage on each new line
+- Output loads from LocalStorage on page refresh
+
+**World Deactivation** (user navigates away from `/world/:worldId`):
+1. Set `adventureClosedTimestamp` to current time
+2. Clear `adventureOutput` from LocalStorage
+3. Disconnect peer from p2p-webapp
+
+**Page Close** (`beforeunload` event):
+1. Set `adventureClosedTimestamp` to current time
+2. Browser may or may not allow time to complete (best effort)
+
+**Page Refresh** (user reloads page):
+- `beforeunload` fires but browser reloads quickly
+- No `adventureClosedTimestamp` set (or cleared during reload)
+- Peer recreation succeeds (same tab)
+- Output loads from LocalStorage
+
+### Implementation Notes
+
+**Peer Creation Check**:
+```typescript
+try {
+  await networkProvider.createPeer();
+  // Success - proceed with world activation
+  activateWorld();
+} catch (error) {
+  // Failure - duplicate peer key (tab duplication)
+  showError('Cannot activate world - already active in another tab');
+  return;
+}
+```
+
+**Close Timestamp Check on Activation**:
+```typescript
+const closedTimestamp = localStorage.getItem('adventureClosedTimestamp');
+if (closedTimestamp) {
+  // Page was closed - scrub output
+  localStorage.removeItem('adventureOutput');
+  localStorage.removeItem('adventureClosedTimestamp');
+} else {
+  // Page was refreshed - load output
+  const output = JSON.parse(localStorage.getItem('adventureOutput') || '[]');
+  output.forEach(line => addOutputLineToDisplay(line.text, line.className));
+}
+```
+
+**Page Close Handler**:
+```typescript
+window.addEventListener('beforeunload', () => {
+  localStorage.setItem('adventureClosedTimestamp', Date.now().toString());
+});
+```
+
+**Output Persistence**:
+```typescript
+function addOutputLine(text: string, className: string) {
+  // Add to display
+  const line = document.createElement('div');
+  line.className = className;
+  line.textContent = text;
+  outputContainer.appendChild(line);
+
+  // Save to LocalStorage
+  const output = JSON.parse(localStorage.getItem('adventureOutput') || '[]');
+  output.push({ text, className });
+  localStorage.setItem('adventureOutput', JSON.stringify(output));
+}
+```
+
+### Edge Cases
+
+**Tab Duplication**:
+- Original tab: Peer created successfully, world active normally
+- Duplicate tab: Peer creation fails, world cannot activate, shows error
+- User must close duplicate tab or navigate away
+
+**Browser Crash** (rare):
+- `beforeunload` may not fire
+- `adventureClosedTimestamp` not set
+- Next activation loads stale output from crashed session
+- **Acceptable limitation**: User can manually clear output or navigate away and back
+- Trade-off for simpler implementation (no heartbeat polling)
+
+**User Closes Original Tab, Keeps Duplicate**:
+- Original tab closes, peer disconnects, sets `adventureClosedTimestamp`
+- Duplicate tab still shows error (world never activated)
+- User must navigate away and back (or refresh) to activate world in this tab
+- On refresh, sees close timestamp, scrubs output, starts fresh
+
+**Page Refresh**:
+- `beforeunload` fires but browser reloads quickly
+- Timestamp may be set momentarily but cleared on activation
+- Output loads successfully from LocalStorage
+
+**p2p-webapp Not Running** (different scenario):
+- Peer creation fails with connection error
+- Show error: "Cannot connect to p2p-webapp server"
+- Configuration/setup issue, not duplicate tab
 
 ---
 

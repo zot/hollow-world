@@ -954,6 +954,14 @@ ${workflowIssues.length === 0 && accessibilityIssues.length === 0 ?
             });
         }
 
+        const homeBtn = this.container.querySelector('#character-manager-home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', async () => {
+                await AudioControlUtils.playButtonSound(this.audioManager);
+                this.router.navigate('/');
+            });
+        }
+
         const backBtn = this.container.querySelector('#back-to-menu-btn');
         if (backBtn) {
             backBtn.addEventListener('click', async () => {

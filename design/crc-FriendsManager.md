@@ -1,6 +1,6 @@
 # CRC Card: FriendsManager
 
-**Source Spec:** specs/friends.md
+**Source Spec:** friends.md
 **Existing Code:** src/p2p/FriendsManager.ts
 
 ## Class Responsibilities

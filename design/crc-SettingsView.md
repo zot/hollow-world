@@ -1,6 +1,6 @@
 # SettingsView
 
-**Source Spec:** specs/ui.settings.md
+**Source Spec:** ui.settings.md
 **Existing Code:** src/ui/SettingsView.ts
 **Test Code:** test/SettingsView.test.ts
 

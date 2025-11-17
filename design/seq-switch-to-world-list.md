@@ -1,6 +1,6 @@
 # Sequence: Switch to World List
 
-**Source Spec:** specs/game-worlds.md (lines 111-112, 128)
+**Source Spec:** game-worlds.md (lines 111-112, 128)
 **Use Case:** User navigates from adventure view back to world list overlay
 
 ## Participants

@@ -1,6 +1,6 @@
 # CharacterSync
 
-**Source Spec:** specs/integrate-textcraft.md
+**Source Spec:** integrate-textcraft.md
 **Existing Code:** src/textcraft/character-sync.ts
 **Test Code:** (none - Phase 6)
 

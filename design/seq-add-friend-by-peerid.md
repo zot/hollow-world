@@ -1,6 +1,6 @@
 # Sequence: Add Friend by Peer ID
 
-**Source Spec:** specs/friends.md, specs/ui.friends.md
+**Source Spec:** friends.md, ui.friends.md
 **Existing Code:** src/ui/FriendsView.ts, src/p2p/HollowPeer.ts
 
 ## Participants

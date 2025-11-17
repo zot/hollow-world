@@ -1,6 +1,6 @@
 # CharacterVersioning
 
-**Source Spec:** specs/characters.md, specs/storage.md
+**Source Spec:** characters.md, storage.md
 **Existing Code:** src/character/CharacterVersioning.ts
 
 ## Responsibilities

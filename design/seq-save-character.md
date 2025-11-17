@@ -1,6 +1,6 @@
 # Sequence: Save Character
 
-**Source Spec:** specs/characters.md, specs/storage.md
+**Source Spec:** characters.md, storage.md
 **Use Case:** User saves character from editor (with hash-based save optimization)
 
 ## Participants

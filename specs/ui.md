@@ -51,6 +51,21 @@
 
 ## Navigation
 
+### Home Button
+- **REQUIRED**: All top-level screens **MUST** have a "🏠" home button at the top-left
+  - Button navigates to the splash screen (main menu)
+  - Position: Top-left corner of the view
+  - Not required on:
+    - Splash screen itself (it IS the home)
+    - Embedded components (modals, cards, sub-panels)
+  - Required on all main views:
+    - World List View
+    - Character Manager View
+    - Character Editor View
+    - Friends View
+    - Settings View
+    - Adventure View
+
 ### URL-Based Navigation
 - **Single-page app location** represented by browser URL
 - **Each view** gets its own URL path
